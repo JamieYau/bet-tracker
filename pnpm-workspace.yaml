@@ -1,0 +1,3 @@
+# Only the root application is included in this workspace.
+packages:
+  - .

@@ -4,15 +4,40 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 First, run the development server:
 
+This repository uses **pnpm 12.11.2**. With Node.js installed, install pnpm once:
+
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install --global pnpm@12.11.2
 ```
+
+Install the project dependencies, then start development:
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Use `pnpm add <package>` to add a dependency and `pnpm add -D <package>` for a development dependency. For CI, use `pnpm install --frozen-lockfile`.
+
+## Code quality
+
+Biome handles linting, formatting and import organisation, with recommended React/Next.js rules and Tailwind CSS directive support. TypeScript checking remains a separate step.
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm check` | Check formatting, lint rules, imports and TypeScript types |
+| `pnpm check:fix` | Apply formatting, import organisation and safe lint fixes |
+| `pnpm format` | Format supported files |
+| `pnpm format:check` | Check formatting without changing files |
+| `pnpm lint` | Run lint rules only |
+| `pnpm typecheck` | Generate Next.js route types and check TypeScript |
+| `pnpm build` | Create a production build |
+
+For VS Code or compatible editors, install the recommended **Biome** extension (`biomejs.biome`). Workspace settings enable formatting and safe fixes on save for supported source/config files. Static files in `public`, generated Next.js types and Git-ignored build/dependency files are excluded from Biome checks.
+
+Commit `pnpm-lock.yaml` when dependencies change. The `packageManager` field pins the pnpm version; use pnpm consistently in this repository.
+
+Project requirements and handoff notes are in [docs/BUILD_BRIEF.md](docs/BUILD_BRIEF.md), [docs/DECISIONS.md](docs/DECISIONS.md), and [docs/PROGRESS.md](docs/PROGRESS.md).
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

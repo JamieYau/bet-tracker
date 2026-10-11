@@ -2,11 +2,17 @@
   "name": "bet-tracker",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@12.11.2",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check:fix": "biome check --write .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "check": "biome check . && pnpm typecheck"
   },
   "dependencies": {
     "next": "16.4.0",
@@ -14,12 +20,11 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
