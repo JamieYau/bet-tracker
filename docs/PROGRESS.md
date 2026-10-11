@@ -2,40 +2,56 @@
 
 Last updated: 2026-10-11.
 
-## Verified current state
+## Completed manual milestone
 
-- Repository contains a create-next-app scaffold; README now documents pnpm setup and commands.
-- `package.json` declares Next.js 16.4.0, React/React DOM 19.3.0, TypeScript and Tailwind CSS. Full application dependency compatibility/stability review remains outstanding.
-- pnpm 12.11.2 is installed under the current nvm Node installation and pinned in `package.json`. Imported `package-lock.json` into `pnpm-lock.yaml`, removed the npm lockfile and installed dependencies successfully.
-- ESLint/config dependencies were replaced with pinned Biome 2.5.15. Configuration enables recommended React/Next.js rules, import organisation, two-space formatting and Tailwind directive parsing. Static public assets and generated/ignored files are excluded.
-- Added code-quality scripts and VS Code extension recommendations/settings. Install the Biome editor extension to activate format/fix on save.
-- Removed the obsolete `unrs-resolver` build approval with its ESLint dependency tree; `pnpm-workspace.yaml` includes only the root app.
-- Build brief, decisions and continuity instructions are recorded. No application code has been changed by this task.
-- Before migration, ESLint and standalone TypeScript checks passed. After Biome migration, verified `pnpm check:fix`, `pnpm install --frozen-lockfile`, `pnpm check` (Biome and Next.js route generation/TypeScript) and `pnpm build`: all passed. No application tests or live service checks have been run.
+- Moved the scaffold to `src/app`; strict TypeScript alias points to `src/`. Installed shadcn/ui components, a mobile bottom navigation/desktop shell, loading/error/empty states and Home Screen metadata/icons.
+- pnpm 12.11.2 and Biome 2.5.15 remain pinned. Next.js 16.4.0/React 19.3.0 match registry stable tags; dependency peers pass. Node 24 types satisfy Vitest 5. Relevant installed Next.js and official Supabase/shadcn/testing guides were read.
+- Added exact decimal financial logic, fractional odds input, cash/free-bet stake rules, actual credited returns, early payouts, full cash-outs, voids and latest-revision corrections.
+- Manual form records singles/accas; incomplete drafts can be explicitly saved/resumed. Open bets and legs can be edited. Settled financial terms are locked; correction reasons are required for settlement revisions.
+- Dashboard/history/details/settings, placement/settlement date filters, cash-only ROI, promotional P/L, monthly/cumulative P/L, exposure, grouped totals, bookmaker/source editing and bets/legs CSV export are implemented.
+- Migration creates owner-scoped tables, singleton private-account provisioning, seeded lists, RLS, transactional save/settlement/list RPCs and private Storage bucket policies. Supabase types are actually CLI-generated from the migration in disposable PostgreSQL.
+- Cookie-based Supabase clients, session-refresh proxy, private account checks, email-link login without user creation, callback and sign-out are implemented. No hosted Supabase project or real account has been configured/verified.
+- Explicit loopback-only development demo persists test data in `.local/ledger-data/demo.json`; no credentials needed. Demo is disabled in production/Vercel, and local data is excluded from server deployment traces.
+- Setup/environment/metric documentation lives in `docs/SETUP.md`, `.env.example`, and `docs/METRICS.md`.
 
-## Next development step
+## Verification actually performed
 
-Read the context documents and relevant installed Next.js guides, inspect the scaffold and check application dependencies against official documentation. Then establish the target folder structure, financial domain logic and the Supabase schema/access policies before wiring the manual workflow. pnpm setup is complete.
+- `pnpm install --frozen-lockfile` and `pnpm peers check`: passed.
+- Biome/Next route generation/TypeScript checks: passed.
+- Vitest: 19 financial, metrics, input/date and CSV checks passed.
+- PostgreSQL: 9 integration checks passed against the actual migration with stand-in Auth/Storage schemas. Covers owner isolation, path-based image isolation, concurrent/idempotent confirmation, duplicate warnings/override, atomic legs, void leg remaining open, corrections and stale settlement rejection.
+- Playwright: 4 checks passed across iPhone viewport Chromium and WebKit. Covers source editing, recording, settlement/correction, dashboard reconciliation, CSV download and saved draft/acca flow.
+- WebKit initially lacked Linux libraries. For this environment only, standard Ubuntu packages were extracted under ignored `.local/browser-libs` and linked into the user's Playwright cache; the successful run used `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1` because libraries are not registered in the system loader cache. Browsers actually launched and completed tests. Normal setup is `playwright install --with-deps`.
+- Production build passed. Inspected 15 server trace files and confirmed none contain `.local` data.
+- T3 native preview opened and page text/layout dimensions were inspected via preview evaluation. Snapshot calls failed in the preview tooling. Browser tests do not count as actual iPhone Safari verification.
+
+## Next steps
+
+1. Configure development Supabase project, email user and singleton account using `docs/SETUP.md`; verify live email links, session persistence, RPCs and RLS. No runtime service-role key is required.
+2. Implement private attachments and screenshot import: direct uploads, deletion independent of bets, persistent import drafts, extraction adapter/route, hash/reference warnings, retry and idempotent confirmation.
+3. Add CI checks; compare image models with supplied sample slips when available.
+4. Verify real image isolation, actual iPhone Safari uploads/core flows and Home Screen installation. Configure separate production Supabase/Vercel environments before deployment readiness.
 
 ## Delivery checklist
 
-- [ ] Scaffold inspection, Next.js guide review and dependency verification.
-- [ ] pnpm lockfile, strict TypeScript, shadcn/ui and project structure.
-- [ ] Schema migrations, owner RLS, private storage policies and generated database types.
-- [ ] Email-link authentication, single-account provisioning and disabled public registration.
-- [ ] Financial logic, settlement correction model and Vitest coverage.
-- [ ] Editable bookmaker/source lists and required seeds.
-- [ ] Mobile/desktop shell, manual drafts, singles/accas, editing and settlement.
-- [ ] Dashboard, filters, metric definitions, bet details and CSV exports.
-- [ ] Private attachments, deletion, import drafts, extraction, warnings and idempotent confirmation.
-- [ ] Mocked integration checks and Playwright recording/settlement flow.
-- [ ] Type checking, lint, tests and production build.
-- [ ] Setup/deployment guide and environment examples; preview/production separation.
-- [ ] Live Supabase authentication, database and storage isolation verification.
-- [ ] Sample-slip model comparison and live extraction verification.
-- [ ] Actual iPhone Safari uploads/core interactions and Home Screen verification.
+- [x] Scaffold inspection, guides and dependency compatibility checks.
+- [x] pnpm, strict TypeScript, Biome, shadcn/ui and project structure.
+- [x] Schema, RLS, Storage policy preparation and generated types.
+- [x] Email-link/session/authentication code; hosted provisioning remains outstanding.
+- [x] Financial logic, correction model and Vitest coverage.
+- [x] Editable lists and required seed data.
+- [x] Shell, explicitly saved manual drafts, singles/accas, editing and settlement.
+- [x] Dashboard, filters, metric definitions, bet details and CSV exports.
+- [ ] Attachment uploads/deletion/import drafts/extraction/retry/warnings.
+- [x] PostgreSQL integration and Playwright manual flow checks.
+- [x] Type checking, Biome checks and production build.
+- [x] Setup/deployment documentation and environment example.
+- [ ] CI automation.
+- [ ] Live Supabase authentication/database/Storage verification.
+- [ ] Sample-slip/model/extraction verification.
+- [ ] Actual iPhone Safari and Home Screen checks.
 - [ ] Vercel deployment and production verification.
 
 ## Handoff discipline
 
-Update this file at meaningful milestones/end of development sessions with what changed, checks actually run, failures/limitations and the next concrete step. Record new product decisions in `DECISIONS.md`; update `BUILD_BRIEF.md` when scope changes. Never store credentials or personal screenshot contents in these documents.
+Update this file at milestones with verified results and the next step. Record decisions in `DECISIONS.md`, scope changes in `BUILD_BRIEF.md`. Never store credentials or personal screenshots in these documents. This is a completed manual development milestone, not a deployment-ready first release.

@@ -1,3 +1,5 @@
 # Only the root application is included in this workspace.
 packages:
   - .
+minimumReleaseAgeExclude:
+  - zod@4.6.6

@@ -9,7 +9,7 @@
 - Whole void bets count as settled.
 - A voided acca leg does not settle the whole bet while remaining legs are active. “Lay” in the discussion meant remaining acca, not an exchange lay bet.
 - Acca calculations use accepted total odds or the actual credited return. Do not recalculate from leg odds.
-- The build brief is the agreed product scope. No application implementation has begun in this conversation.
+- The build brief is the agreed product scope. The foundation and first manual recording/settlement milestone have been implemented; screenshot import remains the next stage.
 
 ## Proposed implementation defaults
 
@@ -25,6 +25,17 @@ These were suggested during discussion, but were not separately confirmed. Resol
 ## Delivery sequence
 
 Suggested order: manual recording/settlement and analytics; screenshot import; release verification. This is sequencing, not a reduction of the first-release scope.
+
+## Implemented defaults
+
+- Private pages render per request. Removed the scaffold's Cache Components/partial-prefetch flags to keep authenticated reads straightforward; no shared user-data caching.
+- Manual incomplete drafts are explicitly saved through Save draft. Automatic draft saving is not implemented; imported draft persistence belongs to the import stage.
+- Settlement history is append-only and latest revision determines all metrics. Lock settled recorded terms; correct credited returns with a required explanation.
+- Bet IDs and confirmation-from-version identify repeated confirmation. RPCs serialize owner saves and check optimistic versions; settlement retries use request keys.
+- Date-filter and cash-only/promotional reporting semantics are defined in `METRICS.md`. Open exposure ignores the date range; other filters apply.
+- A local development-only, loopback demo enables manual testing without Supabase credentials. It is clearly labelled, stores test data separately and cannot run in production/Vercel. Production uses Supabase exclusively.
+- Confirmed Server Actions recheck the authenticated/provisioned owner. Database writes use transactional RPCs; authenticated users have read access through RLS and cannot directly mutate settlement history.
+- Generated types come from CLI introspection of actual migrated PostgreSQL; Auth/Storage fixture schemas were stand-ins and do not imply live service verification.
 
 ## Outstanding external inputs
 

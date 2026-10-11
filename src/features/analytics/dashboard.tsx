@@ -1,0 +1,267 @@
+import { ArrowUpRight, CircleCheck, Wallet } from "lucide-react";
+import Link from "next/link";
+import { PageHeading } from "@/components/page-heading";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BetList } from "@/features/bets/bet-list";
+import type { Ledger } from "@/features/bets/types";
+import { money } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { FilterForm } from "./filters";
+import { type Filters, matchesDimensions, metrics } from "./metrics";
+
+function ProfitChart({
+  series,
+}: {
+  series: ReturnType<typeof metrics>["series"];
+}) {
+  if (!series.length)
+    return (
+      <div className="flex h-40 items-center justify-center rounded-lg bg-muted/40 text-sm text-muted-foreground">
+        Your chart begins with your first settlement.
+      </div>
+    );
+  const points = [0, ...series.map((point) => point.value)];
+  const min = Math.min(...points),
+    max = Math.max(...points),
+    span = max - min || 100;
+  const x = (index: number) => 16 + (index / (points.length - 1)) * 668;
+  const y = (value: number) => 160 - ((value - min) / span) * 140;
+  return (
+    <div>
+      <svg
+        viewBox="0 0 700 180"
+        role="img"
+        aria-labelledby="profit-chart-title"
+        className="w-full"
+      >
+        <title id="profit-chart-title">{`Cumulative settled cash profit: ${money(series.at(-1)?.value ?? 0)} across ${series.length} settlements`}</title>
+        <line
+          x1="16"
+          x2="684"
+          y1={y(0)}
+          y2={y(0)}
+          stroke="currentColor"
+          className="text-border"
+          strokeDasharray="4 4"
+        />
+        <polyline
+          points={points
+            .map((value, index) => `${x(index)},${y(value)}`)
+            .join(" ")}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinejoin="round"
+          className="text-primary"
+        />
+      </svg>
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>Start: £0</span>
+        <span>{money(series.at(-1)?.value ?? 0)}</span>
+      </div>
+    </div>
+  );
+}
+export function Dashboard({
+  ledger,
+  filters,
+}: {
+  ledger: Ledger;
+  filters: Filters;
+}) {
+  const totals = metrics(ledger.bets, filters);
+  return (
+    <>
+      <PageHeading
+        eyebrow="Overview"
+        title="Your betting, at a glance"
+        description="Actual returns. Clear totals. Keep track of what’s settled and what’s still in play."
+      />
+      <FilterForm
+        ledger={ledger}
+        filters={filters}
+        dateLabel="Settlement dates · Europe/London"
+      />
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[
+          {
+            label: "Settled cash P/L",
+            value: money(totals.profit),
+            note: "Credited returns minus cash stakes",
+            icon: ArrowUpRight,
+          },
+          {
+            label: "Settled bets",
+            value: String(totals.settledCount),
+            note: `${money(totals.cashStakes)} settled cash stakes`,
+            icon: CircleCheck,
+          },
+          {
+            label: "Open cash exposure",
+            value: money(totals.openExposure),
+            note: "All placement dates · other filters apply",
+            icon: Wallet,
+          },
+        ].map((item, index) => (
+          <Card
+            key={item.label}
+            className={
+              index === 0
+                ? "border-primary/20 bg-primary text-primary-foreground"
+                : ""
+            }
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <p
+                  className={cn(
+                    "text-xs font-medium",
+                    index === 0
+                      ? "text-primary-foreground/80"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {item.label}
+                </p>
+                <item.icon className="size-4 opacity-60" />
+              </div>
+              <p className="mt-5 text-3xl font-semibold tracking-tight tabular-nums">
+                {item.value}
+              </p>
+              <p className="mt-3 text-xs opacity-75">{item.note}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div className="mt-5 grid gap-5 lg:grid-cols-[1.6fr_1fr]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Cumulative cash P/L</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Settlement date · selected period starts at zero
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ProfitChart series={totals.series} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance breakdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="space-y-4 text-sm">
+              {[
+                ["Cash-only P/L", money(totals.cashOnlyProfit)],
+                [
+                  "Cash-only ROI",
+                  totals.cashOnlyRoi === null
+                    ? "—"
+                    : `${totals.cashOnlyRoi.toFixed(1)}%`,
+                ],
+                ["Free/mixed-funded cash P/L", money(totals.promotionalProfit)],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="font-medium tabular-nums">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-6 text-xs leading-5 text-muted-foreground">
+              Cash-only ROI excludes bets with free-bet funding. The two P/L
+              categories add up to your total.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="mt-5 grid gap-5 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly P/L</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {totals.monthly.length ? (
+              <dl className="space-y-3">
+                {totals.monthly.map(([month, value]) => (
+                  <div className="flex justify-between text-sm" key={month}>
+                    <dt>{month}</dt>
+                    <dd className="font-medium tabular-nums">{money(value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No settled bets in this period.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        {(
+          [
+            ["bookmakers", "By bookmaker"],
+            ["sources", "By source"],
+          ] as const
+        ).map(([kind, title]) => (
+          <Card key={kind}>
+            <CardHeader>
+              <CardTitle>{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-3">
+                {ledger[kind]
+                  .filter((option) =>
+                    ledger.bets.some(
+                      (bet) =>
+                        (kind === "bookmakers"
+                          ? bet.bookmakerId
+                          : bet.sourceId) === option.id,
+                    ),
+                  )
+                  .map((option) => {
+                    const grouped = metrics(
+                      ledger.bets.filter(
+                        (bet) =>
+                          (kind === "bookmakers"
+                            ? bet.bookmakerId
+                            : bet.sourceId) === option.id,
+                      ),
+                      filters,
+                    );
+                    return (
+                      <div
+                        className="flex justify-between gap-3 text-sm"
+                        key={option.id}
+                      >
+                        <dt className="text-muted-foreground">{option.name}</dt>
+                        <dd className="font-medium tabular-nums">
+                          {money(grouped.profit)}
+                        </dd>
+                      </div>
+                    );
+                  })}
+              </dl>
+              {!ledger.bets.length && (
+                <p className="text-sm text-muted-foreground">
+                  Your settled totals will appear here.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div className="mt-8 mb-4 flex justify-between">
+        <h2 className="font-semibold">Recent bets · all placement dates</h2>
+        <Link href="/bets" className="text-sm text-primary hover:underline">
+          View all →
+        </Link>
+      </div>
+      <BetList
+        bets={ledger.bets
+          .filter((bet) => matchesDimensions(bet, filters))
+          .sort((a, b) => b.placedAt.localeCompare(a.placedAt))
+          .slice(0, 5)}
+        ledger={ledger}
+      />
+    </>
+  );
+}
