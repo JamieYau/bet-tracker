@@ -96,7 +96,7 @@ export function ProfitChart({
             }
           />
           <Line
-            type="stepAfter"
+            type="linear"
             dataKey="value"
             stroke="var(--color-value)"
             strokeWidth={2}

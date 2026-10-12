@@ -77,6 +77,11 @@ Last updated: 2026-10-12.
 - Final verification passed: Biome/TypeScript, 19 unit tests, all 18 Chromium/WebKit E2E tests, peers and production build. Chart tests cover one settlement/losses, baseline, equal timestamps, exact GBP/London keyboard tooltip, corrected totals/counts and settlement-date exclusion. Settings-only tests were rerun after adding the 320px regression assertion.
 - T3 preview inspected the actual chart and measured no horizontal overflow or navigation geometry changes on four routes at 320/390/768/1280px. Database integration was not rerun for these UI changes. Actual iPhone Safari, live Supabase and Vercel remain outstanding.
 
+## Profit chart line style (2026-10-12)
+
+- At the user’s request, changed the step line to linear segments: the £0 start connects diagonally to the first result. Settlement points, totals, baseline and tooltips are unchanged.
+- T3 preview confirmed a single diagonal SVG segment for the one-settlement demo. `pnpm check`, both Chromium/WebKit chart checks and production build passed. No financial/database changes.
+
 ## Next steps
 
 All four planned shadcn conversions are complete on `feature/shadcn-components`; the branch is ready for review/merge. Optional Input Group polish is deferred. The next product work is Supabase setup and private attachments/import; service and release checks below remain outstanding.
