@@ -87,7 +87,7 @@ Last updated: 2026-10-12.
 - Reviewed the full conversion against origin/main. All four planned batches are implemented; financial logic, metrics, actions, migrations and access policies are unchanged. Optional refinements remain deferred.
 - Applied the same hydration/pending guard to Settings controlled fields as recording/settlement, preventing pre-hydration edits from being overwritten. A new browser test holds JavaScript loading, checks disabled fields/checkbox/submit, releases scripts and verifies a source saves.
 - Final checks passed: `pnpm check`, 19 unit tests, all 20 mobile Chromium/WebKit E2E checks, peer compatibility and production build. Database integration and actual iPhone/hosted services were not reverified.
-- Branch is ready for a draft PR and final review/merge. This completes development of the shadcn conversion; Supabase setup and private screenshot import remain the next product work.
+- [Draft PR #1](https://github.com/JamieYau/bet-tracker/pull/1) is open for final review/merge and linked to the T3 thread. This completes development of the shadcn conversion; Supabase setup and private screenshot import remain the next product work.
 
 ## Next steps
 
