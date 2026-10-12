@@ -40,9 +40,16 @@ Last updated: 2026-10-12.
 - Production build passed. Inspected 15 server trace files and confirmed none contain `.local` data.
 - T3 native preview opened and page text/layout dimensions were inspected via preview evaluation. Snapshot calls failed in the preview tooling. Browser tests do not count as actual iPhone Safari verification.
 
+## shadcn form conversion (2026-10-12)
+
+- Implemented review Batch 1: Field/FieldLabel/FieldDescription/FieldError, FieldSet/FieldLegend, Native Select and Checkbox across recording, settlement, login, settings and filters. Deleted the custom Field/select styling. Form-wide failures/configuration notices use the existing Alert.
+- Preserved native mobile selects/date controls, GET filters, hidden payloads, submit intents, draft readiness/pending guard and checkbox `on` contracts. Added explicit labels/descriptions/error associations; Me stays immutable and early payout clears for non-Won outcomes.
+- Verification: `pnpm check`, 19 unit tests, all 12 mobile Chromium/WebKit E2E checks, and production build passed. Reran all eight new form E2E checks after the final checkbox label-ID change. Tests cover checked/unchecked free-bet funding, early payout/correction, duplicate override, field errors, source archiving/reactivation and the existing draft/acca/CSV flow.
+- T3 native preview: measured unchanged navigation geometry and no horizontal overflow across Dashboard/Bets/Add Bet/Settings at 320, 390, 768 and 1280px. Database integration tests were not rerun for this UI-only change; earlier nine PostgreSQL checks remain the last database verification. No hosted services or actual iPhone Safari were verified.
+
 ## Next steps
 
-The next UI conversion work should follow `SHADCN_REVIEW.md`, starting with the form primitives. The service/import/release steps below remain outstanding.
+The next UI conversion work should follow `SHADCN_REVIEW.md`, Batch 2: Empty, Item, Spinner and CardDescription. Batch 1 forms are complete. The service/import/release steps below remain outstanding.
 
 1. Configure development Supabase project, email user and singleton account using `docs/SETUP.md`; verify live email links, session persistence, RPCs and RLS. No runtime service-role key is required.
 2. Implement private attachments and screenshot import: direct uploads, deletion independent of bets, persistent import drafts, extraction adapter/route, hash/reference warnings, retry and idempotent confirmation.

@@ -1,14 +1,16 @@
 "use client";
 import { useActionState } from "react";
-import { Field } from "@/components/form-field";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { loginAction } from "./actions";
 export function LoginForm() {
   const [state, action, pending] = useActionState(loginAction, {});
   return (
     <form action={action} className="space-y-5">
-      <Field id="email" label="Your email">
+      <Field>
+        <FieldLabel htmlFor="email">Your email</FieldLabel>
         <Input
           className="h-11 text-base"
           id="email"
@@ -22,9 +24,9 @@ export function LoginForm() {
         {pending ? "Sending…" : "Email me a sign-in link"}
       </Button>
       {state.error && (
-        <p role="alert" className="text-sm text-destructive">
-          {state.error}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
       )}
       {state.success && (
         <p role="status" className="text-sm text-primary">

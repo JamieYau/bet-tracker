@@ -28,9 +28,11 @@ Suggested order: manual recording/settlement and analytics; screenshot import; r
 
 ## UI consistency review
 
-- The user requested a review of shadcn equivalents before conversion. Recommendations and file-level conversion batches are recorded in [SHADCN_REVIEW.md](SHADCN_REVIEW.md); they are not yet implemented.
+- The user requested a review of shadcn equivalents before conversion. Recommendations and file-level conversion batches are recorded in [SHADCN_REVIEW.md](SHADCN_REVIEW.md); Batch 1 (forms) is now implemented; remaining batches are queued.
 - Prefer the existing Base UI/base-nova family for appropriate primitives. Prioritise Field, Native Select and Checkbox, then empty/list/loading presentation. Filter and chart conversions need separate client-boundary checks.
 - Preserve the fixed route navigation, native date/time controls, Server Actions and financial definitions. Using shadcn consistently does not require replacing every semantic HTML element or adding a new form library.
+
+- Form conversion uses direct Field composition with the existing Server Actions; no form library was added. Native Select keeps browser/mobile selection with 44px controls and 16px text. Checkbox named values remain `on`; free-stake-returned stays in the hidden editor payload. Stable label IDs support checkbox accessibility before and after hydration.
 
 ## Implemented defaults
 

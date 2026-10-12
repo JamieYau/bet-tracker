@@ -1,8 +1,19 @@
 "use client";
 import { useActionState, useState } from "react";
-import { Field, selectClass } from "@/components/form-field";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { settlementAction } from "@/features/bets/actions";
 import type { Bet, Outcome } from "@/features/bets/types";
@@ -41,9 +52,13 @@ export function SettlementForm({
       <input type="hidden" name="version" value={bet.version} />
       <input type="hidden" name="requestKey" value={requestKey} />
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="outcome" label="Outcome">
-          <select
-            className={selectClass}
+        <Field data-invalid={Boolean(state.errors?.outcome?.length)}>
+          <FieldLabel htmlFor="outcome">Outcome</FieldLabel>
+          <NativeSelect
+            aria-invalid={Boolean(state.errors?.outcome)}
+            aria-describedby={
+              state.errors?.outcome ? "outcome-error" : undefined
+            }
             id="outcome"
             name="outcome"
             value={outcome}
@@ -55,18 +70,27 @@ export function SettlementForm({
             }}
           >
             {OUTCOMES.map((value) => (
-              <option key={value} value={value}>
+              <NativeSelectOption key={value} value={value}>
                 {outcomeLabel(value)}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
+          <FieldError id="outcome-error">
+            {state.errors?.outcome?.join(" ")}
+          </FieldError>
         </Field>
-        <Field
-          id="return"
-          label="Actual credited cash return (£)"
-          hint="Prefilled for ordinary results. Override with the amount the bookmaker credited."
-        >
+        <Field data-invalid={Boolean(state.errors?.returnPence?.length)}>
+          <FieldLabel htmlFor="return">
+            Actual credited cash return (£)
+          </FieldLabel>
           <Input
+            aria-invalid={Boolean(state.errors?.returnPence)}
+            aria-describedby={[
+              "return-hint",
+              state.errors?.returnPence?.length ? "return-error" : undefined,
+            ]
+              .filter(Boolean)
+              .join(" ")}
             className="h-11 text-base"
             id="return"
             name="return"
@@ -75,13 +99,24 @@ export function SettlementForm({
             value={credited}
             onChange={(event) => setCredited(event.target.value)}
           />
+          <FieldDescription id="return-hint">
+            Prefilled for ordinary results. Override with the amount the
+            bookmaker credited.
+          </FieldDescription>
+          <FieldError id="return-error">
+            {state.errors?.returnPence?.join(" ")}
+          </FieldError>
         </Field>
-        <Field
-          id="settledAt"
-          label="Settlement time"
-          hint="Europe/London · used for profit charts"
-        >
+        <Field data-invalid={Boolean(state.errors?.settledAt?.length)}>
+          <FieldLabel htmlFor="settledAt">Settlement time</FieldLabel>
           <Input
+            aria-invalid={Boolean(state.errors?.settledAt)}
+            aria-describedby={[
+              "settledAt-hint",
+              state.errors?.settledAt?.length ? "settledAt-error" : undefined,
+            ]
+              .filter(Boolean)
+              .join(" ")}
             className="h-11 text-base"
             id="settledAt"
             name="settledAt"
@@ -90,36 +125,57 @@ export function SettlementForm({
             value={date}
             onChange={(event) => setDate(event.target.value)}
           />
+          <FieldDescription id="settledAt-hint">
+            Europe/London · used for profit charts
+          </FieldDescription>
+          <FieldError id="settledAt-error">
+            {state.errors?.settledAt?.join(" ")}
+          </FieldError>
         </Field>
-        <label className="flex min-h-11 items-center gap-3 self-end text-sm">
-          <input
-            className="size-5 accent-primary"
-            type="checkbox"
+        <Field
+          orientation="horizontal"
+          className="min-h-11 self-end"
+          data-disabled={outcome !== "won"}
+        >
+          <Checkbox
+            id="earlyPayout"
+            aria-labelledby="earlyPayout-label"
             name="earlyPayout"
-            disabled={outcome !== "won"}
+            value="on"
+            disabled={outcome !== "won" || pending}
             checked={early}
-            onChange={(event) => setEarly(event.target.checked)}
+            onCheckedChange={setEarly}
           />
-          Early payout
-        </label>
+          <FieldLabel
+            id="earlyPayout-label"
+            htmlFor="earlyPayout"
+            className="min-h-11"
+          >
+            Early payout
+          </FieldLabel>
+        </Field>
       </div>
-      <Field
-        id="reason"
-        label={previous ? "Correction reason" : "Settlement note (optional)"}
-      >
+      <Field data-invalid={Boolean(state.errors?.reason?.length)}>
+        <FieldLabel htmlFor="reason">
+          {previous ? "Correction reason" : "Settlement note (optional)"}
+        </FieldLabel>
         <Textarea
+          aria-invalid={Boolean(state.errors?.reason)}
+          aria-describedby={state.errors?.reason ? "reason-error" : undefined}
           id="reason"
           name="reason"
           required={Boolean(previous)}
           value={reason}
           onChange={(event) => setReason(event.target.value)}
         />
+        <FieldError id="reason-error">
+          {state.errors?.reason?.join(" ")}
+        </FieldError>
       </Field>
       {state.error && (
-        <p role="alert" className="text-sm text-destructive">
-          {state.error}{" "}
-          {state.errors && Object.values(state.errors).flat().join(" ")}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
       )}
       <Button type="submit" className="h-11" disabled={pending}>
         {pending ? "Saving…" : previous ? "Save correction" : "Settle bet"}

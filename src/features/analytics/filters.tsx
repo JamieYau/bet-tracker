@@ -1,7 +1,11 @@
 import { z } from "zod";
-import { Field, selectClass } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import type { Ledger } from "@/features/bets/types";
 import type { Filters } from "./metrics";
 
@@ -58,7 +62,8 @@ export function FilterForm({
         </span>
       </summary>
       <form className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Field id="from" label="From">
+        <Field>
+          <FieldLabel htmlFor="from">From</FieldLabel>
           <Input
             className="h-11"
             id="from"
@@ -67,7 +72,8 @@ export function FilterForm({
             defaultValue={filters.from}
           />
         </Field>
-        <Field id="to" label="To (inclusive)">
+        <Field>
+          <FieldLabel htmlFor="to">To (inclusive)</FieldLabel>
           <Input
             className="h-11"
             id="to"
@@ -82,55 +88,47 @@ export function FilterForm({
             ["source", "Source", ledger.sources],
           ] as const
         ).map(([key, label, options]) => (
-          <Field key={key} id={key} label={label}>
-            <select
-              className={selectClass}
-              name={key}
-              id={key}
-              defaultValue={filters[key] ?? ""}
-            >
-              <option value="">All</option>
+          <Field key={key}>
+            <FieldLabel htmlFor={key}>{label}</FieldLabel>
+            <NativeSelect name={key} id={key} defaultValue={filters[key] ?? ""}>
+              <NativeSelectOption value="">All</NativeSelectOption>
               {options.map((option) => (
-                <option key={option.id} value={option.id}>
+                <NativeSelectOption key={option.id} value={option.id}>
                   {option.name}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </Field>
         ))}
-        <Field id="sport" label="Sport">
-          <select
-            className={selectClass}
+        <Field>
+          <FieldLabel htmlFor="sport">Sport</FieldLabel>
+          <NativeSelect
             name="sport"
             id="sport"
             defaultValue={filters.sport ?? ""}
           >
-            <option value="">All sports</option>
+            <NativeSelectOption value="">All sports</NativeSelectOption>
             {sports.map((sport) => (
-              <option key={sport}>{sport}</option>
+              <NativeSelectOption key={sport}>{sport}</NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
-        <Field id="type" label="Bet type">
-          <select
-            className={selectClass}
-            id="type"
-            name="type"
-            defaultValue={filters.type ?? ""}
-          >
-            <option value="">All types</option>
-            <option value="single">Single</option>
-            <option value="acca">Acca</option>
-          </select>
+        <Field>
+          <FieldLabel htmlFor="type">Bet type</FieldLabel>
+          <NativeSelect id="type" name="type" defaultValue={filters.type ?? ""}>
+            <NativeSelectOption value="">All types</NativeSelectOption>
+            <NativeSelectOption value="single">Single</NativeSelectOption>
+            <NativeSelectOption value="acca">Acca</NativeSelectOption>
+          </NativeSelect>
         </Field>
-        <Field id="status" label="Status">
-          <select
-            className={selectClass}
+        <Field>
+          <FieldLabel htmlFor="status">Status</FieldLabel>
+          <NativeSelect
             id="status"
             name="status"
             defaultValue={filters.status ?? ""}
           >
-            <option value="">All statuses</option>
+            <NativeSelectOption value="">All statuses</NativeSelectOption>
             {[
               ["draft", "Draft"],
               ["open", "Open"],
@@ -140,11 +138,11 @@ export function FilterForm({
               ["void", "Void"],
               ["cash_out", "Full cash-out"],
             ].map(([value, label]) => (
-              <option key={value} value={value}>
+              <NativeSelectOption key={value} value={value}>
                 {label}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Button type="submit" className="h-11 self-end">
           Apply filters

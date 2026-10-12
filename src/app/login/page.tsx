@@ -1,5 +1,6 @@
 import { Wallet } from "lucide-react";
 import Link from "next/link";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/features/auth/login-form";
 import { hasSupabase, isDemo } from "@/lib/config";
@@ -21,17 +22,21 @@ export default async function LoginPage({
         </CardHeader>
         <CardContent className="space-y-5">
           {!hasSupabase() && (
-            <p className="rounded-lg bg-secondary p-4 text-sm">
-              Private login is awaiting Supabase setup. See the repository setup
-              guide.
-            </p>
+            <Alert>
+              <AlertDescription>
+                Private login is awaiting Supabase setup. See the repository
+                setup guide.
+              </AlertDescription>
+            </Alert>
           )}
           {error && (
-            <p role="alert" className="text-sm text-destructive">
-              {error === "access"
-                ? "This account is not provisioned for this app."
-                : "That link has expired or could not be verified. Request a new link."}
-            </p>
+            <Alert variant="destructive">
+              <AlertDescription>
+                {error === "access"
+                  ? "This account is not provisioned for this app."
+                  : "That link has expired or could not be verified. Request a new link."}
+              </AlertDescription>
+            </Alert>
           )}
           <LoginForm />
           {isDemo() && (

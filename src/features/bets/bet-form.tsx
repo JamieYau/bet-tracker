@@ -1,11 +1,23 @@
 "use client";
 import { Plus, Trash2 } from "lucide-react";
 import { useActionState, useState } from "react";
-import { Field, selectClass } from "@/components/form-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { londonInput } from "@/lib/format";
 import { useClientReady } from "@/lib/use-client-ready";
@@ -56,18 +68,32 @@ export function BetForm({
       previous.map((leg) => (leg.id === id ? { ...leg, [key]: value } : leg)),
     );
   }
-  const input = (key: keyof typeof values, label: string, hint?: string) => (
-    <Field id={key} label={label} hint={hint} error={state.errors?.[key]}>
-      <Input
-        id={key}
-        className="h-11 text-base"
-        value={String(values[key])}
-        onChange={(event) => text(key, event.target.value)}
-        aria-invalid={Boolean(state.errors?.[key])}
-        aria-describedby={hint ? `${key}-hint` : undefined}
-      />
-    </Field>
-  );
+  const input = (key: keyof typeof values, label: string, hint?: string) => {
+    const errors = state.errors?.[key === "tagsText" ? "tags" : key];
+    return (
+      <Field data-invalid={Boolean(errors?.length)}>
+        <FieldLabel htmlFor={key}>{label}</FieldLabel>
+        <Input
+          aria-invalid={Boolean(errors?.length)}
+          aria-describedby={
+            [
+              hint ? `${key}-hint` : undefined,
+              errors?.length ? `${key}-error` : undefined,
+            ]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
+          id={key}
+          className="h-11 text-base"
+          value={String(values[key])}
+          onChange={(event) => text(key, event.target.value)}
+        />
+
+        {hint && <FieldDescription id={`${key}-hint`}>{hint}</FieldDescription>}
+        <FieldError id={`${key}-error`}>{errors?.join(" ")}</FieldError>
+      </Field>
+    );
+  };
   const payload = {
     ...values,
     legs:
@@ -95,10 +121,16 @@ export function BetForm({
             <CardTitle>Bet details</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 sm:grid-cols-2">
-            <Field id="bookmakerId" label="Bookmaker">
-              <select
+            <Field data-invalid={Boolean(state.errors?.bookmakerId?.length)}>
+              <FieldLabel htmlFor="bookmakerId">Bookmaker</FieldLabel>
+              <NativeSelect
+                aria-invalid={Boolean(state.errors?.bookmakerId?.length)}
+                aria-describedby={
+                  state.errors?.bookmakerId?.length
+                    ? "bookmakerId-error"
+                    : undefined
+                }
                 id="bookmakerId"
-                className={selectClass}
                 value={values.bookmakerId}
                 onChange={(event) => text("bookmakerId", event.target.value)}
               >
@@ -107,21 +139,27 @@ export function BetForm({
                     (option) => option.active || option.id === bet?.bookmakerId,
                   )
                   .map((option) => (
-                    <option key={option.id} value={option.id}>
+                    <NativeSelectOption key={option.id} value={option.id}>
                       {option.name}
                       {!option.active ? " (archived)" : ""}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-              </select>
+              </NativeSelect>
+              <FieldError id="bookmakerId-error">
+                {state.errors?.bookmakerId?.join(" ")}
+              </FieldError>
             </Field>
-            <Field
-              id="sourceId"
-              label="Source"
-              hint="One source for the whole bet. Choose Me for mixed-source accas."
-            >
-              <select
+            <Field data-invalid={Boolean(state.errors?.sourceId?.length)}>
+              <FieldLabel htmlFor="sourceId">Source</FieldLabel>
+              <NativeSelect
+                aria-invalid={Boolean(state.errors?.sourceId?.length)}
+                aria-describedby={[
+                  "sourceId-hint",
+                  state.errors?.sourceId?.length ? "sourceId-error" : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 id="sourceId"
-                className={selectClass}
                 value={values.sourceId}
                 onChange={(event) => text("sourceId", event.target.value)}
               >
@@ -130,40 +168,61 @@ export function BetForm({
                     (option) => option.active || option.id === bet?.sourceId,
                   )
                   .map((option) => (
-                    <option key={option.id} value={option.id}>
+                    <NativeSelectOption key={option.id} value={option.id}>
                       {option.name}
                       {!option.active ? " (archived)" : ""}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-              </select>
+              </NativeSelect>
+              <FieldDescription id="sourceId-hint">
+                One source for the whole bet. Choose Me for mixed-source accas.
+              </FieldDescription>
+              <FieldError id="sourceId-error">
+                {state.errors?.sourceId?.join(" ")}
+              </FieldError>
             </Field>
-            <Field
-              id="placedAt"
-              label="Placement time"
-              hint={
-                bet
-                  ? "Europe/London"
-                  : "Defaults to now · Europe/London. Change it if you placed the bet earlier."
-              }
-            >
+            <Field data-invalid={Boolean(state.errors?.placedAt?.length)}>
+              <FieldLabel htmlFor="placedAt">Placement time</FieldLabel>
               <Input
+                aria-invalid={Boolean(state.errors?.placedAt?.length)}
+                aria-describedby={[
+                  "placedAt-hint",
+                  state.errors?.placedAt?.length ? "placedAt-error" : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 id="placedAt"
                 type="datetime-local"
                 className="h-11 text-base"
                 value={values.placedAt}
                 onChange={(event) => text("placedAt", event.target.value)}
               />
+              <FieldDescription id="placedAt-hint">
+                {bet
+                  ? "Europe/London"
+                  : "Defaults to now · Europe/London. Change it if you placed the bet earlier."}
+              </FieldDescription>
+              <FieldError id="placedAt-error">
+                {state.errors?.placedAt?.join(" ")}
+              </FieldError>
             </Field>
-            <Field id="betType" label="Bet type">
-              <select
+            <Field data-invalid={Boolean(state.errors?.betType?.length)}>
+              <FieldLabel htmlFor="betType">Bet type</FieldLabel>
+              <NativeSelect
+                aria-invalid={Boolean(state.errors?.betType?.length)}
+                aria-describedby={
+                  state.errors?.betType?.length ? "betType-error" : undefined
+                }
                 id="betType"
-                className={selectClass}
                 value={values.betType}
                 onChange={(event) => text("betType", event.target.value)}
               >
-                <option value="single">Single</option>
-                <option value="acca">Acca</option>
-              </select>
+                <NativeSelectOption value="single">Single</NativeSelectOption>
+                <NativeSelectOption value="acca">Acca</NativeSelectOption>
+              </NativeSelect>
+              <FieldError id="betType-error">
+                {state.errors?.betType?.join(" ")}
+              </FieldError>
             </Field>
             {input(
               "sport",
@@ -193,10 +252,10 @@ export function BetForm({
             </CardHeader>
             <CardContent className="space-y-5">
               {legs.map((leg, index) => (
-                <fieldset key={leg.id} className="rounded-lg border p-4">
-                  <legend className="px-2 text-sm font-medium">
+                <FieldSet key={leg.id} className="rounded-lg border p-4">
+                  <FieldLegend className="px-2 text-sm font-medium">
                     Leg {index + 1}
-                  </legend>
+                  </FieldLegend>
                   <div className="grid gap-4 sm:grid-cols-2">
                     {(
                       [
@@ -206,7 +265,10 @@ export function BetForm({
                         ["odds", "Leg odds (optional)"],
                       ] as const
                     ).map(([key, label]) => (
-                      <Field key={key} id={`${leg.id}-${key}`} label={label}>
+                      <Field key={key}>
+                        <FieldLabel htmlFor={`${leg.id}-${key}`}>
+                          {label}
+                        </FieldLabel>
                         <Input
                           className="h-11 text-base"
                           id={`${leg.id}-${key}`}
@@ -217,20 +279,28 @@ export function BetForm({
                         />
                       </Field>
                     ))}
-                    <Field id={`${leg.id}-status`} label="Leg status">
-                      <select
-                        className={selectClass}
+                    <Field>
+                      <FieldLabel htmlFor={`${leg.id}-status`}>
+                        Leg status
+                      </FieldLabel>
+                      <NativeSelect
                         id={`${leg.id}-status`}
                         value={leg.status}
                         onChange={(event) =>
                           legChange(leg.id, "status", event.target.value)
                         }
                       >
-                        <option value="open">Open</option>
-                        <option value="won">Won</option>
-                        <option value="lost">Lost</option>
-                        <option value="void">Void</option>
-                      </select>
+                        <NativeSelectOption value="open">
+                          Open
+                        </NativeSelectOption>
+                        <NativeSelectOption value="won">Won</NativeSelectOption>
+                        <NativeSelectOption value="lost">
+                          Lost
+                        </NativeSelectOption>
+                        <NativeSelectOption value="void">
+                          Void
+                        </NativeSelectOption>
+                      </NativeSelect>
                     </Field>
                     <Button
                       type="button"
@@ -246,7 +316,7 @@ export function BetForm({
                       Remove leg {index + 1}
                     </Button>
                   </div>
-                </fieldset>
+                </FieldSet>
               ))}
               <Button
                 type="button"
@@ -271,9 +341,7 @@ export function BetForm({
                 Add leg
               </Button>
               {state.errors?.legs && (
-                <p role="alert" className="text-sm text-destructive">
-                  {state.errors.legs.join(" ")}
-                </p>
+                <FieldError>{state.errors.legs.join(" ")}</FieldError>
               )}
             </CardContent>
           </Card>
@@ -291,11 +359,20 @@ export function BetForm({
             ).map(([key, label]) => (
               <Field
                 key={key}
-                id={key}
-                label={label}
-                error={state.errors?.[`${key}Pence`]}
+                data-invalid={Boolean(state.errors?.[`${key}Pence`]?.length)}
               >
+                <FieldLabel htmlFor={key}>{label}</FieldLabel>
                 <Input
+                  aria-invalid={Boolean(state.errors?.[`${key}Pence`]?.length)}
+                  aria-describedby={
+                    [
+                      state.errors?.[`${key}Pence`]?.length
+                        ? `${key}-error`
+                        : undefined,
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || undefined
+                  }
                   className="h-11 text-base"
                   id={key}
                   inputMode="decimal"
@@ -303,22 +380,32 @@ export function BetForm({
                   value={values[key]}
                   onChange={(event) => text(key, event.target.value)}
                 />
+                <FieldError id={`${key}-error`}>
+                  {state.errors?.[`${key}Pence`]?.join(" ")}
+                </FieldError>
               </Field>
             ))}
-            <label className="flex min-h-11 items-center gap-3 text-sm sm:col-span-2">
-              <input
-                className="size-5 accent-primary"
-                type="checkbox"
+            <Field orientation="horizontal" className="min-h-11 sm:col-span-2">
+              <Checkbox
+                id="freeStakeReturned"
+                aria-labelledby="freeStakeReturned-label"
+                disabled={!ready || pending}
                 checked={values.freeStakeReturned}
-                onChange={(event) =>
+                onCheckedChange={(checked) =>
                   setValues((previous) => ({
                     ...previous,
-                    freeStakeReturned: event.target.checked,
+                    freeStakeReturned: checked,
                   }))
                 }
               />
-              Free-bet stake is returned with winnings
-            </label>
+              <FieldLabel
+                id="freeStakeReturned-label"
+                htmlFor="freeStakeReturned"
+                className="min-h-11"
+              >
+                Free-bet stake is returned with winnings
+              </FieldLabel>
+            </Field>
           </CardContent>
         </Card>
         <Card>
@@ -333,12 +420,20 @@ export function BetForm({
               "Separate tags with commas, e.g. Boost, Welcome offer.",
             )}
             <div className="sm:col-span-2">
-              <Field id="notes" label="Notes">
+              <Field data-invalid={Boolean(state.errors?.notes?.length)}>
+                <FieldLabel htmlFor="notes">Notes</FieldLabel>
                 <Textarea
+                  aria-invalid={Boolean(state.errors?.notes?.length)}
+                  aria-describedby={
+                    state.errors?.notes?.length ? "notes-error" : undefined
+                  }
                   id="notes"
                   value={values.notes}
                   onChange={(event) => text("notes", event.target.value)}
                 />
+                <FieldError id="notes-error">
+                  {state.errors?.notes?.join(" ")}
+                </FieldError>
               </Field>
             </div>
           </CardContent>
@@ -351,14 +446,22 @@ export function BetForm({
             </AlertDescription>
           </Alert>
         )}
-        <label className="flex min-h-11 items-center gap-3 text-sm">
-          <input
-            type="checkbox"
+        <Field orientation="horizontal" className="min-h-11">
+          <Checkbox
+            id="allowDuplicate"
+            aria-labelledby="allowDuplicate-label"
             name="allowDuplicate"
-            className="size-5 accent-primary"
+            value="on"
+            disabled={!ready || pending}
           />
-          Record despite duplicate warning
-        </label>
+          <FieldLabel
+            id="allowDuplicate-label"
+            htmlFor="allowDuplicate"
+            className="min-h-11"
+          >
+            Record despite duplicate warning
+          </FieldLabel>
+        </Field>
         <div className="flex flex-wrap gap-3">
           <Button
             type="submit"

@@ -1,6 +1,6 @@
 # shadcn/ui conversion review
 
-Reviewed: 2026-10-12. Status: documentation/recommendations only; no components have been converted by this review.
+Reviewed: 2026-10-12. Status: Batch 1 (forms) implemented and verified; Batches 2–4 remain queued.
 
 Reviewed the current presentation code against official shadcn documentation. The project already uses the **Base UI / base-nova** family (`components.json`), so use that family consistently when installing components. This is a UI consistency pass within the existing build brief, not a change to financial rules or architecture.
 
@@ -44,12 +44,12 @@ Priority 1 should be the first conversion batch. Priority 2 follows after the fo
 
 ## Conversion sequence
 
-- [ ] **Batch 1 — forms:** install Field, Native Select and Checkbox; migrate bet/settlement/login/filter/settings controls; standardise field errors and form-wide Alerts. Remove the custom Field implementation and `selectClass` when unused.
+- [x] **Batch 1 — forms:** install Field, Native Select and Checkbox; migrate bet/settlement/login/filter/settings controls; standardise field errors and form-wide Alerts. Remove the custom Field implementation and `selectClass` when unused.
 - [ ] **Batch 2 — presentation:** install Empty, Item and Spinner; migrate empty states, list rows and pending buttons; reuse CardDescription and the existing error primitives.
 - [ ] **Batch 3 — filters:** install Collapsible, isolate `readFilters`/Zod parsing into a server-safe module, and migrate the filter presentation while retaining query-string behaviour.
 - [ ] **Batch 4 — charts:** install Chart and its compatible Recharts dependency, extract `profit-chart.tsx` as a client presentation component, and preserve the current metric definitions.
 
-These are recommendations queued for conversion. None of the checkboxes indicates completed implementation.
+Checked batches indicate verified implementation. Unchecked batches remain recommendations for later commits.
 
 ## Implementation and verification notes
 
@@ -61,6 +61,15 @@ These are recommendations queued for conversion. None of the checkboxes indicate
 6. Chart data must remain derived from `metrics.ts`: latest settlement revisions only, selected-period zero baseline, negative P/L support and whole-bet counting. Never recalculate profit in chart code or interpolate invented financial results.
 7. For each converted batch run `pnpm check`, relevant existing tests and a production build. Exercise keyboard focus, field labels/errors, draft save/resume, duplicate override, free-bet return checkbox, settlement correction, filtering and CSV downloads in the applicable browser flow.
 8. Recheck 320/390/768/1280-pixel layouts and the stable navigation geometry. Actual iPhone Safari verification remains a separate release requirement.
+
+## Batch 1 implementation (2026-10-12)
+
+- Installed Base UI/base-nova Field, Native Select and Checkbox through the existing shadcn CLI/configuration. Reused the existing Label and Separator without overwriting them; no dependency/lockfile change was required.
+- Converted bet, settlement, login, settings and filter fields. Removed `src/components/form-field.tsx` and `selectClass`. Acca legs use FieldSet/FieldLegend; the editor retains its outer native disabled fieldset.
+- Added associated FieldDescription/FieldError IDs, `aria-invalid` and stable checkbox label IDs. Request failures use Alert; settings success feedback stays inline.
+- Native Select defaults are adapted to this app: full width, 44px height and 16px text for mobile. Native date/time controls and GET filters remain. Checkbox labels have a 44px tap target.
+- Checked/unchecked values preserve Server Action contracts: named checkboxes submit `on` when checked; free-stake-returned stays in the editor payload. Me is disabled; non-Won outcomes clear and disable early payout.
+- Verification: Biome/type checking, 19 unit checks, 12 mobile Chromium/WebKit end-to-end checks, and a production build passed. The eight new form checks were rerun after adding explicit checkbox label IDs. T3 preview measured unchanged navigation dimensions and no horizontal overflow on all four screens at 320/390/768/1280px. Actual iPhone Safari and hosted Supabase remain unverified.
 
 ## Later feature work
 
