@@ -54,6 +54,11 @@ Last updated: 2026-10-12.
 - Verification: `pnpm check`, 19 unit tests, all 12 existing E2E checks and two new presentation checks passed in separate Playwright runs on mobile Chromium/WebKit. The new test pauses a POST to verify stable pending dimensions, visible spinner and disabled/busy state, then checks row navigation and filtered empty messages. Production build passed.
 - T3 preview measured no horizontal overflow, nested anchors or navigation dimension changes across Dashboard/Bets/Add Bet/Settings at 320/390/768/1280px. No database integration rerun was needed for this presentation change. Hosted Supabase and actual iPhone Safari remain unverified.
 
+## Pending label alignment correction (2026-10-12)
+
+- Removed the idle label's blank icon slot, which shifted text 12px to the right. Hidden pending content still reserves button width; idle text is centred and pending icon/text remain centred together.
+- Extended the presentation regression to measure text centring as well as pending dimensions. Both Chromium/WebKit checks passed, along with `pnpm check` and production build. T3 preview measured less than 0.01px idle-text offset at 390/1280px. No financial/database changes or live iPhone verification.
+
 ## Next steps
 
 The next UI conversion work should follow `SHADCN_REVIEW.md`, Batch 3: Collapsible and a server-safe filter parsing module. Batches 1–2 are complete; Chart/Recharts remains Batch 4. The service/import/release steps below remain outstanding.

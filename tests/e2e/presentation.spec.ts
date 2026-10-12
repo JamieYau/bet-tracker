@@ -7,6 +7,21 @@ test("saving keeps button dimensions and history rows remain links", async ({
   await page.goto("/add");
   await page.getByLabel("Selection", { exact: true }).fill(name);
   const save = page.getByRole("button", { name: "Save draft", exact: true });
+  // Measure the text itself: a blank icon slot can centre the group but offset the label.
+  for (const label of ["Confirm bet", "Save draft"]) {
+    const offset = await page
+      .getByRole("button", { name: label, exact: true })
+      .evaluate((button) => {
+        const idle = button.querySelector(".inline-grid")?.firstElementChild;
+        if (!idle?.lastChild) throw new Error("Missing idle button label");
+        const range = document.createRange();
+        range.selectNodeContents(idle.lastChild);
+        const text = range.getBoundingClientRect();
+        const bounds = button.getBoundingClientRect();
+        return Math.abs(text.x + text.width / 2 - bounds.x - bounds.width / 2);
+      });
+    expect(offset).toBeLessThan(1);
+  }
   const before = await save.boundingBox();
   let resume: () => void = () => {};
   const gate = new Promise<void>((resolve) => {

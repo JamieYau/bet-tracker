@@ -17,7 +17,6 @@ export function PendingLabel({
         className={`col-start-1 row-start-1 inline-flex items-center justify-center gap-2 ${pending ? "invisible" : ""}`}
         aria-hidden={pending || undefined}
       >
-        <span className="size-4 shrink-0" aria-hidden="true" />
         {children}
       </span>
       <span

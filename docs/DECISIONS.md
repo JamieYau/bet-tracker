@@ -33,7 +33,7 @@ Suggested order: manual recording/settlement and analytics; screenshot import; r
 - Preserve the fixed route navigation, native date/time controls, Server Actions and financial definitions. Using shadcn consistently does not require replacing every semantic HTML element or adding a new form library.
 - Form conversion uses direct Field composition with the existing Server Actions; no form library was added. Native Select keeps browser/mobile selection with 44px controls and 16px text. Checkbox named values remain `on`; free-stake-returned stays in the hidden editor payload. Stable label IDs support checkbox accessibility before and after hydration.
 
-- Presentation conversion uses Item's Base UI render composition with Next.js Link; history is a semantic ul, and detail list semantics/order are preserved. A shared PendingLabel reserves idle/pending widths and hides decorative Spinner announcements; busy state belongs to the submit button. Filtered empty messages differ from a new ledger.
+- Presentation conversion uses Item's Base UI render composition with Next.js Link; history is a semantic ul, and detail list semantics/order are preserved. A shared PendingLabel centres idle text without a blank icon slot, reserves idle/pending widths and hides decorative Spinner announcements; busy state belongs to the submit button. Filtered empty messages differ from a new ledger.
 
 ## Implemented defaults
 
