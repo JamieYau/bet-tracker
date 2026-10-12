@@ -26,6 +26,8 @@ export function AppShell({
   demo: boolean;
 }) {
   const pathname = usePathname();
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
   return (
     <div className="min-h-dvh">
       <a
@@ -50,18 +52,21 @@ export function AppShell({
               </span>
             </span>
           </Link>
-          <nav aria-label="Desktop navigation" className="hidden gap-2 md:flex">
+          <nav
+            aria-label="Desktop navigation"
+            className="hidden grid-cols-3 gap-2 md:grid"
+          >
             {items
               .filter((item) => item.href !== "/add")
               .map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  aria-current={pathname === item.href ? "page" : undefined}
+                  aria-current={isActive(item.href) ? "page" : undefined}
                   className={cn(
-                    "rounded-lg px-4 py-3 text-sm",
-                    pathname === item.href
-                      ? "bg-secondary font-medium"
+                    "flex h-11 w-28 items-center justify-center whitespace-nowrap rounded-lg px-4 text-sm font-medium",
+                    isActive(item.href)
+                      ? "bg-secondary"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -89,21 +94,18 @@ export function AppShell({
       </main>
       <nav
         aria-label="Mobile navigation"
-        className="fixed inset-x-0 bottom-0 z-30 flex justify-around border-t bg-card/95 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-card/95 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden"
       >
         {items.map((item) => {
-          const active =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href);
+          const active = isActive(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-h-12 min-w-16 flex-col items-center justify-center gap-1 rounded-lg px-3 text-[11px]",
-                active ? "font-semibold text-primary" : "text-muted-foreground",
+                "flex h-12 min-w-0 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-lg px-2 text-[11px] font-medium",
+                active ? "text-primary" : "text-muted-foreground",
               )}
             >
               <item.icon

@@ -40,6 +40,7 @@ Install the recommended Biome editor extension for format/fix on save. Commit `p
 - [Build brief](docs/BUILD_BRIEF.md)
 - [Decisions](docs/DECISIONS.md)
 - [Progress and next steps](docs/PROGRESS.md)
+- [shadcn component review and conversion plan](docs/SHADCN_REVIEW.md)
 - [Setup, testing and deployment](docs/SETUP.md)
 - [Metric definitions](docs/METRICS.md)
 

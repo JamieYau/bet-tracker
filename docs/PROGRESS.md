@@ -1,6 +1,21 @@
 # Progress and handoff
 
-Last updated: 2026-10-11.
+Last updated: 2026-10-12.
+
+## shadcn component review (2026-10-12)
+
+- Reviewed presentation modules and official shadcn Base UI documentation; recommendations are in [SHADCN_REVIEW.md](SHADCN_REVIEW.md).
+- Queued forms, empty/list/loading states, filter disclosure and chart presentation in four conversion batches, with exact files and accessibility/submission checks.
+- Documented components already in use and justified retained native/application-specific UI, including the navigation stability fix.
+- This task changes documentation only. No components/dependencies were installed or converted, and no runtime tests were run for the review.
+
+## Navigation stability fix (2026-10-12)
+
+- Reproduced mobile/desktop navigation shifts in the T3 collaborative browser: active font-weight changes resized links, and short/long routes changed scrollbar visibility and viewport width.
+- Mobile navigation now has four equal-width slots; desktop links have fixed dimensions. Active styling changes colour/background without changing font weight. Bets stays active on its detail/edit routes.
+- The root reserves vertical scrollbar space with `overflow-y-scroll`. Disabled the Next.js development badge because it intercepted the mobile Dashboard link at narrow widths; compile/runtime errors still surface.
+- Clicked Dashboard, Bets, Add bet and Settings at 320, 390, 768 and 1280 CSS-pixel widths. Measured zero changes in navigation width, link rectangles and mobile icon positions across routes at each width.
+- `pnpm check` (Biome and TypeScript) and `pnpm build` passed. These browser checks used desktop Chromium at resized viewports, not actual iPhone Safari.
 
 ## Completed manual milestone
 
@@ -26,6 +41,8 @@ Last updated: 2026-10-11.
 - T3 native preview opened and page text/layout dimensions were inspected via preview evaluation. Snapshot calls failed in the preview tooling. Browser tests do not count as actual iPhone Safari verification.
 
 ## Next steps
+
+The next UI conversion work should follow `SHADCN_REVIEW.md`, starting with the form primitives. The service/import/release steps below remain outstanding.
 
 1. Configure development Supabase project, email user and singleton account using `docs/SETUP.md`; verify live email links, session persistence, RPCs and RLS. No runtime service-role key is required.
 2. Implement private attachments and screenshot import: direct uploads, deletion independent of bets, persistent import drafts, extraction adapter/route, hash/reference warnings, retry and idempotent confirmation.

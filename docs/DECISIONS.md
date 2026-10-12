@@ -26,6 +26,12 @@ These were suggested during discussion, but were not separately confirmed. Resol
 
 Suggested order: manual recording/settlement and analytics; screenshot import; release verification. This is sequencing, not a reduction of the first-release scope.
 
+## UI consistency review
+
+- The user requested a review of shadcn equivalents before conversion. Recommendations and file-level conversion batches are recorded in [SHADCN_REVIEW.md](SHADCN_REVIEW.md); they are not yet implemented.
+- Prefer the existing Base UI/base-nova family for appropriate primitives. Prioritise Field, Native Select and Checkbox, then empty/list/loading presentation. Filter and chart conversions need separate client-boundary checks.
+- Preserve the fixed route navigation, native date/time controls, Server Actions and financial definitions. Using shadcn consistently does not require replacing every semantic HTML element or adding a new form library.
+
 ## Implemented defaults
 
 - Private pages render per request. Removed the scaffold's Cache Components/partial-prefetch flags to keep authenticated reads straightforward; no shared user-data caching.
