@@ -2,6 +2,34 @@
 
 Last updated: 2026-10-12.
 
+## Current direction — personal modular backend (2026-10-12)
+
+- The user approved the Neon PostgreSQL + Better Auth + Drizzle + private Cloudflare R2 approach for personal, single-owner use. Pricing/productisation work is outside the current scope.
+- The user confirmed initial Better Auth email/password login with one provisioned account with public signup disabled and operator-only recovery/session revocation. No email service is required for routine login; OAuth/passkeys are deferred options.
+- Updated the build brief, decisions and setup guide. Preserved the old Supabase instructions in `SETUP_SUPABASE_LEGACY.md` as existing-code reference.
+- The Drizzle/PostgreSQL foundation is now implemented and verified locally. Website routes still use Supabase; replacement auth/repository integration and hosted checks remain incomplete. Earlier historical test results below describe the Supabase/manual baseline.
+- Next task: Better Auth login/provisioning and the replacement repository/permissions, then live Neon verification and R2 attachments. Keep the existing financial/UI behaviour and concurrency guarantees.
+
+## Active branch scope — `feature/modular-backend`
+
+- Created from the local `main` checkout, carrying the uncommitted architecture/analytics documentation updates from this conversation.
+- Implement Better Auth email/password login, logout, session/owner checks, disabled public signup and operator-only owner provisioning/password recovery with session revocation.
+- Replace Supabase database access with Drizzle and a transaction-capable PostgreSQL connection suitable for Neon. Add reviewed migrations and preserve financial constraints, atomic saves, idempotency, optimistic versions and append-only settlement corrections.
+- Update environment examples, scripts and setup documentation; remove superseded Supabase runtime dependencies/integration after the replacement works. Preserve the loopback demo and personal data.
+- Verify local PostgreSQL authorization/concurrency, authenticated flows, the existing manual recording/settlement/CSV behaviour, type/lint checks, unit tests and production build. Live Neon checks depend on configured development credentials and must be recorded separately.
+- Completion means the existing manual tracker works on the replacement auth/database backend with repeatable setup and verified local checks. R2 uploads, screenshot extraction, social login, analytics refinements and deployment are later work.
+- First implementation commit covers the database foundation below; auth/repository cutover is next.
+
+## Modular database foundation (2026-10-12)
+
+- Added pinned stable Drizzle ORM/Kit, node-postgres runtime driver, Better Auth/Drizzle adapter dependencies and script tooling with the pnpm lockfile. Approved only esbuild installation scripts needed by the tools; peer checks pass.
+- Generated Better Auth core tables under `identity` using its pinned 1.7.7 CLI. Added typed ledger tables with bounded integer pence, string decimal odds, UTC ledger timestamps, singleton account/owner foreign keys, composite bet/list references, settlement request/revision uniqueness, correction reasons and attachment metadata constraints.
+- Added reviewed initial/custom migrations and the existing 13-bookmaker/Me provisioning seed trigger. No Supabase Auth/Storage schemas are required. Generated schema snapshots replay without further diffs.
+- Added a lazy server-only PostgreSQL entry point with a bounded reusable pool, generation/check commands and an operator migrator that requires separate `MIGRATION_DATABASE_URL`. Updated environment/setup docs; retained legacy website configuration because no routes have switched yet.
+- Verification: `pnpm check`, 19 unit tests, nine new replacement-schema integration checks and the nine existing Supabase-baseline integration checks passed. Integration checks used actual disposable local PostgreSQL, not a mock Neon service. New checks cover migration replay/seeds, singleton/unprovisioned-owner foreign keys, numeric/date round trips, constraints, auth-session foreign keys and rollback of a failed bet/leg transaction.
+- The migration command applied and replayed successfully against a separate disposable local database. `pnpm db:check`, schema generation with no changes, frozen-lockfile installation, peer compatibility and production build passed.
+- No live Neon, Better Auth HTTP login/provisioning, restricted runtime privileges, repository concurrency/idempotency, R2 or actual iPhone checks were performed for the replacement backend. Existing browser E2E checks were not rerun: this commit adds no route/UI integration. The website and demo retain their existing backend behaviour.
+
 ## shadcn component review (2026-10-12)
 
 - Reviewed presentation modules and official shadcn Base UI documentation; recommendations are in [SHADCN_REVIEW.md](SHADCN_REVIEW.md).
@@ -89,16 +117,41 @@ Last updated: 2026-10-12.
 - Final checks passed: `pnpm check`, 19 unit tests, all 20 mobile Chromium/WebKit E2E checks, peer compatibility and production build. Database integration and actual iPhone/hosted services were not reverified.
 - [Draft PR #1](https://github.com/JamieYau/bet-tracker/pull/1) is open for final review/merge and linked to the T3 thread. This completes development of the shadcn conversion; Supabase setup and private screenshot import remain the next product work.
 
+## Merge and future analytics ideas (2026-10-12)
+
+- The user reported merging `feature/shadcn-components` into `main`; the working checkout is on `main`. The conversion no longer awaits review/merge.
+- Saved the user’s PropBomb references and candidate analytics improvements in [DECISIONS.md](DECISIONS.md#future-analytics-ui-reference-2026-10-12), with a future-scope pointer in `BUILD_BRIEF.md`. Quick time filters, source performance pages and clearer summaries are candidates; records and units need agreed definitions.
+- Documentation only: no analytics features implemented or runtime checks rerun. Supabase setup/live verification and private screenshot import remain the next product work.
+
 ## Next steps
 
-All four planned shadcn conversions are complete on `feature/shadcn-components`; the branch is ready for review/merge. Optional Input Group polish is deferred. The next product work is Supabase setup and private attachments/import; service and release checks below remain outstanding.
+All four shadcn conversions are complete and the user reports the branch merged into `main`. Optional Input Group polish is deferred. The approved next milestone replaces the existing Supabase backend with the personal modular stack.
 
-1. Configure development Supabase project, email user and singleton account using `docs/SETUP.md`; verify live email links, session persistence, RPCs and RLS. No runtime service-role key is required.
-2. Implement private attachments and screenshot import: direct uploads, deletion independent of bets, persistent import drafts, extraction adapter/route, hash/reference warnings, retry and idempotent confirmation.
-3. Add CI checks; compare image models with supplied sample slips when available.
-4. Verify real image isolation, actual iPhone Safari uploads/core flows and Home Screen installation. Configure separate production Supabase/Vercel environments before deployment readiness.
+1. Implement Better Auth email/password login and private owner provisioning/recovery; replace Supabase session checks and login UI. Disable public signup at the server and verify session persistence/invalidation and owner restrictions.
+2. Build Neon-compatible server repository access and restricted database privileges on the implemented Drizzle schema/migrations. Replace Supabase identity/RPC integration while preserving atomic saves, idempotency, optimistic versions and settlement history. Finish environment/setup changes and integration coverage for the actual workflows.
+3. Configure development Neon and verify the manual workflow and access restrictions live. Earlier stand-in Supabase checks do not verify this backend.
+4. Implement and verify private R2 attachment uploads/downloads/deletion, then persistent import drafts, extraction, hash/reference warnings, retry and idempotent confirmation.
+5. Add CI checks; compare image models with supplied sample slips when available.
+6. Verify actual iPhone Safari uploads/core flows and Home Screen installation. Configure separate production Neon/R2/auth and Next.js hosting; document backups and verify the personal deployment.
 
-## Delivery checklist
+After live verification, screenshot import and some real usage, revisit the [future analytics UI ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12). This remains a deferred candidate milestone, not an additional release blocker.
+
+## Modular backend milestone checklist
+
+- [x] Document the approved personal stack and recommended login approach.
+- [ ] Better Auth integration, password login, owner provisioning/recovery and session checks.
+- [x] Drizzle schema, reviewed foundation migrations, pool and local schema integration checks.
+- [ ] Replacement repository/transaction logic and restricted runtime permissions.
+- [ ] Complete auth/repository environment example, executable provisioning guide and workflow integration tests; database foundation setup is documented.
+- [ ] Local migration, authorization, concurrency and manual-flow verification.
+- [ ] Live Neon/Better Auth verification.
+- [ ] Private R2 attachment workflow and live access verification.
+- [ ] Persistent screenshot import/extraction/retry/confirmation.
+- [ ] CI, sample-slip checks, actual iPhone/Home Screen and personal deployment verification.
+
+## Previous manual milestone checklist — Supabase baseline
+
+Checked backend items below are historical completion for the existing implementation. They do not indicate the modular replacement is complete.
 
 - [x] Scaffold inspection, guides and dependency compatibility checks.
 - [x] pnpm, strict TypeScript, Biome, shadcn/ui and project structure.
