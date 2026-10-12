@@ -8,6 +8,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { optionAction } from "@/features/bets/actions";
 import type { NamedOption } from "@/features/bets/types";
+import { useClientReady } from "@/lib/use-client-ready";
 export function OptionForm({
   kind,
   id,
@@ -17,6 +18,7 @@ export function OptionForm({
   id: string;
   option?: NamedOption;
 }) {
+  const ready = useClientReady();
   const [state, action, pending] = useActionState(optionAction, {});
   const [name, setName] = useState(option?.name ?? "");
   const [active, setActive] = useState(option?.active ?? true);
@@ -25,7 +27,10 @@ export function OptionForm({
     <form action={action} className="space-y-2 border-b py-3 last:border-0">
       <input type="hidden" name="kind" value={kind} />
       <input type="hidden" name="id" value={id} />
-      <div className="flex flex-wrap items-center gap-2">
+      <fieldset
+        disabled={!ready || pending}
+        className="flex flex-wrap items-center gap-2"
+      >
         <Field
           className="min-w-32 flex-1"
           data-invalid={Boolean(state.errors?.name?.length)}
@@ -64,7 +69,7 @@ export function OptionForm({
             name="active"
             value="on"
             checked={active}
-            disabled={fixed || pending}
+            disabled={!ready || fixed || pending}
             onCheckedChange={setActive}
           />
           <FieldLabel
@@ -79,14 +84,14 @@ export function OptionForm({
           type="submit"
           className="h-11"
           variant="outline"
-          disabled={pending || fixed}
+          disabled={!ready || pending || fixed}
           aria-busy={pending}
         >
           <PendingLabel pending={pending}>
             {option ? "Save" : "Add"}
           </PendingLabel>
         </Button>
-      </div>
+      </fieldset>
       {state.error && (
         <Alert variant="destructive">
           <AlertDescription>{state.error}</AlertDescription>

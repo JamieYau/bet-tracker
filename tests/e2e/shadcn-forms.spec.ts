@@ -175,3 +175,42 @@ test("settings checkboxes persist active and archived sources", async ({
     .getByLabel("Source", { exact: true })
     .selectOption({ label: name });
 });
+
+test("settings wait for hydration before accepting editable values", async ({
+  page,
+}) => {
+  let resume: () => void = () => {};
+  const gate = new Promise<void>((resolve) => {
+    resume = resolve;
+  });
+  await page.route(/\/_next\/static\/.*\.js(?:\?|$)/, async (route) => {
+    await gate;
+    await route.continue();
+  });
+  const name = `Hydration ${crypto.randomUUID()}`;
+  try {
+    await page.goto("/settings", { waitUntil: "commit" });
+    const input = page.getByLabel("New source name");
+    await expect(input).toBeVisible();
+    await expect(input).toBeDisabled();
+    const form = page.locator("form").filter({ has: input });
+    await expect(
+      form.getByRole("checkbox", { name: "Active", exact: true }),
+    ).toBeDisabled();
+    await expect(
+      form.getByRole("button", { name: "Add", exact: true }),
+    ).toBeDisabled();
+  } finally {
+    resume();
+  }
+  await expect(page.getByLabel("New source name")).toBeEnabled();
+  await page.getByLabel("New source name").fill(name);
+  await page
+    .locator("form")
+    .filter({ has: page.getByLabel("New source name") })
+    .getByRole("button", { name: "Add", exact: true })
+    .click();
+  await expect(
+    page.getByLabel(`Name for ${name}`, { exact: true }),
+  ).toBeVisible();
+});
