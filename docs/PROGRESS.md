@@ -64,6 +64,12 @@ Last updated: 2026-10-12.
 - Batch 3 implemented: Collapsible client disclosure wraps the server-rendered GET form; keepMounted preserves unsent values and active filters open initially. Parser/Zod moved to filter-schema.ts; route pages and CSV import it without client/UI dependencies.
 - `pnpm check`, 19 unit tests, two Chromium/WebKit keyboard/value/GET/CSV filter checks and production build passed. No financial/database changes or hosted/iPhone verification.
 
+## Final conversion regression fixes (2026-10-12)
+
+- WebKit correction testing exposed editable settlement fields before hydration; an entered return could be reset to the prefill. Added the bet editor's client readiness/pending fieldset guard to settlement controls, with an explicit guard on the composite checkbox.
+- Long hidden settings labels inherited Field's automatic width and caused horizontal overflow. Their width is now explicitly one pixel. Added a 320px assertion to the existing source settings flow; both browser runs passed.
+- Final combined conversion checks passed: `pnpm check`, 18 Chromium/WebKit E2E checks and production build. These checks also included the chart implementation being completed in the next commit. T3 preview subsequently measured stable navigation and no horizontal overflow across four routes at 320/390/768/1280px. Hosted/iPhone verification remains outstanding.
+
 ## Next steps
 
 The next UI conversion work should follow `SHADCN_REVIEW.md`, Batch 4: Chart/Recharts. Batches 1–3 are complete. The service/import/release steps below remain outstanding.

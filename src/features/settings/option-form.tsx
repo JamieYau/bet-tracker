@@ -30,7 +30,7 @@ export function OptionForm({
           className="min-w-32 flex-1"
           data-invalid={Boolean(state.errors?.name?.length)}
         >
-          <FieldLabel htmlFor={`${id}-name`} className="sr-only">
+          <FieldLabel htmlFor={`${id}-name`} className="sr-only w-px!">
             {option
               ? `Name for ${option.name}`
               : `New ${kind === "sources" ? "source" : "bookmaker"} name`}

@@ -162,6 +162,14 @@ test("settings checkboxes persist active and archived sources", async ({
   await row.getByRole("checkbox", { name: "Active", exact: true }).check();
   await row.getByRole("button", { name: "Save", exact: true }).click();
   await expect(row.getByRole("status")).toHaveText("List updated.");
+  const viewport = page.viewportSize();
+  await page.setViewportSize({ width: 320, height: 800 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  if (viewport) await page.setViewportSize(viewport);
   await page.goto("/add");
   await page
     .getByLabel("Source", { exact: true })

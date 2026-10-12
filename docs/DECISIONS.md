@@ -37,6 +37,8 @@ Suggested order: manual recording/settlement and analytics; screenshot import; r
 
 - FilterDisclosure is a small client island around the server-rendered GET form. readFilters/Zod lives in filter-schema.ts with no UI dependencies. Keep mounted fields preserve unsubmitted values; active query filters open initially.
 
+- Controlled settlement fields use the same readiness/pending guard as the bet editor to prevent pre-hydration entries being replaced by prefills. Hidden settings labels have an explicit one-pixel width so long names cannot widen the page.
+
 ## Implemented defaults
 
 - Private pages render per request. Removed the scaffold's Cache Components/partial-prefetch flags to keep authenticated reads straightforward; no shared user-data caching.
