@@ -1,5 +1,6 @@
 import { PageHeading } from "@/components/page-heading";
-import { FilterForm, readFilters } from "@/features/analytics/filters";
+import { readFilters } from "@/features/analytics/filter-schema";
+import { FilterForm } from "@/features/analytics/filters";
 import { history } from "@/features/analytics/metrics";
 import { BetList } from "@/features/bets/bet-list";
 import { getLedger } from "@/features/bets/repository";

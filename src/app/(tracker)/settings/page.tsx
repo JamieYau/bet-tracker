@@ -1,7 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { PageHeading } from "@/components/page-heading";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { signOut } from "@/features/auth/actions";
 import { getLedger } from "@/features/bets/repository";
 import { OptionForm } from "@/features/settings/option-form";
@@ -24,10 +30,10 @@ export default async function SettingsPage() {
           <Card key={kind}>
             <CardHeader>
               <CardTitle>{title}</CardTitle>
-              <p className="text-xs text-muted-foreground">
+              <CardDescription className="text-xs text-muted-foreground">
                 Archive entries by clearing Active. Existing bets retain their
                 list reference.
-              </p>
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {ledger[kind].map((option) => (
