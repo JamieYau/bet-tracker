@@ -1,6 +1,6 @@
 # shadcn/ui conversion review
 
-Reviewed: 2026-10-12. Status: Batches 1 (forms) and 2 (presentation) implemented and verified; Batches 3–4 remain queued.
+Reviewed: 2026-10-12. Status: Batches 1–3 implemented and verified; Batch 4 (charts) remains queued.
 
 Reviewed the current presentation code against official shadcn documentation. The project already uses the **Base UI / base-nova** family (`components.json`), so use that family consistently when installing components. This is a UI consistency pass within the existing build brief, not a change to financial rules or architecture.
 
@@ -46,7 +46,7 @@ Priority 1 should be the first conversion batch. Priority 2 follows after the fo
 
 - [x] **Batch 1 — forms:** install Field, Native Select and Checkbox; migrate bet/settlement/login/filter/settings controls; standardise field errors and form-wide Alerts. Remove the custom Field implementation and `selectClass` when unused.
 - [x] **Batch 2 — presentation:** install Empty, Item and Spinner; migrate empty states, list rows and pending buttons; reuse CardDescription and the existing error primitives.
-- [ ] **Batch 3 — filters:** install Collapsible, isolate `readFilters`/Zod parsing into a server-safe module, and migrate the filter presentation while retaining query-string behaviour.
+- [x] **Batch 3 — filters:** install Collapsible, isolate `readFilters`/Zod parsing into a server-safe module, and migrate the filter presentation while retaining query-string behaviour.
 - [ ] **Batch 4 — charts:** install Chart and its compatible Recharts dependency, extract `profit-chart.tsx` as a client presentation component, and preserve the current metric definitions.
 
 Checked batches indicate verified implementation. Unchecked batches remain recommendations for later commits.
@@ -78,6 +78,12 @@ Checked batches indicate verified implementation. Unchecked batches remain recom
 - Empty states distinguish a new ledger from no matching bets and provide compact dashboard placeholders. Card header descriptions use CardDescription. The route error fallback uses Card and preserves its h1/retry action.
 - Shared PendingLabel composes Spinner with saving/sending text and reserves both label widths. Buttons expose aria-busy and remain disabled while pending; decorative spinners are hidden from assistive technology and respect reduced motion. Submit names, intents and actions are preserved.
 - Verification: `pnpm check`, 19 unit checks, the 12 existing mobile Chromium/WebKit checks, two new presentation checks, and a production build passed. A paused POST checks actual pending-state dimensions, spinner visibility and disabled/busy state; it then checks linked history rows and filtered empty messages. T3 preview found no overflow, nested anchors or navigation dimension changes across four routes at 320/390/768/1280px. Actual iPhone Safari remains outstanding.
+
+## Batch 3 implementation (2026-10-12)
+
+- Replaced details/summary with Base UI Collapsible in a small client FilterDisclosure. The GET form, sports/options generation and reads remain server-rendered; keepMounted preserves unsent values across toggles. Active query filters open the panel initially.
+- Moved readFilters/Zod to filter-schema.ts and updated dashboard/history/CSV entry points to import it directly. It remains server-safe with no UI dependencies.
+- Verification: `pnpm check`, 19 unit tests, two new Chromium/WebKit checks and production build passed. Browser checks cover Enter/Space, hidden content, preserved inputs, GET values, active defaults, CSV response and placement/settlement labels.
 
 ## Later feature work
 

@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { readFilters } from "@/features/analytics/filters";
+import { readFilters } from "@/features/analytics/filter-schema";
 import { history } from "@/features/analytics/metrics";
 import { exportCsv } from "@/features/bets/export";
 import { getLedger } from "@/features/bets/repository";

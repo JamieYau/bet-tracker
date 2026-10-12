@@ -59,9 +59,14 @@ Last updated: 2026-10-12.
 - Removed the idle label's blank icon slot, which shifted text 12px to the right. Hidden pending content still reserves button width; idle text is centred and pending icon/text remain centred together.
 - Extended the presentation regression to measure text centring as well as pending dimensions. Both Chromium/WebKit checks passed, along with `pnpm check` and production build. T3 preview measured less than 0.01px idle-text offset at 390/1280px. No financial/database changes or live iPhone verification.
 
+## shadcn filter conversion (2026-10-12)
+
+- Batch 3 implemented: Collapsible client disclosure wraps the server-rendered GET form; keepMounted preserves unsent values and active filters open initially. Parser/Zod moved to filter-schema.ts; route pages and CSV import it without client/UI dependencies.
+- `pnpm check`, 19 unit tests, two Chromium/WebKit keyboard/value/GET/CSV filter checks and production build passed. No financial/database changes or hosted/iPhone verification.
+
 ## Next steps
 
-The next UI conversion work should follow `SHADCN_REVIEW.md`, Batch 3: Collapsible and a server-safe filter parsing module. Batches 1–2 are complete; Chart/Recharts remains Batch 4. The service/import/release steps below remain outstanding.
+The next UI conversion work should follow `SHADCN_REVIEW.md`, Batch 4: Chart/Recharts. Batches 1–3 are complete. The service/import/release steps below remain outstanding.
 
 1. Configure development Supabase project, email user and singleton account using `docs/SETUP.md`; verify live email links, session persistence, RPCs and RLS. No runtime service-role key is required.
 2. Implement private attachments and screenshot import: direct uploads, deletion independent of bets, persistent import drafts, extraction adapter/route, hash/reference warnings, retry and idempotent confirmation.

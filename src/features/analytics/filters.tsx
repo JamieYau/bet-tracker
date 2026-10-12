@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -7,36 +6,9 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import type { Ledger } from "@/features/bets/types";
+import { FilterDisclosure } from "./filter-disclosure";
 import type { Filters } from "./metrics";
 
-const schema = z.object({
-  from: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional(),
-  to: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional(),
-  bookmaker: z.uuid().optional(),
-  source: z.uuid().optional(),
-  sport: z.string().max(80).optional(),
-  type: z.enum(["single", "acca"]).optional(),
-  status: z
-    .enum(["draft", "open", "settled", "won", "lost", "void", "cash_out"])
-    .optional(),
-});
-export function readFilters(
-  params: Record<string, string | string[] | undefined>,
-): Filters {
-  const clean = Object.fromEntries(
-    Object.entries(params).filter(
-      ([, value]) => typeof value === "string" && value !== "",
-    ),
-  );
-  const parsed = schema.safeParse(clean);
-  return parsed.success ? parsed.data : {};
-}
 export function FilterForm({
   ledger,
   filters,
@@ -54,13 +26,10 @@ export function FilterForm({
     ),
   ].sort();
   return (
-    <details className="mb-6 rounded-xl border bg-card p-4">
-      <summary className="cursor-pointer text-sm font-medium">
-        Filter your ledger{" "}
-        <span className="ml-2 font-normal text-muted-foreground">
-          · {dateLabel}
-        </span>
-      </summary>
+    <FilterDisclosure
+      dateLabel={dateLabel}
+      defaultOpen={Object.keys(filters).length > 0}
+    >
       <form className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Field>
           <FieldLabel htmlFor="from">From</FieldLabel>
@@ -148,6 +117,6 @@ export function FilterForm({
           Apply filters
         </Button>
       </form>
-    </details>
+    </FilterDisclosure>
   );
 }
