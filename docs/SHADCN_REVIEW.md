@@ -1,6 +1,6 @@
 # shadcn/ui conversion review
 
-Reviewed: 2026-10-12. Status: Batch 1 (forms) implemented and verified; Batches 2–4 remain queued.
+Reviewed: 2026-10-12. Status: Batches 1 (forms) and 2 (presentation) implemented and verified; Batches 3–4 remain queued.
 
 Reviewed the current presentation code against official shadcn documentation. The project already uses the **Base UI / base-nova** family (`components.json`), so use that family consistently when installing components. This is a UI consistency pass within the existing build brief, not a change to financial rules or architecture.
 
@@ -45,7 +45,7 @@ Priority 1 should be the first conversion batch. Priority 2 follows after the fo
 ## Conversion sequence
 
 - [x] **Batch 1 — forms:** install Field, Native Select and Checkbox; migrate bet/settlement/login/filter/settings controls; standardise field errors and form-wide Alerts. Remove the custom Field implementation and `selectClass` when unused.
-- [ ] **Batch 2 — presentation:** install Empty, Item and Spinner; migrate empty states, list rows and pending buttons; reuse CardDescription and the existing error primitives.
+- [x] **Batch 2 — presentation:** install Empty, Item and Spinner; migrate empty states, list rows and pending buttons; reuse CardDescription and the existing error primitives.
 - [ ] **Batch 3 — filters:** install Collapsible, isolate `readFilters`/Zod parsing into a server-safe module, and migrate the filter presentation while retaining query-string behaviour.
 - [ ] **Batch 4 — charts:** install Chart and its compatible Recharts dependency, extract `profit-chart.tsx` as a client presentation component, and preserve the current metric definitions.
 
@@ -70,6 +70,14 @@ Checked batches indicate verified implementation. Unchecked batches remain recom
 - Native Select defaults are adapted to this app: full width, 44px height and 16px text for mobile. Native date/time controls and GET filters remain. Checkbox labels have a 44px tap target.
 - Checked/unchecked values preserve Server Action contracts: named checkboxes submit `on` when checked; free-stake-returned stays in the editor payload. Me is disabled; non-Won outcomes clear and disable early payout.
 - Verification: Biome/type checking, 19 unit checks, 12 mobile Chromium/WebKit end-to-end checks, and a production build passed. The eight new form checks were rerun after adding explicit checkbox label IDs. T3 preview measured unchanged navigation dimensions and no horizontal overflow on all four screens at 320/390/768/1280px. Actual iPhone Safari and hosted Supabase remain unverified.
+
+## Batch 2 implementation (2026-10-12)
+
+- Installed Empty, Item and Spinner through the existing Base UI/base-nova configuration; retained the existing Separator. No dependencies or lockfile changes were needed.
+- Bet history/recent bets use Item with `render={<Link ... />}` so each row remains one clickable anchor. ItemGroup renders a semantic ul with li children; acca legs retain ul/li and correction revisions retain ol/li in their original order. Detail descriptions are not line-clamped.
+- Empty states distinguish a new ledger from no matching bets and provide compact dashboard placeholders. Card header descriptions use CardDescription. The route error fallback uses Card and preserves its h1/retry action.
+- Shared PendingLabel composes Spinner with saving/sending text and reserves both label widths. Buttons expose aria-busy and remain disabled while pending; decorative spinners are hidden from assistive technology and respect reduced motion. Submit names, intents and actions are preserved.
+- Verification: `pnpm check`, 19 unit checks, the 12 existing mobile Chromium/WebKit checks, two new presentation checks, and a production build passed. A paused POST checks actual pending-state dimensions, spinner visibility and disabled/busy state; it then checks linked history rows and filtered empty messages. T3 preview found no overflow, nested anchors or navigation dimension changes across four routes at 320/390/768/1280px. Actual iPhone Safari remains outstanding.
 
 ## Later feature work
 

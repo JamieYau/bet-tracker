@@ -1,7 +1,13 @@
 import { Wallet } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { LoginForm } from "@/features/auth/login-form";
 import { hasSupabase, isDemo } from "@/lib/config";
 export default async function LoginPage({
@@ -16,9 +22,9 @@ export default async function LoginPage({
         <CardHeader className="gap-4">
           <Wallet className="size-9 text-primary" />
           <CardTitle className="text-2xl">Your private bet ledger</CardTitle>
-          <p className="text-sm leading-6 text-muted-foreground">
+          <CardDescription className="text-sm leading-6 text-muted-foreground">
             One place to record your bets and understand your returns.
-          </p>
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {!hasSupabase() && (

@@ -1,7 +1,19 @@
 import { ArrowUpRight, CircleCheck, Wallet } from "lucide-react";
 import Link from "next/link";
 import { PageHeading } from "@/components/page-heading";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { BetList } from "@/features/bets/bet-list";
 import type { Ledger } from "@/features/bets/types";
 import { money } from "@/lib/format";
@@ -16,9 +28,14 @@ function ProfitChart({
 }) {
   if (!series.length)
     return (
-      <div className="flex h-40 items-center justify-center rounded-lg bg-muted/40 text-sm text-muted-foreground">
-        Your chart begins with your first settlement.
-      </div>
+      <Empty className="min-h-40 bg-muted/40 p-4">
+        <EmptyHeader>
+          <EmptyTitle>No settlements in this period</EmptyTitle>
+          <EmptyDescription>
+            Your chart appears when a settled bet matches the filters.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   const points = [0, ...series.map((point) => point.value)];
   const min = Math.min(...points),
@@ -137,9 +154,9 @@ export function Dashboard({
         <Card>
           <CardHeader>
             <CardTitle>Cumulative cash P/L</CardTitle>
-            <p className="text-xs text-muted-foreground">
+            <CardDescription className="text-xs text-muted-foreground">
               Settlement date · selected period starts at zero
-            </p>
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ProfitChart series={totals.series} />
@@ -190,9 +207,14 @@ export function Dashboard({
                 ))}
               </dl>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No settled bets in this period.
-              </p>
+              <Empty className="p-3">
+                <EmptyHeader>
+                  <EmptyTitle>No monthly results</EmptyTitle>
+                  <EmptyDescription>
+                    No settled bets match this period.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             )}
           </CardContent>
         </Card>
@@ -241,9 +263,14 @@ export function Dashboard({
                   })}
               </dl>
               {!ledger.bets.length && (
-                <p className="text-sm text-muted-foreground">
-                  Your settled totals will appear here.
-                </p>
+                <Empty className="p-3">
+                  <EmptyHeader>
+                    <EmptyTitle>No totals yet</EmptyTitle>
+                    <EmptyDescription>
+                      Your settled totals will appear here.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               )}
             </CardContent>
           </Card>

@@ -1,9 +1,16 @@
 "use client";
 import { Plus, Trash2 } from "lucide-react";
 import { useActionState, useState } from "react";
+import { PendingLabel } from "@/components/pending-label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
@@ -245,10 +252,10 @@ export function BetForm({
           <Card>
             <CardHeader>
               <CardTitle>Acca legs</CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <CardDescription className="text-sm text-muted-foreground">
                 Leg odds are for reference. Financial returns use accepted total
                 odds.
-              </p>
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               {legs.map((leg, index) => (
@@ -469,12 +476,11 @@ export function BetForm({
             name="intent"
             value="confirm"
             disabled={pending}
+            aria-busy={pending}
           >
-            {pending
-              ? "Saving…"
-              : bet?.status === "open"
-                ? "Save changes"
-                : "Confirm bet"}
+            <PendingLabel pending={pending}>
+              {bet?.status === "open" ? "Save changes" : "Confirm bet"}
+            </PendingLabel>
           </Button>
           {bet?.status !== "open" && (
             <Button
@@ -484,8 +490,9 @@ export function BetForm({
               name="intent"
               value="draft"
               disabled={pending}
+              aria-busy={pending}
             >
-              Save draft
+              <PendingLabel pending={pending}>Save draft</PendingLabel>
             </Button>
           )}
         </div>

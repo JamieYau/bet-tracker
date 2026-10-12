@@ -1,5 +1,6 @@
 "use client";
 import { useActionState } from "react";
+import { PendingLabel } from "@/components/pending-label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -20,8 +21,15 @@ export function LoginForm() {
           required
         />
       </Field>
-      <Button type="submit" className="h-11 w-full" disabled={pending}>
-        {pending ? "Sending…" : "Email me a sign-in link"}
+      <Button
+        type="submit"
+        className="h-11 w-full"
+        disabled={pending}
+        aria-busy={pending}
+      >
+        <PendingLabel pending={pending} pendingText="Sending…">
+          Email me a sign-in link
+        </PendingLabel>
       </Button>
       {state.error && (
         <Alert variant="destructive">

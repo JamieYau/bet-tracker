@@ -4,7 +4,20 @@ import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item";
 import { getLedger } from "@/features/bets/repository";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
 import { SettlementForm } from "@/features/settlement/settlement-form";
@@ -104,20 +117,23 @@ export default async function BetPage({
           <CardContent>
             <ul className="divide-y">
               {bet.legs.map((leg, index) => (
-                <li
-                  key={leg.id}
-                  className="flex items-start justify-between gap-3 py-3"
-                >
-                  <div>
-                    <p className="text-sm font-medium">
-                      {index + 1}. {leg.selection}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {leg.sport} · {leg.market || "No market"}
-                      {leg.odds ? ` · ${leg.odds}` : ""}
-                    </p>
-                  </div>
-                  <Badge variant="outline">{outcomeLabel(leg.status)}</Badge>
+                <li key={leg.id}>
+                  <Item className="items-start border-0 px-0 py-3">
+                    <ItemContent className="min-w-0">
+                      <ItemTitle className="line-clamp-none break-words">
+                        {index + 1}. {leg.selection}
+                      </ItemTitle>
+                      <ItemDescription className="line-clamp-none break-words text-xs">
+                        {leg.sport} · {leg.market || "No market"}
+                        {leg.odds ? ` · ${leg.odds}` : ""}
+                      </ItemDescription>
+                    </ItemContent>
+                    <ItemActions>
+                      <Badge variant="outline">
+                        {outcomeLabel(leg.status)}
+                      </Badge>
+                    </ItemActions>
+                  </Item>
                 </li>
               ))}
             </ul>
@@ -162,10 +178,10 @@ export default async function BetPage({
               {current ? "Correct settlement" : "Settle this bet"}
             </CardTitle>
             {current && (
-              <p className="text-sm text-muted-foreground">
+              <CardDescription className="text-sm text-muted-foreground">
                 Corrections replace the effective settlement and preserve
                 history. Recorded stakes are locked.
-              </p>
+              </CardDescription>
             )}
           </CardHeader>
           <CardContent>
@@ -186,19 +202,27 @@ export default async function BetPage({
           <CardContent>
             <ol className="divide-y">
               {[...bet.settlements].reverse().map((item) => (
-                <li key={item.id} className="py-4 text-sm">
-                  <div className="flex justify-between gap-3">
-                    <span className="font-medium">
-                      Revision {item.revision} · {outcomeLabel(item.outcome)}
-                      {item.earlyPayout ? " · Early payout" : ""}
-                    </span>
-                    <span>{money(item.returnPence)}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Settled {dateTime(item.settledAt)} · Recorded{" "}
-                    {dateTime(item.createdAt)}
-                  </p>
-                  {item.reason && <p className="mt-2">{item.reason}</p>}
+                <li key={item.id}>
+                  <Item className="items-start border-0 px-0 py-4">
+                    <ItemContent className="min-w-0">
+                      <ItemTitle className="line-clamp-none">
+                        Revision {item.revision} · {outcomeLabel(item.outcome)}
+                        {item.earlyPayout ? " · Early payout" : ""}
+                      </ItemTitle>
+                      <ItemDescription className="line-clamp-none text-xs">
+                        Settled {dateTime(item.settledAt)} · Recorded{" "}
+                        {dateTime(item.createdAt)}
+                      </ItemDescription>
+                      {item.reason && (
+                        <ItemDescription className="line-clamp-none whitespace-pre-wrap break-words text-foreground">
+                          {item.reason}
+                        </ItemDescription>
+                      )}
+                    </ItemContent>
+                    <ItemActions className="shrink-0 tabular-nums">
+                      {money(item.returnPence)}
+                    </ItemActions>
+                  </Item>
                 </li>
               ))}
             </ol>

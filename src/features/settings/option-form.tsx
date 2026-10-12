@@ -1,5 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
+import { PendingLabel } from "@/components/pending-label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -79,8 +80,11 @@ export function OptionForm({
           className="h-11"
           variant="outline"
           disabled={pending || fixed}
+          aria-busy={pending}
         >
-          {pending ? "Saving…" : option ? "Save" : "Add"}
+          <PendingLabel pending={pending}>
+            {option ? "Save" : "Add"}
+          </PendingLabel>
         </Button>
       </div>
       {state.error && (

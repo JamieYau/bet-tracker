@@ -1,5 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
+import { PendingLabel } from "@/components/pending-label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -177,8 +178,15 @@ export function SettlementForm({
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       )}
-      <Button type="submit" className="h-11" disabled={pending}>
-        {pending ? "Saving…" : previous ? "Save correction" : "Settle bet"}
+      <Button
+        type="submit"
+        className="h-11"
+        disabled={pending}
+        aria-busy={pending}
+      >
+        <PendingLabel pending={pending}>
+          {previous ? "Save correction" : "Settle bet"}
+        </PendingLabel>
       </Button>
       <p className="text-xs leading-5 text-muted-foreground">
         {outcome === "void"
