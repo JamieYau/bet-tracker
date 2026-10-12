@@ -28,7 +28,7 @@ Suggested order: manual recording/settlement and analytics; screenshot import; r
 
 ## UI consistency review
 
-- The user requested a review of shadcn equivalents before conversion. Recommendations and file-level conversion batches are recorded in [SHADCN_REVIEW.md](SHADCN_REVIEW.md); Batches 1–3 are implemented; charts remain queued.
+- The user requested a review of shadcn equivalents before conversion. Recommendations and file-level conversion batches are recorded in [SHADCN_REVIEW.md](SHADCN_REVIEW.md); All four planned shadcn conversion batches are implemented; optional refinements and future import UI are outside this branch’s required scope.
 - Prefer the existing Base UI/base-nova family for appropriate primitives. Prioritise Field, Native Select and Checkbox, then empty/list/loading presentation. Filter and chart conversions need separate client-boundary checks.
 - Preserve the fixed route navigation, native date/time controls, Server Actions and financial definitions. Using shadcn consistently does not require replacing every semantic HTML element or adding a new form library.
 - Form conversion uses direct Field composition with the existing Server Actions; no form library was added. Native Select keeps browser/mobile selection with 44px controls and 16px text. Checkbox named values remain `on`; free-stake-returned stays in the hidden editor payload. Stable label IDs support checkbox accessibility before and after hydration.
@@ -38,6 +38,8 @@ Suggested order: manual recording/settlement and analytics; screenshot import; r
 - FilterDisclosure is a small client island around the server-rendered GET form. readFilters/Zod lives in filter-schema.ts with no UI dependencies. Keep mounted fields preserve unsubmitted values; active query filters open initially.
 
 - Controlled settlement fields use the same readiness/pending guard as the bet editor to prevent pre-hydration entries being replaced by prefills. Hidden settings labels have an explicit one-pixel width so long names cannot widen the page.
+
+- ProfitChart is a client presentation island using shadcn Chart/Recharts 3.10.1. Server metrics/labels supply cumulative pence and a £0 baseline. The step line shows one point per settled bet, including equal timestamps; exact GBP/London tooltips and a visible summary accompany the chart. Animations are disabled, and latest corrections replace effective returns without adding points.
 
 ## Implemented defaults
 

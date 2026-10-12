@@ -37,8 +37,8 @@ test("filter disclosure supports the keyboard, preserves values and exports the 
   expect(response.ok()).toBe(true);
   const csv = await response.text();
   expect(csv).toContain("status");
-  expect(csv).not.toContain(",settled,");
-  expect(csv).not.toContain(",open,");
+  expect(csv).not.toContain('","settled","');
+  expect(csv).not.toContain('","open","');
   await page.goto("/?status=draft");
   await expect(
     page.getByRole("button", { name: /Filter your ledger/ }),

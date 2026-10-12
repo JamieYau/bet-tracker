@@ -1,6 +1,6 @@
 # shadcn/ui conversion review
 
-Reviewed: 2026-10-12. Status: Batches 1–3 implemented and verified; Batch 4 (charts) remains queued.
+Reviewed: 2026-10-12. Status: All four planned conversion batches implemented and verified locally. Hosted services and actual iPhone Safari remain separate release checks.
 
 Reviewed the current presentation code against official shadcn documentation. The project already uses the **Base UI / base-nova** family (`components.json`), so use that family consistently when installing components. This is a UI consistency pass within the existing build brief, not a change to financial rules or architecture.
 
@@ -47,7 +47,7 @@ Priority 1 should be the first conversion batch. Priority 2 follows after the fo
 - [x] **Batch 1 — forms:** install Field, Native Select and Checkbox; migrate bet/settlement/login/filter/settings controls; standardise field errors and form-wide Alerts. Remove the custom Field implementation and `selectClass` when unused.
 - [x] **Batch 2 — presentation:** install Empty, Item and Spinner; migrate empty states, list rows and pending buttons; reuse CardDescription and the existing error primitives.
 - [x] **Batch 3 — filters:** install Collapsible, isolate `readFilters`/Zod parsing into a server-safe module, and migrate the filter presentation while retaining query-string behaviour.
-- [ ] **Batch 4 — charts:** install Chart and its compatible Recharts dependency, extract `profit-chart.tsx` as a client presentation component, and preserve the current metric definitions.
+- [x] **Batch 4 — charts:** install Chart and its compatible Recharts dependency, extract `profit-chart.tsx` as a client presentation component, and preserve the current metric definitions.
 
 Checked batches indicate verified implementation. Unchecked batches remain recommendations for later commits.
 
@@ -84,6 +84,15 @@ Checked batches indicate verified implementation. Unchecked batches remain recom
 - Replaced details/summary with Base UI Collapsible in a small client FilterDisclosure. The GET form, sports/options generation and reads remain server-rendered; keepMounted preserves unsent values across toggles. Active query filters open the panel initially.
 - Moved readFilters/Zod to filter-schema.ts and updated dashboard/history/CSV entry points to import it directly. It remains server-safe with no UI dependencies.
 - Verification: `pnpm check`, 19 unit tests, two new Chromium/WebKit checks and production build passed. Browser checks cover Enter/Space, hidden content, preserved inputs, GET values, active defaults, CSV response and placement/settlement labels.
+
+## Batch 4 implementation (2026-10-12)
+
+- Installed shadcn Chart without overwriting Card, and pinned compatible stable Recharts 3.10.1 (the CLI initially specified 3.8.0). Peer checks pass; pnpm-lock.yaml is committed. Official shadcn/Recharts documentation and installed Next.js client-boundary guidance were checked.
+- Dashboard remains a Server Component: metrics.ts supplies cumulative pence values, latest revisions and selected-period totals. It prepares London labels and a £0 starting point, then passes only display points/summary to the client ProfitChart. No financial calculations moved to the client.
+- ChartContainer/Recharts render a step line, GBP axis, zero reference line, exact-value tooltip and visible accessible summary. Index categories preserve separate bets with equal settlement timestamps. Keyboard accessibility is enabled; animation is disabled. Empty chart content stays server-rendered.
+- Generated Chart styling uses React style text rather than dangerouslySetInnerHTML, and tooltip/legend keys use series keys to satisfy the existing Biome rules.
+- Verification: `pnpm check`, 19 unit checks, 18 mobile Chromium/WebKit E2E checks, peer compatibility and production build passed. New tests verify losses, one-settlement rendering, baseline, equal timestamps, GBP/London keyboard tooltips, latest correction totals/counts and date-filter exclusion. The narrow Settings regression was rerun after its assertion was added. T3 preview inspected the rendered chart and measured stable navigation/no overflow on all four routes at 320/390/768/1280px.
+- All required conversion batches are complete. Money Input Group and other optional refinements remain optional; attachment UI belongs to the future import feature. Actual iPhone Safari and live Supabase/Vercel are not verified by these local checks.
 
 ## Later feature work
 

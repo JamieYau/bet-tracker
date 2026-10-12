@@ -70,9 +70,16 @@ Last updated: 2026-10-12.
 - Long hidden settings labels inherited Field's automatic width and caused horizontal overflow. Their width is now explicitly one pixel. Added a 320px assertion to the existing source settings flow; both browser runs passed.
 - Final combined conversion checks passed: `pnpm check`, 18 Chromium/WebKit E2E checks and production build. These checks also included the chart implementation being completed in the next commit. T3 preview subsequently measured stable navigation and no horizontal overflow across four routes at 320/390/768/1280px. Hosted/iPhone verification remains outstanding.
 
+## shadcn chart conversion and branch completion (2026-10-12)
+
+- Batch 4 complete: client ProfitChart uses shadcn Chart and compatible stable Recharts 3.10.1. Dashboard/metrics remain server-side; London labels, cumulative pence and a £0 baseline are passed as display data. Step line, zero reference, GBP axes/tooltips, keyboard access and a visible summary replace the custom SVG.
+- One point per settled bet preserves equal timestamps, negative values and latest corrections. Empty content remains server-rendered. No financial definitions, database schema or authentication rules changed.
+- Final verification passed: Biome/TypeScript, 19 unit tests, all 18 Chromium/WebKit E2E tests, peers and production build. Chart tests cover one settlement/losses, baseline, equal timestamps, exact GBP/London keyboard tooltip, corrected totals/counts and settlement-date exclusion. Settings-only tests were rerun after adding the 320px regression assertion.
+- T3 preview inspected the actual chart and measured no horizontal overflow or navigation geometry changes on four routes at 320/390/768/1280px. Database integration was not rerun for these UI changes. Actual iPhone Safari, live Supabase and Vercel remain outstanding.
+
 ## Next steps
 
-The next UI conversion work should follow `SHADCN_REVIEW.md`, Batch 4: Chart/Recharts. Batches 1–3 are complete. The service/import/release steps below remain outstanding.
+All four planned shadcn conversions are complete on `feature/shadcn-components`; the branch is ready for review/merge. Optional Input Group polish is deferred. The next product work is Supabase setup and private attachments/import; service and release checks below remain outstanding.
 
 1. Configure development Supabase project, email user and singleton account using `docs/SETUP.md`; verify live email links, session persistence, RPCs and RLS. No runtime service-role key is required.
 2. Implement private attachments and screenshot import: direct uploads, deletion independent of bets, persistent import drafts, extraction adapter/route, hash/reference warnings, retry and idempotent confirmation.

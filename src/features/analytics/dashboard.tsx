@@ -1,3 +1,4 @@
+import { formatInTimeZone } from "date-fns-tz";
 import { ArrowUpRight, CircleCheck, Wallet } from "lucide-react";
 import Link from "next/link";
 import { PageHeading } from "@/components/page-heading";
@@ -16,69 +17,12 @@ import {
 } from "@/components/ui/empty";
 import { BetList } from "@/features/bets/bet-list";
 import type { Ledger } from "@/features/bets/types";
-import { money } from "@/lib/format";
+import { dateTime, money, TIME_ZONE } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { FilterForm } from "./filters";
 import { type Filters, matchesDimensions, metrics } from "./metrics";
+import { ProfitChart, type ProfitChartPoint } from "./profit-chart";
 
-function ProfitChart({
-  series,
-}: {
-  series: ReturnType<typeof metrics>["series"];
-}) {
-  if (!series.length)
-    return (
-      <Empty className="min-h-40 bg-muted/40 p-4">
-        <EmptyHeader>
-          <EmptyTitle>No settlements in this period</EmptyTitle>
-          <EmptyDescription>
-            Your chart appears when a settled bet matches the filters.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
-  const points = [0, ...series.map((point) => point.value)];
-  const min = Math.min(...points),
-    max = Math.max(...points),
-    span = max - min || 100;
-  const x = (index: number) => 16 + (index / (points.length - 1)) * 668;
-  const y = (value: number) => 160 - ((value - min) / span) * 140;
-  return (
-    <div>
-      <svg
-        viewBox="0 0 700 180"
-        role="img"
-        aria-labelledby="profit-chart-title"
-        className="w-full"
-      >
-        <title id="profit-chart-title">{`Cumulative settled cash profit: ${money(series.at(-1)?.value ?? 0)} across ${series.length} settlements`}</title>
-        <line
-          x1="16"
-          x2="684"
-          y1={y(0)}
-          y2={y(0)}
-          stroke="currentColor"
-          className="text-border"
-          strokeDasharray="4 4"
-        />
-        <polyline
-          points={points
-            .map((value, index) => `${x(index)},${y(value)}`)
-            .join(" ")}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinejoin="round"
-          className="text-primary"
-        />
-      </svg>
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>Start: £0</span>
-        <span>{money(series.at(-1)?.value ?? 0)}</span>
-      </div>
-    </div>
-  );
-}
 export function Dashboard({
   ledger,
   filters,
@@ -87,6 +31,21 @@ export function Dashboard({
   filters: Filters;
 }) {
   const totals = metrics(ledger.bets, filters);
+  const chartPoints: ProfitChartPoint[] = [
+    {
+      index: 0,
+      dateLabel: "Start of selected period",
+      axisLabel: "Start",
+      value: 0,
+    },
+    ...totals.series.map((point, index) => ({
+      index: index + 1,
+      dateLabel: `${dateTime(point.date)} · Europe/London`,
+      axisLabel: formatInTimeZone(point.date, TIME_ZONE, "d MMM"),
+      value: point.value,
+    })),
+  ];
+  const chartSummary = `Cumulative settled cash P/L: ${money(totals.profit)} across ${totals.settledCount} settled ${totals.settledCount === 1 ? "bet" : "bets"}. Start: £0.00 · Europe/London.`;
   return (
     <>
       <PageHeading
@@ -159,7 +118,18 @@ export function Dashboard({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ProfitChart series={totals.series} />
+            {totals.series.length ? (
+              <ProfitChart points={chartPoints} summary={chartSummary} />
+            ) : (
+              <Empty className="min-h-40 bg-muted/40 p-4">
+                <EmptyHeader>
+                  <EmptyTitle>No settlements in this period</EmptyTitle>
+                  <EmptyDescription>
+                    Your chart appears when a settled bet matches the filters.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
           </CardContent>
         </Card>
         <Card>
