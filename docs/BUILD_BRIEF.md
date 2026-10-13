@@ -10,7 +10,7 @@ A private, iPhone-first web app for the owner’s personal use that records bets
 - Neon PostgreSQL, Better Auth and Drizzle ORM; private screenshot storage in Cloudflare R2. Next.js hosting remains separate, with Vercel the current deployment target. R2 does not require hosting the app on Cloudflare Workers.
 - Server Components for initial reads, Server Actions for ordinary mutations, a Route Handler for screenshot extraction. Share validation and business logic across entry points.
 - Server-side validation, authorised mutations, financial calculations and AI extraction. Drizzle schema-derived types and reviewed SQL migrations; Zod for external inputs.
-- One repository: `src/app`, `src/components`, `src/features`, `src/lib`, `drizzle`, `tests`. The existing Supabase implementation will be replaced in a dedicated backend migration milestone.
+- One repository: `src/app`, `src/components`, `src/features`, `src/lib`, `drizzle`, `tests`. The auth/repository cutover is implemented; unused Supabase artifacts will be removed after replacement verification.
 - Financial logic independent of UI/database calls; straightforward modules and thin routes. Migrations are the schema source of truth. Use pnpm with a committed lockfile.
 
 ## First release

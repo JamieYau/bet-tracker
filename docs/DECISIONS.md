@@ -41,7 +41,11 @@ The user approved updating the approach to Neon PostgreSQL, Better Auth, Drizzle
 - R2 buckets remain private. The server assigns object keys and checks draft/bet ownership before issuing short-lived upload/download URLs. Validate size/type and uploaded metadata; provide deletion independent of bets. Keep R2 credentials server-side and configure narrow browser-upload CORS.
 - Separate development/preview and production databases, buckets and auth secrets. No live Supabase data migration is currently required; preserve local demo data and avoid destructive commands against any configured database.
 
-Status: the Drizzle/PostgreSQL foundation is implemented and verified locally; application routes still use Supabase. Better Auth runtime login/provisioning, replacement repository/permissions, R2 operations and hosted checks remain incomplete. See [SETUP.md](SETUP.md) for executable foundation commands and the remaining setup boundary.
+Status: Better Auth password login, owner provisioning/recovery, restricted-role grants and the PostgreSQL repository cutover are implemented and verified locally. Application routes no longer use Supabase. Unused legacy dependencies/files/tests remain for a separate cleanup commit; hosted Neon, R2 and real iPhone checks remain outstanding. See [SETUP.md](SETUP.md) for the current executable setup.
+
+Cutover choices (2026-10-13): keep the verified transactional SQL write functions, adapting them to an explicit text Better Auth owner ID. Server operations validate the session and provisioned owner/email; functions independently reject unprovisioned IDs. Use a restricted runtime role with read access and vetted function execution, plus session/rate-limit writes; it cannot provision users or directly mutate ledger/history. This is trusted-server authorization without Supabase JWT/RLS assumptions. Reads use a repeatable-read snapshot. List changes share the owner lock used by bet saves to avoid racing archived options.
+
+Password provisioning/recovery uses a separate operator-only Better Auth instance with the admin plugin, never mounted by the public app. Core schema generation includes its admin fields and the database rate-limit table. Provisioning is atomic and serialized; recovery captures a transient reset token inside the operator process, calls supported password-reset APIs and revokes sessions in the transaction. Terminal password input is hidden. The public handler allows only sign-in, sign-out and session retrieval, checks POST origins, bounds credential bodies and normalizes Next.js requests for the auth handler. Signup/account linking are disabled. One shared database bucket allows five login attempts/minute for the single-owner app. Sessions last 30 days with daily refresh and cookie caching disabled for immediate revocation checks.
 
 Foundation choices: pinned stable Drizzle ORM 0.45.4/Kit 0.31.11, node-postgres 8.23.1 and Better Auth/Drizzle adapter 1.7.7. The official Drizzle guide currently demonstrates release candidates; this project uses the registry’s stable versions and compatible Relations v1. Better Auth core tables were CLI-generated into the `identity` PostgreSQL schema. Owner IDs use text, while bet/leg IDs remain UUIDs. Ledger rows reference the singleton provisioned account; user deletion cannot cascade away the owner’s ledger. Reviewed SQL migrations include the existing bookmaker/Me seed trigger. A separate `MIGRATION_DATABASE_URL` is required for operator migrations; the lazy server entry point reads only `DATABASE_URL`. Restricted runtime grants and authorization/write workflows are the next stage, not supplied by this schema alone.
 
@@ -83,9 +87,9 @@ Source views describe the user’s recorded bets attributed to that tipster, not
 
 Existing sport/source/date filters, cumulative/monthly cash P/L, cash-only ROI, settled counts and source totals provide the foundation. This milestone should improve access and presentation while keeping financial calculations independent of UI/database calls. Revisit scope and update metric definitions before implementing new metrics.
 
-## Implemented defaults — existing Supabase baseline
+## Historical implemented defaults — Supabase baseline
 
-These describe the current code before migration, not the target architecture. Preserve the financial and concurrency guarantees while replacing Supabase-specific integration.
+These record the original implementation before the cutover. Supabase integration is superseded by the choices above; financial and concurrency guarantees are retained.
 
 - Private pages render per request. Removed the scaffold's Cache Components/partial-prefetch flags to keep authenticated reads straightforward; no shared user-data caching.
 - Manual incomplete drafts are explicitly saved through Save draft. Automatic draft saving is not implemented; imported draft persistence belongs to the import stage.

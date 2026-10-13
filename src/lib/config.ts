@@ -1,3 +1,11 @@
+export function hasAuthentication() {
+  return Boolean(
+    process.env.DATABASE_URL &&
+      process.env.BETTER_AUTH_SECRET &&
+      process.env.OWNER_EMAIL &&
+      process.env.APP_URL,
+  );
+}
 export function hasSupabase() {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&

@@ -1,8 +1,11 @@
 import "server-only";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { DEMO_OWNER, hasSupabase, isDemo } from "./config";
-import { supabaseServer } from "./supabase/server";
+import { authConfiguration } from "@/features/auth/options";
+import { isProvisionedOwner } from "@/features/auth/owner";
+import { authentication } from "@/features/auth/server";
+import { DEMO_OWNER, hasAuthentication, isDemo } from "./config";
+import { database } from "./db/server";
 
 export async function requireOwner() {
   if (isDemo()) {
@@ -11,18 +14,18 @@ export async function requireOwner() {
       throw new Error("The local demo only accepts loopback hosts.");
     return DEMO_OWNER;
   }
-  if (!hasSupabase()) redirect("/login");
-  const db = await supabaseServer();
-  const {
-    data: { user },
-    error,
-  } = await db.auth.getUser();
-  if (error || !user) redirect("/login");
-  const { data: account } = await db
-    .from("app_accounts")
-    .select("owner_id")
-    .eq("owner_id", user.id)
-    .maybeSingle();
-  if (!account) redirect("/login?error=access");
-  return user.id;
+  if (!hasAuthentication()) redirect("/login");
+  const session = await authentication().api.getSession({
+    headers: await headers(),
+  });
+  if (!session) redirect("/login");
+  if (
+    !(await isProvisionedOwner(
+      database(),
+      session.user.id,
+      authConfiguration().ownerEmail,
+    ))
+  )
+    redirect("/login?error=access");
+  return session.user.id;
 }

@@ -2,9 +2,9 @@
 
 ## Current status
 
-The target stack is Next.js + Neon PostgreSQL + Better Auth + Drizzle + private Cloudflare R2 for a single-owner personal app. The Drizzle database foundation is implemented, but the website still uses Supabase authentication/repository access. `.env.example` now includes the database foundation variables alongside the legacy website configuration. Setting `DATABASE_URL` does not switch the website to Neon yet. The local demo remains available.
+The website now uses Better Auth password login and Drizzle/PostgreSQL for the private ledger. Neon is the hosted database target; Cloudflare R2 attachments are a later milestone. Supabase integration is no longer used by application routes, but unused packages/client files and the old migration/tests remain until the separate cleanup commit. The loopback demo remains available.
 
-The previous instructions are preserved in [SETUP_SUPABASE_LEGACY.md](SETUP_SUPABASE_LEGACY.md) for the existing code, not as the next setup task. Migration generation/application commands are available below. Private account provisioning, Better Auth runtime integration, restricted runtime grants and hosted verification are still upcoming; this is not yet a complete hosted setup guide.
+Local integration checks exercise actual Better Auth, migrations and a restricted PostgreSQL role. They do not establish hosted Neon connectivity or actual iPhone behaviour. The old [Supabase setup](SETUP_SUPABASE_LEGACY.md) is historical reference only; do not provision Supabase.
 
 ## Local manual demo — available now
 
@@ -34,21 +34,28 @@ pnpm dlx auth@1.7.7 generate --config scripts/auth-schema.config.ts --output src
 pnpm exec biome check --write src/lib/db/auth-schema.ts
 ```
 
-The generator config is for core schema generation only, never an application auth service. It does not connect to PostgreSQL. When runtime auth options/plugins are implemented, regenerate against that configuration and review any migration changes.
+The generator config includes core auth, database-backed rate limits and the operator-only admin plugin fields. It is never mounted as an application auth service and does not connect to PostgreSQL. Review schema/migration changes when changing auth options/plugins.
 
-The lazy server-only database entry point is `src/lib/db/server.ts`. It reads `DATABASE_URL`, reuses a bounded node-postgres pool and preserves URL-specified TLS settings. Use a Neon pooled runtime connection; use the appropriate admin connection for reviewed migrations. Actual hosted connectivity and restricted-role configuration remain unverified. No application routes use this entry point yet.
+The lazy server-only database entry point is `src/lib/db/server.ts`. It reads `DATABASE_URL`, reuses a bounded node-postgres pool and preserves URL-specified TLS settings. Use a Neon pooled runtime connection; use the appropriate admin connection for reviewed migrations. Application routes now use this entry point. Restricted-role behaviour is verified on disposable local PostgreSQL; hosted Neon connectivity remains unverified.
 
-## Remaining backend setup — not implemented
+## Private account setup — implemented; hosted verification pending
 
-1. Build the replacement repository and restricted database permissions on the implemented schema. Retain transactional saves, idempotency, append-only correction history and optimistic version checks. Schema constraints alone do not enforce these application workflows.
-2. Configure a dedicated Neon development database and a transaction-capable server database connection. Keep runtime privileges separate from migration/admin credentials. Set the eventual database/auth environment variables using the updated example produced during implementation; never commit real secrets.
-3. Configure Better Auth in Next.js with one provisioned email/password account, public signup disabled, trusted application origins, persistent sessions and login rate limiting. Create the owner using an operator-only provisioning command and seed the existing bookmakers/Me. Do not expose user creation through a public bootstrap endpoint.
-4. Document and test operator-only password recovery with session revocation. Initial login has no magic-link or password-reset email dependency. Email is an account identifier; no verification-email flow is required for the manually provisioned owner. OAuth/passkeys can be considered later.
-5. Verify real login, logout/session invalidation, persistence, recording, settlement/correction, CSV and owner restrictions. Test unauthenticated requests and an unprovisioned identity; a hidden signup screen alone is insufficient. Verify concurrent/idempotent writes on the actual migrated PostgreSQL schema.
-6. Implement attachments using a private development R2 bucket, server-only credentials, narrow CORS and server-authorized short-lived upload/download URLs. Validate PNG/JPEG and the 10 MB limit, check uploaded metadata and preserve bets when attachments are deleted. Verify access restrictions through actual R2 requests.
-7. Add persistent import drafts, extraction, ambiguity/duplicate warnings, retry and explicit idempotent confirmation. Manual entry and attachments must work without AI credentials.
+1. Create a fresh development Neon database or disposable local PostgreSQL database. Apply reviewed migrations using the steps above. Do not point development scripts at personal production data.
+2. Create a separate, unprivileged PostgreSQL login role (for example `bet_tracker_app`) using an administrative SQL client. Give it a strong password through secure client input, such as psql’s `\password bet_tracker_app`. It must not own the database/tables, inherit administrative roles, bypass RLS or have role/database creation privileges. A role created through a provider dashboard may inherit broad privileges; verify it rather than assuming it is restricted.
+3. Set `RUNTIME_DATABASE_ROLE` to that role name, and run `pnpm db:grant-runtime` using `MIGRATION_DATABASE_URL`. The command checks the role, then grants schema usage, ledger/auth read access, session/rate-limit writes and execute access to the vetted ledger functions. It grants no direct ledger writes, account provisioning or password writes. This is a trusted-server model, not automatic user-level RLS: application operations verify the session/owner and SQL mutation functions recheck the provisioned owner ID.
+4. Set `DATABASE_URL` to the runtime role’s connection, `OWNER_EMAIL` to your account email and `APP_URL` to the exact origin you will visit. Use a pooled Neon connection suitable for node-postgres; retain provider TLS settings. Generate a random `BETTER_AUTH_SECRET` of at least 32 characters, for example with `openssl rand -hex 32`, and store it privately. Do not deploy migration/admin credentials to the Next.js runtime.
+5. Run `pnpm owner:provision` from an interactive terminal. It prompts twice for a hidden password (12–128 characters), uses Better Auth’s server-only admin API to create the credential and provisions the singleton account in one transaction. The existing bookmaker/Me seed trigger runs once. Repeated provisioning is rejected. No signup endpoint is opened.
+6. Run `pnpm dev` and sign in with your email/password. Verify login/logout, persistent sessions, recording, corrections, CSV and access restrictions against the actual hosted database before marking Neon setup complete.
 
-Better Auth provisioning/recovery and R2 setup commands are still pending implementation and verification. Keep SQL migrations committed and inspect their effects before applying them; never use development reset commands on personal production data.
+Forgotten password: set the operator configuration for the correct environment and run `pnpm owner:recover`. It prompts for a new hidden password, checks the provisioned owner email, uses Better Auth’s password-reset APIs with a transient token captured inside the operator process, and revokes existing sessions transactionally. No email is sent and no reset token/password is printed or committed. This procedure requires administrative database access; there is no public recovery screen.
+
+The public auth handler exposes only sign-in, sign-out and session retrieval. Signup, admin APIs, email/password reset and account linking are not public routes. POSTs require the configured origin. Password login is limited to five attempts per minute in one shared, database-backed bucket for this single-owner app; caller IP headers cannot bypass it. Sessions last 30 days and refresh after one day of use; database-backed verification is retained so logout/recovery takes effect immediately. Social login can be added later by deliberately enabling a provider and owner-only account linking.
+
+The repository uses a consistent read transaction and transactional SQL functions adapted from the verified manual baseline. These preserve owner checks, atomic bet/leg saves, duplicate warnings, idempotent confirmations, optimistic versions and append-only correction writes. The restricted runtime role cannot directly update/delete settlement history. Financial definitions remain in `METRICS.md`.
+
+## Later attachments and release work
+
+Implement private R2 uploads/downloads/deletion, metadata validation and persistent import drafts/extraction/retry/confirmation on later branches. Keep development/preview and production buckets/data separate. Actual R2 access, hosted Neon, actual iPhone Safari/Home Screen and production deployment remain separate live checks.
 
 ## Verification — current scripts
 
@@ -64,9 +71,11 @@ Playwright starts a loopback server on port 3100 and uses `.local/ledger-data/e2
 
 The current `pnpm test:db` needs `TEST_DATABASE_URL` pointing to a disposable local PostgreSQL cluster with database/role creation permissions. It creates a temporary database, applies stand-in Supabase Auth/Storage schemas and the existing migration, runs checks and drops that database. This legacy suite remains in place alongside the new modular schema suite; its results do not establish Better Auth, Neon or R2 service behaviour. Never point it at a real personal database.
 
-`pnpm test:db:modular` runs only the new replacement schema suite. It requires `TEST_DATABASE_URL` to point to a loopback disposable PostgreSQL admin cluster, creates a uniquely named temporary database, applies the real Drizzle migrations without stand-in service schemas and drops only its temporary database. It verifies provisioning/seeds, foreign keys, numeric/date round trips, constraints, transactional rollback and migration replay. It does not verify private runtime authorization, auth HTTP flows, concurrent repository writes or R2.
+`pnpm test:db:modular` runs only the new replacement schema suite. It requires `TEST_DATABASE_URL` to point to a loopback disposable PostgreSQL admin cluster, creates a uniquely named temporary database, applies the real Drizzle migrations without stand-in service schemas and drops only its temporary database. It verifies provisioning/seeds, foreign keys, numeric/date round trips, constraints, transactional rollback and migration replay. This schema-only command does not verify auth HTTP flows or repository concurrency. The separate `modular-auth.test.ts` suite, included in `pnpm test:db`, verifies actual Better Auth handlers, owner restrictions, operator recovery, shared rate limiting, restricted-role writes and concurrent/idempotent ledger functions on local PostgreSQL.
 
-After the backend migration, run the appropriate unit, PostgreSQL integration, authentication and browser checks plus a production build. Record local/mocked and live results separately in `PROGRESS.md`.
+For authenticated browser checks, build first, then run `pnpm test:e2e:auth` with the same loopback `TEST_DATABASE_URL`. The runner creates and later drops its own temporary database/role, migrates/provisions fixture credentials, starts the production app on port 3200, and runs Chromium/WebKit password-login and manual-workflow checks. It uses no personal records and does not stop an existing development server. The ordinary demo E2E command still needs its own Next.js dev lock.
+
+Run the appropriate unit, PostgreSQL integration, authentication and browser checks plus a production build. Record local/mocked and live results separately in `PROGRESS.md`.
 
 ## Planned personal deployment
 

@@ -21,7 +21,11 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:check": "drizzle-kit check",
-    "test:db:modular": "vitest run tests/integration/modular-schema.test.ts"
+    "test:db:modular": "vitest run tests/integration/modular-schema.test.ts",
+    "owner:provision": "tsx scripts/owner.ts provision",
+    "owner:recover": "tsx scripts/owner.ts recover",
+    "db:grant-runtime": "tsx scripts/db-grants.ts",
+    "test:e2e:auth": "tsx scripts/test-auth-e2e.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

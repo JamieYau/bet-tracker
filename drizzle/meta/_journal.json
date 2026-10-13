@@ -15,6 +15,20 @@
       "when": 1791833856440,
       "tag": "0001_owner_lists",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791904422399,
+      "tag": "0002_ledger_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791904497585,
+      "tag": "0003_auth_operations",
+      "breakpoints": true
     }
   ]
 }

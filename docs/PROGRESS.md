@@ -1,14 +1,25 @@
 # Progress and handoff
 
-Last updated: 2026-10-12.
+Last updated: 2026-10-13.
+
+## Better Auth and PostgreSQL cutover (2026-10-13)
+
+- Replaced the website’s email-link login with Better Auth email/password, database-verified sessions and provisioned owner/email checks. Public signup/admin/recovery/account-linking routes are unavailable; POST origins are checked and credential bodies are bounded. Added a database-backed, single-owner five-attempt/minute login limit and 30-day sessions without cookie caching.
+- Added operator-only `owner:provision`/`owner:recover` using supported Better Auth APIs, transactional singleton provisioning, hidden terminal password input and password recovery/session revocation without email. Added generated admin-plugin/rate-limit schema migrations; the operator admin instance is never mounted publicly.
+- Cut over the repository to Drizzle snapshot reads and transactional PostgreSQL functions adapted to explicit Better Auth owner IDs. Preserved atomic saves, confirmation/settlement retry keys, duplicate override, optimistic versions, correction history and Me protection. Added a separate runtime-role grant command; runtime credentials cannot directly mutate ledger/history, provision users or change credentials.
+- The old email-link callback now only redirects to login. Application routes no longer call Supabase; unused clients/packages/types/migrations/legacy tests and setup reference remain for the next cleanup commit. The loopback demo and financial calculations are preserved.
+- Verification: `pnpm check`, 19 unit tests and 26 PostgreSQL integration checks passed (nine schema, eight new auth/repository, nine retained legacy checks). New checks use actual Better Auth handlers and a restricted role against disposable local PostgreSQL, covering signup/origin/owner rejection, persistent cookies, logout/recovery revocation, shared rate limits, credential request limits, concurrent/idempotent writes, duplicate override, revisions and direct-write denial.
+- Two new authenticated Chromium/WebKit checks passed against a production build and disposable local database/role: password login, reload/new-tab persistence, recording/settlement, CSV and logout. The production check exposed a NextRequest/native Request implementation mismatch; the handler now creates a bounded normalized request from URL/method/headers/body. This run did not stop the existing development server.
+- T3 preview inspected the actual password login page with no console errors. Hosted Neon, real iPhone Safari and R2 remain unverified; the existing demo browser suite was not rerun in this commit. Local tests are not mocked auth but do not imply hosted-service verification.
+- Migration metadata checks/no-change generation, peer compatibility and production build passed. Operator command smoke checks use fixture credentials and disposable local data; passwords are not echoed to the terminal.
 
 ## Current direction — personal modular backend (2026-10-12)
 
 - The user approved the Neon PostgreSQL + Better Auth + Drizzle + private Cloudflare R2 approach for personal, single-owner use. Pricing/productisation work is outside the current scope.
 - The user confirmed initial Better Auth email/password login with one provisioned account with public signup disabled and operator-only recovery/session revocation. No email service is required for routine login; OAuth/passkeys are deferred options.
 - Updated the build brief, decisions and setup guide. Preserved the old Supabase instructions in `SETUP_SUPABASE_LEGACY.md` as existing-code reference.
-- The Drizzle/PostgreSQL foundation is now implemented and verified locally. Website routes still use Supabase; replacement auth/repository integration and hosted checks remain incomplete. Earlier historical test results below describe the Supabase/manual baseline.
-- Next task: Better Auth login/provisioning and the replacement repository/permissions, then live Neon verification and R2 attachments. Keep the existing financial/UI behaviour and concurrency guarantees.
+- Better Auth password login, operator provisioning/recovery and the Drizzle/PostgreSQL repository cutover are implemented and locally verified. Application routes no longer use Supabase; unused legacy artifacts remain for cleanup. Earlier historical test results below describe the Supabase/manual baseline.
+- Next task: remove unused Supabase artifacts, then configure/verify hosted Neon. R2 attachments/import belong to the following milestone.
 
 ## Active branch scope — `feature/modular-backend`
 
@@ -18,7 +29,7 @@ Last updated: 2026-10-12.
 - Update environment examples, scripts and setup documentation; remove superseded Supabase runtime dependencies/integration after the replacement works. Preserve the loopback demo and personal data.
 - Verify local PostgreSQL authorization/concurrency, authenticated flows, the existing manual recording/settlement/CSV behaviour, type/lint checks, unit tests and production build. Live Neon checks depend on configured development credentials and must be recorded separately.
 - Completion means the existing manual tracker works on the replacement auth/database backend with repeatable setup and verified local checks. R2 uploads, screenshot extraction, social login, analytics refinements and deployment are later work.
-- First implementation commit covers the database foundation below; auth/repository cutover is next.
+- Database foundation and local auth/repository cutover are complete; cleanup and hosted verification remain.
 
 ## Modular database foundation (2026-10-12)
 
@@ -125,25 +136,23 @@ Last updated: 2026-10-12.
 
 ## Next steps
 
-All four shadcn conversions are complete and the user reports the branch merged into `main`. Optional Input Group polish is deferred. The approved next milestone replaces the existing Supabase backend with the personal modular stack.
+On `feature/modular-backend`, the replacement auth/database now runs the manual tracker locally with a restricted runtime role. Remaining branch work:
 
-1. Implement Better Auth email/password login and private owner provisioning/recovery; replace Supabase session checks and login UI. Disable public signup at the server and verify session persistence/invalidation and owner restrictions.
-2. Build Neon-compatible server repository access and restricted database privileges on the implemented Drizzle schema/migrations. Replace Supabase identity/RPC integration while preserving atomic saves, idempotency, optimistic versions and settlement history. Finish environment/setup changes and integration coverage for the actual workflows.
-3. Configure development Neon and verify the manual workflow and access restrictions live. Earlier stand-in Supabase checks do not verify this backend.
-4. Implement and verify private R2 attachment uploads/downloads/deletion, then persistent import drafts, extraction, hash/reference warnings, retry and idempotent confirmation.
-5. Add CI checks; compare image models with supplied sample slips when available.
-6. Verify actual iPhone Safari uploads/core flows and Home Screen installation. Configure separate production Neon/R2/auth and Next.js hosting; document backups and verify the personal deployment.
+1. Remove unused Supabase packages, clients/generated types, obsolete configuration/callback, CLI scripts, migrations, stand-in tests and the legacy setup guide. Preserve historical verification notes and the independent local demo. Run the appropriate checks after removal.
+2. Configure a development Neon database and restricted runtime role using `SETUP.md`, provision the owner and verify actual hosted login/session persistence, writes/corrections, access restrictions and concurrency. This requires development credentials; do not claim hosted verification from local PostgreSQL tests.
+3. Review the completed branch, ensure docs reflect verified status and prepare it for merge. Actual iPhone testing remains a separate personal release check.
 
-After live verification, screenshot import and some real usage, revisit the [future analytics UI ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12). This remains a deferred candidate milestone, not an additional release blocker.
+Later milestones: private R2 attachments/import, CI, sample-slip extraction checks, actual iPhone/Home Screen and separate production deployment. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 
 ## Modular backend milestone checklist
 
 - [x] Document the approved personal stack and recommended login approach.
-- [ ] Better Auth integration, password login, owner provisioning/recovery and session checks.
+- [x] Better Auth integration, password login, owner provisioning/recovery and session checks (local).
 - [x] Drizzle schema, reviewed foundation migrations, pool and local schema integration checks.
-- [ ] Replacement repository/transaction logic and restricted runtime permissions.
-- [ ] Complete auth/repository environment example, executable provisioning guide and workflow integration tests; database foundation setup is documented.
-- [ ] Local migration, authorization, concurrency and manual-flow verification.
+- [x] Replacement repository/transaction logic and restricted runtime permissions (local).
+- [x] Auth/repository environment example, setup/provisioning guide and workflow integration tests.
+- [x] Local migration, authorization, concurrency and authenticated manual-flow verification.
+- [ ] Remove unused Supabase integration/dependencies and rerun relevant checks.
 - [ ] Live Neon/Better Auth verification.
 - [ ] Private R2 attachment workflow and live access verification.
 - [ ] Persistent screenshot import/extraction/retry/confirmation.

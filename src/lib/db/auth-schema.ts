@@ -1,5 +1,13 @@
 import { relations } from "drizzle-orm";
-import { boolean, index, pgSchema, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  boolean,
+  index,
+  integer,
+  pgSchema,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 export const identitySchema = pgSchema("identity");
 
@@ -14,6 +22,10 @@ export const user = identitySchema.table("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+  role: text("role"),
+  banned: boolean("banned").default(false),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires"),
 });
 
 export const session = identitySchema.table(
@@ -31,6 +43,7 @@ export const session = identitySchema.table(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    impersonatedBy: text("impersonated_by"),
   },
   (table) => [index("session_userId_idx").on(table.userId)],
 );
@@ -74,6 +87,13 @@ export const verification = identitySchema.table(
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
+
+export const rateLimit = identitySchema.table("rate_limit", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+});
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),

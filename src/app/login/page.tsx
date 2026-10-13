@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { LoginForm } from "@/features/auth/login-form";
-import { hasSupabase, isDemo } from "@/lib/config";
+import { hasAuthentication, isDemo } from "@/lib/config";
 export default async function LoginPage({
   searchParams,
 }: {
@@ -27,10 +27,10 @@ export default async function LoginPage({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          {!hasSupabase() && (
+          {!hasAuthentication() && (
             <Alert>
               <AlertDescription>
-                Private login is awaiting Supabase setup. See the repository
+                Private login is awaiting account setup. See the repository
                 setup guide.
               </AlertDescription>
             </Alert>
@@ -40,7 +40,7 @@ export default async function LoginPage({
               <AlertDescription>
                 {error === "access"
                   ? "This account is not provisioned for this app."
-                  : "That link has expired or could not be verified. Request a new link."}
+                  : "Unable to verify your session. Please sign in again."}
               </AlertDescription>
             </Alert>
           )}

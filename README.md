@@ -1,8 +1,8 @@
 # Bet ledger
 
-A private, iPhone-first betting tracker for personal use, built with Next.js App Router, strict TypeScript, Tailwind CSS and shadcn/ui. The target backend is Neon PostgreSQL, Better Auth, Drizzle and private Cloudflare R2; the website still uses Supabase while the migration is in progress.
+A private, iPhone-first betting tracker for personal use, built with Next.js App Router, strict TypeScript, Tailwind CSS and shadcn/ui. The website uses PostgreSQL/Drizzle and Better Auth password login, with Neon as the hosted database target. Private Cloudflare R2 attachments are planned next; unused Supabase artifacts await cleanup.
 
-The manual milestone includes singles/accas, saved incomplete drafts, cash/free-bet funding, settlement correction history, dashboard totals, filters, editable lists and CSV exports. The replacement Drizzle schema/migration tooling is implemented. Better Auth login and repository cutover come next, followed by private R2 screenshots/import.
+The manual milestone includes singles/accas, saved incomplete drafts, cash/free-bet funding, settlement correction history, dashboard totals, filters, editable lists and CSV exports. The replacement database/authentication and repository are implemented and verified locally. Supabase cleanup and hosted Neon verification come next, followed by private R2 screenshots/import.
 
 ## Run locally
 
@@ -16,7 +16,7 @@ pnpm dev:demo
 
 Open http://127.0.0.1:3000. The explicit local demo saves test entries in `.local/ledger-data/demo.json`, requires no credentials and binds to loopback. It has no real authentication, is labelled in the UI and is disabled in production/Vercel. Use test data only. To start fresh, stop the demo and remove `.local/ledger-data/demo.json`.
 
-See the [setup guide](docs/SETUP.md) for the available database foundation commands and remaining backend migration work. Legacy Supabase instructions are preserved separately; setting the new database variables does not switch the website yet.
+See the [setup guide](docs/SETUP.md) for the available database foundation commands and remaining backend migration work. Use a separate restricted runtime database connection, and provision your one private account through the operator command.
 
 ## Commands
 
@@ -29,6 +29,9 @@ See the [setup guide](docs/SETUP.md) for the available database foundation comma
 | `pnpm typecheck` | Generate route types and check TypeScript |
 | `pnpm test` | Financial, metrics and validation tests |
 | `pnpm test:db` | PostgreSQL integration tests; requires `TEST_DATABASE_URL` |
+| `pnpm test:e2e:auth` | Production-app password/manual-flow checks on a temporary local database; build first |
+| `pnpm owner:provision` / `pnpm owner:recover` | Hidden-password operator account setup/recovery |
+| `pnpm db:grant-runtime` | Grant limited privileges to a separate existing runtime role |
 | `pnpm test:db:modular` | Replacement schema checks against disposable loopback PostgreSQL |
 | `pnpm test:e2e` | Mobile Chromium/WebKit manual flow using a separate demo file |
 | `pnpm build` / `pnpm start` | Build/run production server |
