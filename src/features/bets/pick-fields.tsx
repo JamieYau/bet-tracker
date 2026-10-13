@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SearchableSelect } from "@/components/searchable-select";
 import {
   Field,
   FieldDescription,
@@ -21,6 +22,7 @@ export function PickFields({
   errors = {},
   includeMixed = false,
   metadata = true,
+  disabled = false,
 }: {
   id: string;
   pick: {
@@ -37,6 +39,7 @@ export function PickFields({
   errors?: Record<string, string[] | undefined>;
   includeMixed?: boolean;
   metadata?: boolean;
+  disabled?: boolean;
 }) {
   const options = marketOptions(pick.sport);
   const [customMode, setCustomMode] = useState(() =>
@@ -85,35 +88,27 @@ export function PickFields({
             <FieldLabel htmlFor={`${id}-market`}>
               Market type (optional)
             </FieldLabel>
-            <NativeSelect
+            <SearchableSelect
+              disabled={disabled}
               id={`${id}-market`}
               value={custom ? "__custom" : pick.market}
               aria-invalid={Boolean(errors.market?.length)}
               aria-describedby={
                 errors.market?.length ? `${id}-market-error` : undefined
               }
-              onChange={(event) => {
-                setCustomMode(event.target.value === "__custom");
+              onValueChange={(value) => {
+                setCustomMode(value === "__custom");
                 change(
                   "market",
-                  event.target.value === "__custom"
-                    ? custom
-                      ? pick.market
-                      : ""
-                    : event.target.value,
+                  value === "__custom" ? (custom ? pick.market : "") : value,
                 );
               }}
-            >
-              <NativeSelectOption value="">Choose market</NativeSelectOption>
-              {options.map((market) => (
-                <NativeSelectOption key={market} value={market}>
-                  {market}
-                </NativeSelectOption>
-              ))}
-              <NativeSelectOption value="__custom">
-                Other / custom
-              </NativeSelectOption>
-            </NativeSelect>
+              options={[
+                { value: "", label: "Choose market" },
+                ...options.map((market) => ({ value: market, label: market })),
+                { value: "__custom", label: "Other / custom" },
+              ]}
+            />
             {custom && (
               <>
                 <FieldLabel htmlFor={`${id}-custom-market`}>

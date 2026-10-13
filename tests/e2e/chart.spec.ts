@@ -22,10 +22,9 @@ test("chart shows losses, zero baseline, equal settlement times and latest corre
   let winnerUrl = "";
   for (const outcome of ["lost", "won"]) {
     await page.goto("/add");
-    await page
-      .getByLabel("Source", { exact: true })
-      .selectOption({ label: sourceName });
-    sourceId = await page.getByLabel("Source", { exact: true }).inputValue();
+    await page.getByLabel("Source", { exact: true }).fill(sourceName);
+    await page.getByRole("option", { name: sourceName, exact: true }).click();
+    sourceId = await page.locator('input[name="sourceId"]').inputValue();
     await page
       .getByLabel("Selection", { exact: true })
       .fill(`${sourceName} ${outcome}`);

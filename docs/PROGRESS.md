@@ -1,6 +1,18 @@
 # Progress and handoff
 
-Last updated: 2026-10-13.
+Last updated: 2026-10-14.
+
+## Combobox typing follow-up (2026-10-14)
+
+- All shared combobox inputs select their displayed text on focus/click, allowing the first typed character to replace All/All markets or a selected label. A before-input handler covers WebKit tap behaviour that resets caret selection after focus; existing selection/search separation and Escape restoration remain intact.
+- Extended the existing Dashboard/Bets filter flow to use actual sequential typing after clicks and keyboard focus, covering All, All markets and an already-selected market. Both Chromium/WebKit focused scenarios passed. The first run identified the WebKit caret reset and a test attempting to focus before hydration; these were corrected. Biome/TypeScript and production build passed. Actual iPhone Safari remains unverified.
+
+## Searchable controls and dependent market filters (2026-10-14)
+
+- Created `feature/searchable-controls` from the clean `main` checkout after the dark-mode/structured-entry merge. Added shadcn Base UI Combobox/InputGroup and a shared searchable select for Bookmaker, Source and Market type in recording/editing, acca legs and Dashboard/Bets filters. Short lists remain native selects; Other/custom and archived selected entry options are preserved.
+- Filters update available markets immediately when Sport changes and clear an incompatible selected market; Apply filters still updates results/metrics/URLs. Custom market choices come from matching single picks or acca legs, with existing Mixed semantics. A client island receives prepared option lists, preserves unsent choices through disclosure toggles and submits canonical hidden values.
+- Type/lint checks, 23 unit checks, peer compatibility and production build passed. Unit coverage includes custom market isolation across singles/mixed acca legs. The full demo browser run passed 33 of 34 Chromium/WebKit scenarios; only the WebKit theme error-list assertion failed on the previously recorded React development `flushComponentPerformance` exception and its Next devtools stack-frame fetch. Theme behaviour assertions passed. All six focused Chromium/WebKit filter/theme checks then passed, including the final bookmaker UUID submission assertion and hydration guard; all 34 scenarios passed across the full and focused runs.
+- T3 inspected real combobox options and searched/selected Sky Bet at 320px, verifying its hidden UUID and no page/popup overflow. NFL market search returned Player receiving yards; the filter popup fitted 320px and the dashboard fitted 1280px. Browser/demo checks are not live Neon or actual iPhone Safari verification. No database/auth/financial logic changes or new dependencies/lockfile changes.
 
 ## Theme and structured entry branch complete (2026-10-13)
 
@@ -227,7 +239,7 @@ Last updated: 2026-10-13.
 
 ## Next steps
 
-The backend is merged and verified against development Neon. Dark mode and structured entry implementation/review are complete on `feature/dark-mode`; review/merge this branch. The new optional metadata migration is already applied to development Neon and must precede the updated app in other environments.
+The backend, dark mode and structured entry are now on `main`. Complete/review the form and filter improvements on `feature/searchable-controls`. The optional metadata migration is already applied to development Neon and must precede the updated app in other environments.
 
 Then implement private R2 attachments and persistent screenshot import/extraction/retry/confirmation. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate hosted Next.js/production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 

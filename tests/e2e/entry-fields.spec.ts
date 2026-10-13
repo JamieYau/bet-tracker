@@ -7,9 +7,10 @@ test("player props retain structured fields through drafts, edits, filters and C
   await page.goto("/add");
   await page.setViewportSize({ width: 320, height: 850 });
   await page.getByLabel("Sport", { exact: true }).selectOption("NBA");
+  await page.getByLabel("Market type (optional)").fill("rebounds");
   await page
-    .getByLabel("Market type (optional)")
-    .selectOption("Player rebounds");
+    .getByRole("option", { name: "Player rebounds", exact: true })
+    .click();
   await page.getByLabel("Selection", { exact: true }).fill("Jarrett Allen");
   await page.getByLabel("Event / fixture (optional)").fill(event);
   await page.getByLabel("Over / Under (optional)").selectOption("over");
@@ -113,7 +114,13 @@ test("mixed acca legs keep their fixtures and custom markets and filters match t
       .fill(index === 1 ? "Jarrett Allen" : "Lions");
     await leg
       .getByLabel("Market type (optional)")
-      .selectOption(index === 1 ? "Player rebounds" : "__custom");
+      .fill(index === 1 ? "rebounds" : "custom");
+    await page
+      .getByRole("option", {
+        name: index === 1 ? "Player rebounds" : "Other / custom",
+        exact: true,
+      })
+      .click();
     if (index === 2)
       await leg.getByLabel("Custom market").fill("Special team handicap");
     await leg

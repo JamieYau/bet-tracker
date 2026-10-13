@@ -2,6 +2,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useActionState, useState } from "react";
 import { PendingLabel } from "@/components/pending-label";
+import { SearchableSelect } from "@/components/searchable-select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -161,7 +162,7 @@ export function BetForm({
           <CardContent className="grid gap-5 sm:grid-cols-2">
             <Field data-invalid={Boolean(state.errors?.bookmakerId?.length)}>
               <FieldLabel htmlFor="bookmakerId">Bookmaker</FieldLabel>
-              <NativeSelect
+              <SearchableSelect
                 aria-invalid={Boolean(state.errors?.bookmakerId?.length)}
                 aria-describedby={
                   state.errors?.bookmakerId?.length
@@ -170,26 +171,25 @@ export function BetForm({
                 }
                 id="bookmakerId"
                 value={values.bookmakerId}
-                onChange={(event) => text("bookmakerId", event.target.value)}
-              >
-                {bookmakers
+                onValueChange={(value) => text("bookmakerId", value)}
+                name="bookmakerId"
+                disabled={!ready || pending}
+                options={bookmakers
                   .filter(
                     (option) => option.active || option.id === bet?.bookmakerId,
                   )
-                  .map((option) => (
-                    <NativeSelectOption key={option.id} value={option.id}>
-                      {option.name}
-                      {!option.active ? " (archived)" : ""}
-                    </NativeSelectOption>
-                  ))}
-              </NativeSelect>
+                  .map((option) => ({
+                    value: option.id,
+                    label: option.name + (!option.active ? " (archived)" : ""),
+                  }))}
+              />
               <FieldError id="bookmakerId-error">
                 {state.errors?.bookmakerId?.join(" ")}
               </FieldError>
             </Field>
             <Field data-invalid={Boolean(state.errors?.sourceId?.length)}>
               <FieldLabel htmlFor="sourceId">Source</FieldLabel>
-              <NativeSelect
+              <SearchableSelect
                 aria-invalid={Boolean(state.errors?.sourceId?.length)}
                 aria-describedby={[
                   "sourceId-hint",
@@ -199,19 +199,18 @@ export function BetForm({
                   .join(" ")}
                 id="sourceId"
                 value={values.sourceId}
-                onChange={(event) => text("sourceId", event.target.value)}
-              >
-                {sources
+                onValueChange={(value) => text("sourceId", value)}
+                name="sourceId"
+                disabled={!ready || pending}
+                options={sources
                   .filter(
                     (option) => option.active || option.id === bet?.sourceId,
                   )
-                  .map((option) => (
-                    <NativeSelectOption key={option.id} value={option.id}>
-                      {option.name}
-                      {!option.active ? " (archived)" : ""}
-                    </NativeSelectOption>
-                  ))}
-              </NativeSelect>
+                  .map((option) => ({
+                    value: option.id,
+                    label: option.name + (!option.active ? " (archived)" : ""),
+                  }))}
+              />
               <FieldDescription id="sourceId-hint">
                 One source for the whole bet. Choose Me for mixed-source accas.
               </FieldDescription>
@@ -281,6 +280,7 @@ export function BetForm({
               </div>
             </Field>
             <PickFields
+              disabled={!ready || pending}
               id="bet"
               pick={values}
               change={text}
@@ -338,6 +338,7 @@ export function BetForm({
                       </Field>
                     ))}
                     <PickFields
+                      disabled={!ready || pending}
                       id={leg.id}
                       pick={leg}
                       errors={Object.fromEntries(

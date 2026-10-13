@@ -30,7 +30,7 @@ These were suggested during discussion, but were not separately confirmed. Resol
 
 ## Delivery sequence
 
-Current order: the Better Auth/Neon/Drizzle backend is merged and verified against development Neon; review/merge the dark-mode and structured-entry milestone; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
+Current order: the Better Auth/Neon/Drizzle backend is merged and verified against development Neon; dark mode and structured entry are now on main; complete the searchable-control/filter branch; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
 
 ## Modular backend pivot (2026-10-12)
 
@@ -136,3 +136,15 @@ Do not treat unavailable external inputs as a reason to stop independent impleme
 ## Runtime database setup checks (2026-10-13)
 
 Use a separately created restricted SQL login role, not a provider dashboard role with administrative membership. `db:grant-runtime` checks effective table and column privileges, role membership/ownership and schema creation before granting the reviewed permissions, then audits the result. `db:verify` checks the runtime connection and provisioned owner in a read-only transaction after setup. These checks supplement authenticated workflow verification; passing locally does not establish hosted Neon behaviour.
+
+
+## Searchable entry and dependent filters (2026-10-14)
+
+- Use the shadcn Base UI Combobox for Bookmaker, Source and Market type in recording/editing (including acca legs) and Dashboard/Bets filters. Keep short Sport, Over/Under, bet type and status lists as native selects. Typing searches existing choices; entry retains explicit Other/custom market input.
+- Changing Sport in filters immediately updates market choices and clears a selected market that is unavailable for the new sport. Results/metrics and URL query parameters update only with Apply filters; collapsing the disclosure preserves unsent choices.
+- Include catalogue markets plus custom/legacy markets from matching singles or matching acca legs. Never add an acca summary market or another sport's recorded markets to a sport-specific list. All sports includes every pick; Mixed includes catalogue choices and custom markets from mixed accas, matching the existing whole-bet Mixed semantics.
+- Preserve an already-applied direct-URL/legacy market value visibly until the user changes sport, so the control represents the active query even if that market has no current matches. Entry preserves archived selected bookmaker/source choices when editing; filters keep archived lists searchable for history.
+- Server-rendered filters pass only option lists and parsed filters into a client island. Hidden controls submit canonical values/IDs, independent of search text. Controlled selectors wait for hydration and recording controls also respect pending submissions. Financial, database and CSV semantics are unchanged.
+- Added registry Combobox/InputGroup files using the existing Base UI dependency; no package or lockfile changes were needed. Removed redundant InputGroup group roles and addon click-to-focus behaviour; the input and labelled trigger provide keyboard interaction. Reference: [shadcn Base UI Combobox](https://ui.shadcn.com/docs/components/base/combobox), [Base UI Combobox](https://base-ui.com/react/components/combobox).
+
+- Combobox focus selects the displayed text so typing replaces it immediately. Click/before-input selection also handles touch browsers that reposition the caret after focus. Search text remains separate from the selected value; Escape restores the selected label.

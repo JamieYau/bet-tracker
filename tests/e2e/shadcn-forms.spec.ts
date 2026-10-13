@@ -152,12 +152,11 @@ test("settings checkboxes persist active and archived sources", async ({
     row.getByRole("checkbox", { name: "Active", exact: true }),
   ).not.toBeChecked();
   await page.goto("/add");
+  await page.getByLabel("Source", { exact: true }).fill(name);
+  await expect(page.getByRole("option", { name, exact: true })).toHaveCount(0);
   await expect(
-    page
-      .getByLabel("Source", { exact: true })
-      .locator("option")
-      .filter({ hasText: name }),
-  ).toHaveCount(0);
+    page.getByText("No matches found.", { exact: true }),
+  ).toBeVisible();
   await page.goto("/settings");
   await row.getByRole("checkbox", { name: "Active", exact: true }).check();
   await row.getByRole("button", { name: "Save", exact: true }).click();
@@ -171,9 +170,8 @@ test("settings checkboxes persist active and archived sources", async ({
   ).toBe(true);
   if (viewport) await page.setViewportSize(viewport);
   await page.goto("/add");
-  await page
-    .getByLabel("Source", { exact: true })
-    .selectOption({ label: name });
+  await page.getByLabel("Source", { exact: true }).fill(name);
+  await page.getByRole("option", { name: name, exact: true }).click();
 });
 
 test("settings wait for hydration before accepting editable values", async ({

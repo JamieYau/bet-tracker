@@ -16,7 +16,7 @@ A private, iPhone-first web app for the owner’s personal use that records bets
 ## First release
 
 - Dashboard, Bets, Add Bet and Settings; mobile bottom navigation and prominent Add Bet action.
-- Accessible shadcn/ui controls with loading, empty, validation and error states.
+- Accessible shadcn/ui controls with loading, empty, validation and error states. Searchable comboboxes for bookmaker, source and market in entry and filters; filter market choices follow the selected sport immediately, with results refreshed by Apply filters.
 - Manual entry plus one or more screenshots for a single bet. AI creates an editable draft; recording requires confirmation.
 - Fields: bookmaker, placement time, sport, selection/market, accepted odds, separate cash/free-bet stakes, bet type and source. Optional event/fixture, Over/Under, numeric line/handicap, reference, notes and tags, plus an In-play checkbox.
 - Agreed entry follow-up: one Sport dropdown with NFL, Football, NCAAF, WNBA, Tennis and NBA. No separate league field; tennis tournaments can go in Event/fixture. Sport-specific market choices include a custom fallback; singles and each acca leg carry their own event, direction and line. These entry refinements are implemented.

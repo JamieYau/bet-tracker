@@ -5,13 +5,11 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
-import {
-  marketOptions,
-  normalizeMarket,
-  sportOptions,
-} from "@/features/bets/catalog";
+import { sportOptions } from "@/features/bets/catalog";
 import type { Ledger } from "@/features/bets/types";
 import { FilterDisclosure } from "./filter-disclosure";
+import { filterMarketOptions } from "./filter-options";
+import { FilterSelectors } from "./filter-selectors";
 import type { Filters } from "./metrics";
 
 export function FilterForm({
@@ -30,15 +28,12 @@ export function FilterForm({
     ]),
     true,
   );
-  const markets = [
-    ...new Set([
-      ...marketOptions(filters.sport ?? ""),
-      ...ledger.bets
-        .flatMap((bet) => [bet.market, ...bet.legs.map((leg) => leg.market)])
-        .map(normalizeMarket)
-        .filter(Boolean),
+  const marketsBySport = Object.fromEntries(
+    ["", ...sports].map((sport) => [
+      sport,
+      filterMarketOptions(ledger.bets, sport),
     ]),
-  ].sort();
+  );
   return (
     <FilterDisclosure
       dateLabel={dateLabel}
@@ -65,52 +60,20 @@ export function FilterForm({
             defaultValue={filters.to}
           />
         </Field>
-        {(
-          [
-            ["bookmaker", "Bookmaker", ledger.bookmakers],
-            ["source", "Source", ledger.sources],
-          ] as const
-        ).map(([key, label, options]) => (
-          <Field key={key}>
-            <FieldLabel htmlFor={key}>{label}</FieldLabel>
-            <NativeSelect name={key} id={key} defaultValue={filters[key] ?? ""}>
-              <NativeSelectOption value="">All</NativeSelectOption>
-              {options.map((option) => (
-                <NativeSelectOption key={option.id} value={option.id}>
-                  {option.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </Field>
-        ))}
-        <Field>
-          <FieldLabel htmlFor="sport">Sport</FieldLabel>
-          <NativeSelect
-            name="sport"
-            id="sport"
-            defaultValue={filters.sport ?? ""}
-          >
-            <NativeSelectOption value="">All sports</NativeSelectOption>
-            {sports.map((sport) => (
-              <NativeSelectOption key={sport}>{sport}</NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="market">Market type</FieldLabel>
-          <NativeSelect
-            id="market"
-            name="market"
-            defaultValue={filters.market ?? ""}
-          >
-            <NativeSelectOption value="">All markets</NativeSelectOption>
-            {markets.map((market) => (
-              <NativeSelectOption key={market} value={market}>
-                {market}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </Field>
+        <FilterSelectors
+          key={JSON.stringify(filters)}
+          filters={filters}
+          sports={sports}
+          marketsBySport={marketsBySport}
+          bookmakers={ledger.bookmakers.map((option) => ({
+            value: option.id,
+            label: option.name,
+          }))}
+          sources={ledger.sources.map((option) => ({
+            value: option.id,
+            label: option.name,
+          }))}
+        />
         <Field>
           <FieldLabel htmlFor="event">Event / fixture</FieldLabel>
           <Input
