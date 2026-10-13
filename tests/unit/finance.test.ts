@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { filterMarketOptions } from "@/features/analytics/filter-options";
 import {
   history,
   matchesDimensions,
@@ -329,5 +330,47 @@ describe("structured pick classification", () => {
     expect(matchesDimensions(acca, { inPlay: "no" })).toBe(false);
     expect(history([acca], { sport: "NBA" })).toEqual([acca]);
     expect(cashProfit(acca)).toBe(1500);
+  });
+});
+
+describe("sport-dependent filter markets", () => {
+  it("includes custom markets only from matching singles and acca legs", () => {
+    const bets = [
+      bet({ sport: "NBA", market: "Custom basketball" }),
+      bet({ sport: "nfl", market: "Custom NFL" }),
+      bet({
+        betType: "acca",
+        sport: "Mixed",
+        market: "Acca summary",
+        legs: [
+          {
+            id: "l1",
+            sport: "NBA",
+            market: "Custom NBA leg",
+            selection: "A",
+            odds: "2",
+            status: "open",
+          },
+          {
+            id: "l2",
+            sport: "NFL",
+            market: "Custom NFL leg",
+            selection: "B",
+            odds: "2",
+            status: "open",
+          },
+        ],
+      }),
+    ];
+    const nfl = filterMarketOptions(bets, "NFL");
+    expect(nfl).toContain("Player receiving yards");
+    expect(nfl).toContain("Custom NFL");
+    expect(nfl).toContain("Custom NFL leg");
+    expect(nfl).not.toContain("Custom basketball");
+    expect(nfl).not.toContain("Custom NBA leg");
+    expect(nfl).not.toContain("Acca summary");
+    expect(filterMarketOptions(bets, "")).toContain("Custom basketball");
+    expect(filterMarketOptions(bets, "Mixed")).toContain("Custom NBA leg");
+    expect(filterMarketOptions(bets, "Mixed")).not.toContain("Custom NFL");
   });
 });

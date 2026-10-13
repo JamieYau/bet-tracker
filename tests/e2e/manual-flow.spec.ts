@@ -23,9 +23,10 @@ test("in-play choice survives drafts and confirmation and can be cleared without
     page.getByRole("checkbox", { name: "In-play", exact: true }),
   ).toBeChecked();
   await page.getByLabel("Sport", { exact: true }).selectOption("NBA");
+  await page.getByLabel("Market type (optional)").fill("rebounds");
   await page
-    .getByLabel("Market type (optional)")
-    .selectOption("Player rebounds");
+    .getByRole("option", { name: "Player rebounds", exact: true })
+    .click();
   await page.getByLabel("Accepted total odds").fill("1.91");
   await page.getByLabel("Cash stake (£)", { exact: true }).fill("10");
   await page.getByRole("button", { name: "Confirm bet", exact: true }).click();
@@ -82,12 +83,9 @@ test("record, settle, correct, export and reconcile a manual bet", async ({
   await expect(
     page.getByRole("heading", { name: "Add a bet", exact: true }),
   ).toBeVisible();
-  await page
-    .getByLabel("Source", { exact: true })
-    .selectOption({ label: sourceName });
-  const sourceId = await page
-    .getByLabel("Source", { exact: true })
-    .inputValue();
+  await page.getByLabel("Source", { exact: true }).fill(sourceName);
+  await page.getByRole("option", { name: sourceName, exact: true }).click();
+  const sourceId = await page.locator('input[name="sourceId"]').inputValue();
   await page.getByLabel("Selection", { exact: true }).fill(name);
   await page.getByLabel("Accepted total odds").fill("3/2");
   await page.getByLabel("Cash stake (£)", { exact: true }).fill("10.00");
