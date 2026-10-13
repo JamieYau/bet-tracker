@@ -4,7 +4,7 @@
 
 The website now uses Better Auth password login and Drizzle/PostgreSQL for the private ledger. Neon is the hosted database target; Cloudflare R2 attachments are a later milestone. The legacy Supabase packages, code, callback, migrations and stand-in tests have been removed. The loopback demo remains available.
 
-Local integration checks exercise actual Better Auth, migrations and a restricted PostgreSQL role. The development Neon migrations, pooled connectivity and restricted runtime permissions are now verified; owner provisioning and hosted authentication/workflow checks remain pending. Actual iPhone behaviour is still unverified. The former Supabase setup is retained in Git history only; no Supabase provisioning is required.
+Local integration checks exercise actual Better Auth, migrations and a restricted PostgreSQL role. The development Neon migrations, pooled connectivity, restricted runtime permissions, provisioned account and authenticated workflow are now verified with the local Next.js app. Hosted Next.js deployment remains a separate check. Actual iPhone behaviour is still unverified. The former Supabase setup is retained in Git history only; no Supabase provisioning is required.
 
 ## Local manual demo — available now
 
@@ -36,9 +36,9 @@ pnpm exec biome check --write src/lib/db/auth-schema.ts
 
 The generator config includes core auth, database-backed rate limits and the operator-only admin plugin fields. It is never mounted as an application auth service and does not connect to PostgreSQL. Review schema/migration changes when changing auth options/plugins.
 
-The lazy server-only database entry point is `src/lib/db/server.ts`. It reads `DATABASE_URL`, reuses a bounded node-postgres pool and preserves URL-specified TLS settings. Use a Neon pooled runtime connection; use the appropriate admin connection for reviewed migrations. Application routes now use this entry point. Restricted-role behaviour is verified on disposable local PostgreSQL. The configured development Neon PostgreSQL 18 database has also passed migration application, pooled connection and runtime privilege checks; its account/authenticated workflow verification remains pending.
+The lazy server-only database entry point is `src/lib/db/server.ts`. It reads `DATABASE_URL`, reuses a bounded node-postgres pool and preserves URL-specified TLS settings. Use a Neon pooled runtime connection; use the appropriate admin connection for reviewed migrations. Application routes now use this entry point. Restricted-role behaviour is verified on disposable local PostgreSQL. The configured development Neon PostgreSQL 18 database has also passed migration application, pooled connection and runtime privilege checks; its provisioned account, session persistence, recording/settlement/correction/CSV workflow and concurrency/access restrictions are also verified with the local Next.js app.
 
-## Private account setup — implemented; hosted verification pending
+## Private account setup — available; development Neon verified
 
 1. Create a fresh development Neon database or disposable local PostgreSQL database. Apply reviewed migrations using the steps above. Do not point development scripts at personal production data.
 2. Create a separate, unprivileged PostgreSQL login role (for example `bet_tracker_app`) using an administrative SQL client. Give it a strong password through secure client input, such as psql’s `\password bet_tracker_app`. It must not own the database/tables, inherit administrative roles, bypass RLS or have role/database creation privileges. A role created through a provider dashboard may inherit broad privileges; verify it rather than assuming it is restricted.
@@ -56,7 +56,7 @@ The repository uses a consistent read transaction and transactional SQL function
 
 ## Later attachments and release work
 
-Implement private R2 uploads/downloads/deletion, metadata validation and persistent import drafts/extraction/retry/confirmation on later branches. Keep development/preview and production buckets/data separate. Actual R2 access, hosted Neon, actual iPhone Safari/Home Screen and production deployment remain separate live checks.
+Implement private R2 uploads/downloads/deletion, metadata validation and persistent import drafts/extraction/retry/confirmation on later branches. Keep development/preview and production buckets/data separate. Actual R2 access, production Neon, actual iPhone Safari/Home Screen and hosted Next.js deployment remain separate live checks.
 
 ## Verification — current scripts
 

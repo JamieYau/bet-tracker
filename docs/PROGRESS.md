@@ -2,6 +2,15 @@
 
 Last updated: 2026-10-13.
 
+## Live Neon verification complete (2026-10-13)
+
+- The user provisioned the private account and reported successful password sign-in. `pnpm db:verify` independently passed against the actual pooled Neon connection, including runtime identity/permissions and the configured password account.
+- T3 Chromium preview used the existing authenticated session with the local Next.js app and actual Neon PostgreSQL 18. Verified recording a labelled £10 cash bet at 2.5 odds, £25 settlement/£15 profit, correction to £20 return/£10 profit, retained revisions, corrected dashboard totals and CSV values. Confirmed the browser-created row and both revisions directly in Neon. Reload and a fresh tab preserved authentication; Settings sign-out cleared the session and private routes redirected to login afterward. The agent did not enter or reset the user's password.
+- Seven live runtime checks passed through Neon’s pooler: concurrent/idempotent confirmation, duplicate warning/override, idempotent settlement and correction history, conflicting settlements/stale rejection, draft confirmation retry, unprovisioned-owner read/write rejection and direct ledger/history/credential/owner write denial. HTTP checks also confirmed unauthenticated route protection, unavailable signup/admin endpoints and hostile-origin rejection.
+- Removed only this run's labelled fixtures using exact UUIDs and matching labels; verified cleanup. Existing records, account credentials and other sessions were preserved. The preview session used for the workflow was signed out as part of the check.
+- Updated the setup/status documentation. No application code changed or local regression suites/build were rerun for this verification step; the previous passing results remain recorded above/below at their milestones. This verifies the hosted development database with a local app, not a hosted Next.js deployment, WebKit rerun or actual iPhone Safari.
+- Backend branch development and live Neon checks are complete. Next: review/merge `feature/modular-backend`, then implement the saved dark-mode plan on a separate branch. R2/import and personal deployment checks remain later milestones.
+
 ## Neon development setup — account provisioning pending (2026-10-13)
 
 - The user created a fresh development Neon project and privately configured its direct owner connection. Applied all four reviewed Drizzle migrations successfully to actual Neon PostgreSQL 18; migration metadata checks passed. No existing local records were transferred.
@@ -166,10 +175,7 @@ Last updated: 2026-10-13.
 
 ## Next steps
 
-On `feature/modular-backend`, the replacement auth/database now runs the manual tracker locally with a restricted runtime role. Local implementation and branch review are complete. Remaining hosted verification and handoff:
-
-1. Complete the configured development Neon environment: run `pnpm owner:provision` with hidden terminal input, then `pnpm db:verify`, restart Next.js and verify hosted login/session persistence, writes/corrections, exports and concurrency. Migrations, pooled connectivity and runtime permissions are verified against Neon; account/workflow verification is pending. Do not claim hosted workflow verification from local PostgreSQL tests.
-2. Record the hosted results and prepare the branch for merge. Local review and regression checks are complete; actual iPhone testing remains a separate personal release check.
+On `feature/modular-backend`, local implementation, branch review and live development Neon verification are complete. Review/merge the branch; hosted Next.js deployment and actual iPhone testing remain separate personal release checks.
 
 Recommended next UI milestone after backend review: [dark mode](DECISIONS.md#dark-mode-plan-2026-10-13) on a separate branch. It can precede private R2 attachments/import. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 
@@ -183,7 +189,7 @@ Recommended next UI milestone after backend review: [dark mode](DECISIONS.md#dar
 - [x] Local migration, authorization, concurrency and authenticated manual-flow verification.
 - [x] Remove unused Supabase integration/dependencies and rerun relevant checks.
 - [x] Local branch review and read-only runtime setup verification command.
-- [ ] Live Neon/Better Auth verification.
+- [x] Live development Neon/Better Auth verification with the local Next.js app.
 - [ ] Private R2 attachment workflow and live access verification.
 - [ ] Persistent screenshot import/extraction/retry/confirmation.
 - [ ] CI, sample-slip checks, actual iPhone/Home Screen and personal deployment verification.

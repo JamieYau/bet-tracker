@@ -2,7 +2,7 @@
 
 A private, iPhone-first betting tracker for personal use, built with Next.js App Router, strict TypeScript, Tailwind CSS and shadcn/ui. The website uses PostgreSQL/Drizzle and Better Auth password login, with Neon as the hosted database target. Private Cloudflare R2 attachments are planned next.
 
-The manual milestone includes singles/accas, saved incomplete drafts, cash/free-bet funding, settlement correction history, dashboard totals, filters, editable lists and CSV exports. The replacement database/authentication and repository are implemented and verified locally. Hosted Neon verification comes next, followed by private R2 screenshots/import.
+The manual milestone includes singles/accas, saved incomplete drafts, cash/free-bet funding, settlement correction history, dashboard totals, filters, editable lists and CSV exports. The replacement database/authentication and repository are implemented and verified locally and against development Neon. Dark mode is the next UI milestone, followed by private R2 screenshots/import. Hosted Next.js deployment and actual iPhone verification remain outstanding.
 
 ## Run locally
 
