@@ -2,9 +2,9 @@
 
 ## Current status
 
-The website now uses Better Auth password login and Drizzle/PostgreSQL for the private ledger. Neon is the hosted database target; Cloudflare R2 attachments are a later milestone. Supabase integration is no longer used by application routes, but unused packages/client files and the old migration/tests remain until the separate cleanup commit. The loopback demo remains available.
+The website now uses Better Auth password login and Drizzle/PostgreSQL for the private ledger. Neon is the hosted database target; Cloudflare R2 attachments are a later milestone. The legacy Supabase packages, code, callback, migrations and stand-in tests have been removed. The loopback demo remains available.
 
-Local integration checks exercise actual Better Auth, migrations and a restricted PostgreSQL role. They do not establish hosted Neon connectivity or actual iPhone behaviour. The old [Supabase setup](SETUP_SUPABASE_LEGACY.md) is historical reference only; do not provision Supabase.
+Local integration checks exercise actual Better Auth, migrations and a restricted PostgreSQL role. They do not establish hosted Neon connectivity or actual iPhone behaviour. The former Supabase setup is retained in Git history only; no Supabase provisioning is required.
 
 ## Local manual demo — available now
 
@@ -69,7 +69,7 @@ pnpm test:e2e
 
 Playwright starts a loopback server on port 3100 and uses `.local/ledger-data/e2e.json`, separate from the interactive demo. Stop other Next.js development servers in this checkout first to avoid the `.next/dev` lock. iPhone viewport/WebKit emulation is not actual iPhone Safari verification.
 
-The current `pnpm test:db` needs `TEST_DATABASE_URL` pointing to a disposable local PostgreSQL cluster with database/role creation permissions. It creates a temporary database, applies stand-in Supabase Auth/Storage schemas and the existing migration, runs checks and drops that database. This legacy suite remains in place alongside the new modular schema suite; its results do not establish Better Auth, Neon or R2 service behaviour. Never point it at a real personal database.
+`pnpm test:db` runs the replacement schema and Better Auth/repository suites. Set `TEST_DATABASE_URL` to a disposable **loopback** PostgreSQL cluster with database/role creation permissions. The suites create uniquely named temporary databases, apply the real Drizzle migrations, verify schema/auth/repository behaviour and clean up their own databases/roles. No stand-in Auth/Storage service schemas are used. Never point these tests at a database containing personal records. These local checks do not verify hosted Neon or R2.
 
 `pnpm test:db:modular` runs only the new replacement schema suite. It requires `TEST_DATABASE_URL` to point to a loopback disposable PostgreSQL admin cluster, creates a uniquely named temporary database, applies the real Drizzle migrations without stand-in service schemas and drops only its temporary database. It verifies provisioning/seeds, foreign keys, numeric/date round trips, constraints, transactional rollback and migration replay. This schema-only command does not verify auth HTTP flows or repository concurrency. The separate `modular-auth.test.ts` suite, included in `pnpm test:db`, verifies actual Better Auth handlers, owner restrictions, operator recovery, shared rate limiting, restricted-role writes and concurrent/idempotent ledger functions on local PostgreSQL.
 

@@ -323,6 +323,82 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
       1,
     );
   });
+  it("retries draft confirmation without double recording", async () => {
+    const ledger = await readLedger(runtime.db, owner);
+    const id = randomUUID();
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      id,
+      0,
+      bet(ledger, {
+        selection: "",
+        sport: "",
+        acceptedOdds: null,
+        cashStakePence: 0,
+      }),
+      false,
+      false,
+    );
+    await savePostgresBet(runtime.db, owner, id, 1, bet(ledger), true, false);
+    await savePostgresBet(runtime.db, owner, id, 1, bet(ledger), true, false);
+    const stored = (await readLedger(runtime.db, owner)).bets;
+    expect(stored).toHaveLength(1);
+    expect(stored[0]).toMatchObject({ id, status: "open", version: 2 });
+  });
+  it("saves accas atomically and keeps the bet open when one leg is void", async () => {
+    const ledger = await readLedger(runtime.db, owner);
+    const input = bet(ledger, {
+      betType: "acca",
+      acceptedOdds: "5.000000",
+      legs: [
+        {
+          id: randomUUID(),
+          selection: "A",
+          market: "",
+          sport: "Football",
+          odds: "2.000000",
+          status: "void",
+        },
+        {
+          id: randomUUID(),
+          selection: "B",
+          market: "",
+          sport: "Football",
+          odds: "2.000000",
+          status: "open",
+        },
+      ],
+    });
+    const id = randomUUID();
+    await savePostgresBet(runtime.db, owner, id, 0, input, true, false);
+    const stored = (await readLedger(runtime.db, owner)).bets[0];
+    expect(stored.status).toBe("open");
+    expect(stored.acceptedOdds).toBe("5.000000");
+    expect(stored.legs.map((leg) => leg.status)).toEqual(["void", "open"]);
+    const broken = randomUUID();
+    await expect(
+      savePostgresBet(
+        runtime.db,
+        owner,
+        broken,
+        0,
+        {
+          ...input,
+          legs: input.legs.map((leg, index) => ({
+            ...leg,
+            id: randomUUID(),
+            odds: index === 1 ? "0" : leg.odds,
+          })),
+        },
+        true,
+        false,
+      ),
+    ).rejects.toThrow();
+    expect(
+      (await readLedger(runtime.db, owner)).bets.map((item) => item.id),
+    ).toEqual([id]);
+  });
   it("restricts direct mutations and keeps Me immutable", async () => {
     await expect(
       runtime.pool.query("update settlements set return_pence=999"),

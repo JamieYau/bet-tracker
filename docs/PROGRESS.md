@@ -2,6 +2,15 @@
 
 Last updated: 2026-10-13.
 
+## Supabase cleanup (2026-10-13)
+
+- Removed Supabase SDK/SSR/CLI dependencies and lockfile entries, client modules/generated types, configuration helpers, retired email-link callback, old migrations/config, stand-in integration fixtures/tests and the legacy setup guide. The earlier implementation remains in Git history; no hosted Supabase data existed to migrate.
+- Removed the obsolete `db:types` command and updated current setup/README/branch status. Historical verification records remain labelled as historical; live Supabase checks are superseded. The ledger error screen now provides a simple retry message without backend-specific instructions.
+- Ported the remaining draft-confirmation retry and atomic acca/void-leg checks into the restricted-role PostgreSQL repository suite before deleting the old suite. The independent loopback demo, financial rules and replacement migrations are preserved.
+- Verification passed: `pnpm check`, 19 unit tests, 19 replacement PostgreSQL integration checks (nine schema and ten auth/repository), two authenticated production Chromium/WebKit flows, migration metadata checks, peer compatibility, frozen-lockfile installation and production build. No Supabase references remain in source, scripts, tests, package manifest or lockfile; the build no longer contains the email-link callback route.
+- These checks used real local PostgreSQL/Better Auth with disposable fixture databases/roles. Hosted Neon, R2 and actual iPhone Safari remain unverified. The existing development server and personal demo data were not changed by verification.
+- Next: configure/verify the development Neon environment, then final branch review. R2 attachments/import remain a later milestone.
+
 ## Better Auth and PostgreSQL cutover (2026-10-13)
 
 - Replaced the website’s email-link login with Better Auth email/password, database-verified sessions and provisioned owner/email checks. Public signup/admin/recovery/account-linking routes are unavailable; POST origins are checked and credential bodies are bounded. Added a database-backed, single-owner five-attempt/minute login limit and 30-day sessions without cookie caching.
@@ -18,8 +27,8 @@ Last updated: 2026-10-13.
 - The user approved the Neon PostgreSQL + Better Auth + Drizzle + private Cloudflare R2 approach for personal, single-owner use. Pricing/productisation work is outside the current scope.
 - The user confirmed initial Better Auth email/password login with one provisioned account with public signup disabled and operator-only recovery/session revocation. No email service is required for routine login; OAuth/passkeys are deferred options.
 - Updated the build brief, decisions and setup guide. Preserved the old Supabase instructions in `SETUP_SUPABASE_LEGACY.md` as existing-code reference.
-- Better Auth password login, operator provisioning/recovery and the Drizzle/PostgreSQL repository cutover are implemented and locally verified. Application routes no longer use Supabase; unused legacy artifacts remain for cleanup. Earlier historical test results below describe the Supabase/manual baseline.
-- Next task: remove unused Supabase artifacts, then configure/verify hosted Neon. R2 attachments/import belong to the following milestone.
+- Better Auth password login, operator provisioning/recovery and the Drizzle/PostgreSQL repository are locally verified. Supabase code, packages and legacy setup/tests have now been removed. Earlier historical test results below describe the original manual baseline.
+- Next task: configure and verify hosted Neon, then review this branch for merge. R2 attachments/import belong to the following milestone.
 
 ## Active branch scope — `feature/modular-backend`
 
@@ -138,9 +147,8 @@ Last updated: 2026-10-13.
 
 On `feature/modular-backend`, the replacement auth/database now runs the manual tracker locally with a restricted runtime role. Remaining branch work:
 
-1. Remove unused Supabase packages, clients/generated types, obsolete configuration/callback, CLI scripts, migrations, stand-in tests and the legacy setup guide. Preserve historical verification notes and the independent local demo. Run the appropriate checks after removal.
-2. Configure a development Neon database and restricted runtime role using `SETUP.md`, provision the owner and verify actual hosted login/session persistence, writes/corrections, access restrictions and concurrency. This requires development credentials; do not claim hosted verification from local PostgreSQL tests.
-3. Review the completed branch, ensure docs reflect verified status and prepare it for merge. Actual iPhone testing remains a separate personal release check.
+1. Configure a development Neon database and restricted runtime role using `SETUP.md`, provision the owner and verify actual hosted login/session persistence, writes/corrections, access restrictions and concurrency. This requires development credentials; do not claim hosted verification from local PostgreSQL tests.
+2. Review the completed branch, ensure docs reflect verified status and prepare it for merge. Actual iPhone testing remains a separate personal release check.
 
 Later milestones: private R2 attachments/import, CI, sample-slip extraction checks, actual iPhone/Home Screen and separate production deployment. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 
@@ -152,7 +160,7 @@ Later milestones: private R2 attachments/import, CI, sample-slip extraction chec
 - [x] Replacement repository/transaction logic and restricted runtime permissions (local).
 - [x] Auth/repository environment example, setup/provisioning guide and workflow integration tests.
 - [x] Local migration, authorization, concurrency and authenticated manual-flow verification.
-- [ ] Remove unused Supabase integration/dependencies and rerun relevant checks.
+- [x] Remove unused Supabase integration/dependencies and rerun relevant checks.
 - [ ] Live Neon/Better Auth verification.
 - [ ] Private R2 attachment workflow and live access verification.
 - [ ] Persistent screenshot import/extraction/retry/confirmation.
@@ -175,7 +183,7 @@ Checked backend items below are historical completion for the existing implement
 - [x] Type checking, Biome checks and production build.
 - [x] Setup/deployment documentation and environment example.
 - [ ] CI automation.
-- [ ] Live Supabase authentication/database/Storage verification.
+- [ ] Live Supabase authentication/database/Storage verification — superseded by Neon/Better Auth/R2; no longer required.
 - [ ] Sample-slip/model/extraction verification.
 - [ ] Actual iPhone Safari and Home Screen checks.
 - [ ] Vercel deployment and production verification.

@@ -1,8 +1,8 @@
 # Bet ledger
 
-A private, iPhone-first betting tracker for personal use, built with Next.js App Router, strict TypeScript, Tailwind CSS and shadcn/ui. The website uses PostgreSQL/Drizzle and Better Auth password login, with Neon as the hosted database target. Private Cloudflare R2 attachments are planned next; unused Supabase artifacts await cleanup.
+A private, iPhone-first betting tracker for personal use, built with Next.js App Router, strict TypeScript, Tailwind CSS and shadcn/ui. The website uses PostgreSQL/Drizzle and Better Auth password login, with Neon as the hosted database target. Private Cloudflare R2 attachments are planned next.
 
-The manual milestone includes singles/accas, saved incomplete drafts, cash/free-bet funding, settlement correction history, dashboard totals, filters, editable lists and CSV exports. The replacement database/authentication and repository are implemented and verified locally. Supabase cleanup and hosted Neon verification come next, followed by private R2 screenshots/import.
+The manual milestone includes singles/accas, saved incomplete drafts, cash/free-bet funding, settlement correction history, dashboard totals, filters, editable lists and CSV exports. The replacement database/authentication and repository are implemented and verified locally. Hosted Neon verification comes next, followed by private R2 screenshots/import.
 
 ## Run locally
 
@@ -35,7 +35,6 @@ See the [setup guide](docs/SETUP.md) for the available database foundation comma
 | `pnpm test:db:modular` | Replacement schema checks against disposable loopback PostgreSQL |
 | `pnpm test:e2e` | Mobile Chromium/WebKit manual flow using a separate demo file |
 | `pnpm build` / `pnpm start` | Build/run production server |
-| `pnpm db:types` | Regenerate types from local Supabase |
 | `pnpm db:generate` | Generate replacement SQL migrations from the Drizzle schema |
 | `pnpm db:check` | Check Drizzle migration metadata |
 | `pnpm db:migrate` | Apply reviewed migrations using `MIGRATION_DATABASE_URL` |

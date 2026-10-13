@@ -61,7 +61,7 @@ function settlement(
   };
 }
 
-// These exercise the real replacement migrations, without Supabase stand-in schemas.
+// These exercise the real migrations on ordinary PostgreSQL.
 // Authorization and transactional save/settle workflows are tested in the next stage.
 describe("modular PostgreSQL schema foundation", () => {
   beforeAll(async () => {
