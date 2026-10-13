@@ -2,6 +2,13 @@
 
 Last updated: 2026-10-13.
 
+## Neon development setup — account provisioning pending (2026-10-13)
+
+- The user created a fresh development Neon project and privately configured its direct owner connection. Applied all four reviewed Drizzle migrations successfully to actual Neon PostgreSQL 18; migration metadata checks passed. No existing local records were transferred.
+- Created the separate runtime SQL login role with a generated password, applied the reviewed grants and passed the operator permission audit. Saved its pooled connection privately in ignored `.env.local`; retained the previous local configuration in a private ignored `.local/` backup. No credentials were printed or committed.
+- The read-only `pnpm db:verify` connected through the actual Neon pooler, passed runtime identity/permission checks, then correctly stopped because the singleton password account is not provisioned yet. This is partial live verification, not a completed setup check.
+- Next: the user runs `pnpm owner:provision` in their own interactive terminal to choose a hidden password. Then rerun `pnpm db:verify`, restart Next.js for the new connection, and verify login/session persistence, ledger writes/corrections, exports and concurrency against Neon. Hosted authentication/workflow verification remains outstanding; no existing regression tests were rerun for this configuration-only step.
+
 ## Runtime permissions review and setup verification (2026-10-13)
 
 - Reviewed the completed backend branch and strengthened the runtime-role audit. It now rejects direct credential/ledger writes including column grants, administrative membership even without inherited privileges, database/table ownership and schema creation. The grant command checks both before and after applying its limited grants.
@@ -161,7 +168,7 @@ Last updated: 2026-10-13.
 
 On `feature/modular-backend`, the replacement auth/database now runs the manual tracker locally with a restricted runtime role. Local implementation and branch review are complete. Remaining hosted verification and handoff:
 
-1. Configure a development Neon database and restricted runtime role using `SETUP.md`, provision the owner and verify actual hosted login/session persistence, writes/corrections, access restrictions and concurrency. This requires development credentials; do not claim hosted verification from local PostgreSQL tests.
+1. Complete the configured development Neon environment: run `pnpm owner:provision` with hidden terminal input, then `pnpm db:verify`, restart Next.js and verify hosted login/session persistence, writes/corrections, exports and concurrency. Migrations, pooled connectivity and runtime permissions are verified against Neon; account/workflow verification is pending. Do not claim hosted workflow verification from local PostgreSQL tests.
 2. Record the hosted results and prepare the branch for merge. Local review and regression checks are complete; actual iPhone testing remains a separate personal release check.
 
 Recommended next UI milestone after backend review: [dark mode](DECISIONS.md#dark-mode-plan-2026-10-13) on a separate branch. It can precede private R2 attachments/import. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.

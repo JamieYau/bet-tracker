@@ -4,7 +4,7 @@
 
 The website now uses Better Auth password login and Drizzle/PostgreSQL for the private ledger. Neon is the hosted database target; Cloudflare R2 attachments are a later milestone. The legacy Supabase packages, code, callback, migrations and stand-in tests have been removed. The loopback demo remains available.
 
-Local integration checks exercise actual Better Auth, migrations and a restricted PostgreSQL role. They do not establish hosted Neon connectivity or actual iPhone behaviour. The former Supabase setup is retained in Git history only; no Supabase provisioning is required.
+Local integration checks exercise actual Better Auth, migrations and a restricted PostgreSQL role. The development Neon migrations, pooled connectivity and restricted runtime permissions are now verified; owner provisioning and hosted authentication/workflow checks remain pending. Actual iPhone behaviour is still unverified. The former Supabase setup is retained in Git history only; no Supabase provisioning is required.
 
 ## Local manual demo — available now
 
@@ -36,7 +36,7 @@ pnpm exec biome check --write src/lib/db/auth-schema.ts
 
 The generator config includes core auth, database-backed rate limits and the operator-only admin plugin fields. It is never mounted as an application auth service and does not connect to PostgreSQL. Review schema/migration changes when changing auth options/plugins.
 
-The lazy server-only database entry point is `src/lib/db/server.ts`. It reads `DATABASE_URL`, reuses a bounded node-postgres pool and preserves URL-specified TLS settings. Use a Neon pooled runtime connection; use the appropriate admin connection for reviewed migrations. Application routes now use this entry point. Restricted-role behaviour is verified on disposable local PostgreSQL; hosted Neon connectivity remains unverified.
+The lazy server-only database entry point is `src/lib/db/server.ts`. It reads `DATABASE_URL`, reuses a bounded node-postgres pool and preserves URL-specified TLS settings. Use a Neon pooled runtime connection; use the appropriate admin connection for reviewed migrations. Application routes now use this entry point. Restricted-role behaviour is verified on disposable local PostgreSQL. The configured development Neon PostgreSQL 18 database has also passed migration application, pooled connection and runtime privilege checks; its account/authenticated workflow verification remains pending.
 
 ## Private account setup — implemented; hosted verification pending
 
