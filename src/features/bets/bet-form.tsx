@@ -207,7 +207,7 @@ export function BetForm({
               <FieldDescription id="placedAt-hint">
                 {bet
                   ? "Europe/London"
-                  : "Defaults to now · Europe/London. Change it if you placed the bet earlier."}
+                  : "Defaults to now. Change it if you placed the bet earlier."}
               </FieldDescription>
               <FieldError id="placedAt-error">
                 {state.errors?.placedAt?.join(" ")}

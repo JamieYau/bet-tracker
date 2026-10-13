@@ -45,33 +45,56 @@ test("chart shows losses, zero baseline, equal settlement times and latest corre
     ).toBeVisible();
     if (outcome === "won") winnerUrl = page.url();
     await page.goto(`/?source=${sourceId}`);
-    const caption = page.locator("figcaption");
+    const caption = page.locator("figcaption:visible");
     await expect(caption).toContainText(
       outcome === "lost"
         ? "-£10.00 across 1 settled bet"
         : "£0.00 across 2 settled bets",
     );
-    const chart = page.locator('svg[aria-label="Cumulative settled cash P/L"]');
+    const chart = page.locator(
+      'svg[aria-label="Cumulative settled cash P/L"]:visible',
+    );
     await expect(chart).toBeVisible();
     expect(
       await chart
         .locator(".recharts-cartesian-axis-tick-value")
         .first()
-        .evaluate((element) => getComputedStyle(element).fill),
-    ).toBe("rgb(165, 187, 173)");
-    await expect(chart.locator(".recharts-line-dot")).toHaveCount(
+        .evaluate((element) => {
+          const probe = document.createElement("span");
+          probe.style.color = "var(--muted-foreground)";
+          element.parentElement?.appendChild(probe);
+          const expected = getComputedStyle(probe).color;
+          probe.remove();
+          return getComputedStyle(element).fill === expected;
+        }),
+    ).toBe(true);
+    await expect(chart.locator(".recharts-area-area")).toHaveAttribute(
+      "d",
+      /.+/,
+    );
+    expect(
+      await chart
+        .locator(".recharts-area-area")
+        .evaluate((element) => getComputedStyle(element).fillOpacity),
+    ).toBe("0.16");
+    await expect(chart.locator(".recharts-area-dot")).toHaveCount(
       outcome === "lost" ? 2 : 3,
     );
     if (outcome === "lost") {
       await chart.focus();
       await chart.press("ArrowRight");
       await chart.press("ArrowRight");
-      await expect(page.locator(".recharts-tooltip-wrapper")).toContainText(
-        "-£10.00",
-      );
-      await expect(page.locator(".recharts-tooltip-wrapper")).toContainText(
-        "12 Oct 2026, 12:00 · Europe/London",
-      );
+      await expect(
+        page.locator(".recharts-tooltip-wrapper:visible"),
+      ).toContainText("-£10.00");
+      await expect(
+        page
+          .locator(".recharts-tooltip-wrapper:visible")
+          .getByText("Cash P/L", { exact: true }),
+      ).toHaveCount(1);
+      await expect(
+        page.locator(".recharts-tooltip-wrapper:visible"),
+      ).toContainText("12 Oct 2026, 12:00");
     }
   }
   await page.goto(winnerUrl);
@@ -82,12 +105,14 @@ test("chart shows losses, zero baseline, equal settlement times and latest corre
   await page.getByRole("button", { name: "Save correction" }).click();
   await expect(page.getByText("Revision 2 · Won")).toBeVisible();
   await page.goto(`/?source=${sourceId}`);
-  await expect(page.locator("figcaption")).toContainText(
+  await expect(page.locator("figcaption:visible")).toContainText(
     "£10.00 across 2 settled bets",
   );
-  await expect(page.locator(".recharts-line-dot")).toHaveCount(3);
+  await expect(page.locator("svg:visible .recharts-area-dot")).toHaveCount(3);
   await page.goto(`/?source=${sourceId}&from=2026-10-13`);
   await expect(
-    page.getByText("No settlements in this period", { exact: true }),
+    page
+      .locator('[data-slot="empty-title"]:visible')
+      .filter({ hasText: "No settlements in this period" }),
   ).toBeVisible();
 });

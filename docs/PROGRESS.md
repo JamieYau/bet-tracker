@@ -2,6 +2,19 @@
 
 Last updated: 2026-10-13.
 
+## Single-area shadcn chart (2026-10-13)
+
+- At the user’s request, simplified the filled P/L chart to shadcn’s AreaChart pattern: one Area supplies the straight outline, settlement dots and 16% fill toward £0. The existing shadcn card, ChartContainer, ChartConfig and GBP/date tooltip remain in use; both outline and fill follow `--chart-1`.
+- Updated the existing chart regression for area dots, a rendered fill path/opacity and a single keyboard-tooltip value. Its colour assertion now follows the current muted-foreground token so the user's palette experiments are supported. Visible-element selectors account for Next.js retaining hidden page DOM across navigation; earlier Chromium attempts failed on duplicate hidden captions/empty titles.
+- Verification: TypeScript, scoped Biome checks and production build passed. Chart flows passed in Chromium and WebKit using local demo fixture data, covering losses, zero baseline, equal timestamps, correction totals, date exclusions and exact keyboard tooltips. T3 preview confirmed one area outline/fill with matching colours and settlement dots on the existing dashboard. No live ledger writes or actual iPhone Safari verification.
+- The user's palette and other UI experiments remain uncommitted; these chart refinements are left alongside them for review.
+
+## Chart fill correction (2026-10-13)
+
+- Added a translucent area between cumulative P/L and the £0 baseline, using 16% opacity. Corrected the initial attempt: the installed Recharts Area explicitly returns no output inside LineChart; ComposedChart supports the line and area together.
+- The shared chart colour config now reads `--chart-1`, following the user's chosen line colour. Both line and fill use `--color-value`, so future `--chart-1` palette edits update both. The fill is excluded from tooltip entries.
+- Verification: TypeScript passed. T3 preview confirmed an actual area SVG path, 0.16 fill opacity and matching computed line/fill colours; visually inspected the shaded chart on the existing dashboard. No ledger records were changed, and browser regression suites were not rerun for this focused correction. The user's palette and other experimental edits remain in progress.
+
 ## Dark mode UI milestone (2026-10-13)
 
 - Created `feature/dark-mode` from `main` after merged backend PR #2. Implemented the saved UI plan with pinned `next-themes` 0.4.6: System default, browser persistence, direct 44px Light/Dark toggles in the app header and login page, and visible System/Light/Dark pressed-button choices in Settings.

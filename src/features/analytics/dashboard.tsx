@@ -40,12 +40,12 @@ export function Dashboard({
     },
     ...totals.series.map((point, index) => ({
       index: index + 1,
-      dateLabel: `${dateTime(point.date)} · Europe/London`,
+      dateLabel: `${dateTime(point.date)}`,
       axisLabel: formatInTimeZone(point.date, TIME_ZONE, "d MMM"),
       value: point.value,
     })),
   ];
-  const chartSummary = `Cumulative settled cash P/L: ${money(totals.profit)} across ${totals.settledCount} settled ${totals.settledCount === 1 ? "bet" : "bets"}. Start: £0.00 · Europe/London.`;
+  const chartSummary = `Cumulative settled cash P/L: ${money(totals.profit)} across ${totals.settledCount} settled ${totals.settledCount === 1 ? "bet" : "bets"}. Start: £0.00.`;
   return (
     <>
       <PageHeading
@@ -56,7 +56,7 @@ export function Dashboard({
       <FilterForm
         ledger={ledger}
         filters={filters}
-        dateLabel="Settlement dates · Europe/London"
+        dateLabel="Settlement dates"
       />
       <div className="grid gap-4 sm:grid-cols-3">
         {[

@@ -28,7 +28,7 @@ export default async function BetsPage({
       <FilterForm
         ledger={ledger}
         filters={filters}
-        dateLabel="Placement dates · Europe/London"
+        dateLabel="Placement dates"
       />
       <div className="mb-4 flex flex-wrap justify-between gap-3 text-sm">
         <span className="text-muted-foreground">

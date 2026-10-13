@@ -65,6 +65,7 @@ References: [Better Auth email/password](https://better-auth.com/docs/authentica
 - Controlled settlement and Settings fields use the same readiness/pending guard as the bet editor to prevent pre-hydration entries being replaced by prefills. Hidden settings labels have an explicit one-pixel width so long names cannot widen the page.
 
 - ProfitChart is a client presentation island using shadcn Chart/Recharts 3.10.1. Server metrics/labels supply cumulative pence and a £0 baseline. At the user’s request, straight line segments connect the £0 baseline and each settled bet, including equal timestamps; exact GBP/London tooltips and a visible summary accompany the chart. Animations are disabled, and latest corrections replace effective returns without adding points.
+- Chart fill follow-up: follow shadcn’s area-chart composition with `AreaChart` and one `Area` drawing the straight outline, dots and 16% fill to £0. Share `--chart-1` through `ChartConfig` for outline/fill; retain the existing shadcn container, card and tooltip components. Keep exact settlement data and keyboard access.
 
 ## Dark mode plan (2026-10-13)
 
