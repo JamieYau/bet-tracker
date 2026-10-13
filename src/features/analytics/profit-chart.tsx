@@ -1,9 +1,9 @@
 "use client";
 import { useId } from "react";
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ReferenceLine,
   XAxis,
   YAxis,
@@ -23,7 +23,7 @@ export type ProfitChartPoint = {
   value: number;
 };
 const config = {
-  value: { label: "Cash P/L", color: "var(--primary)" },
+  value: { label: "Cash P/L", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 const axisMoney = new Intl.NumberFormat("en-GB", {
   style: "currency",
@@ -47,7 +47,7 @@ export function ProfitChart({
         className="h-64 w-full aspect-auto"
         initialDimension={{ width: 320, height: 256 }}
       >
-        <LineChart
+        <AreaChart
           accessibilityLayer
           data={points}
           margin={{ top: 12, right: 12, bottom: 4, left: 0 }}
@@ -56,6 +56,7 @@ export function ProfitChart({
         >
           <CartesianGrid vertical={false} />
           <XAxis
+            tick={{ fill: "var(--muted-foreground)" }}
             dataKey="index"
             tickLine={false}
             axisLine={false}
@@ -65,6 +66,7 @@ export function ProfitChart({
             tickFormatter={(index) => points[Number(index)]?.axisLabel ?? ""}
           />
           <YAxis
+            tick={{ fill: "var(--muted-foreground)" }}
             width={64}
             tickLine={false}
             axisLine={false}
@@ -95,16 +97,19 @@ export function ProfitChart({
               />
             }
           />
-          <Line
+          <Area
             type="linear"
             dataKey="value"
+            baseValue={0}
+            fill="var(--color-value)"
+            fillOpacity={0.16}
             stroke="var(--color-value)"
             strokeWidth={2}
-            dot={{ r: 3 }}
+            dot={false}
             activeDot={{ r: 5 }}
             isAnimationActive={false}
           />
-        </LineChart>
+        </AreaChart>
       </ChartContainer>
       <figcaption
         id={summaryId}

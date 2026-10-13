@@ -5,16 +5,28 @@ import { z } from "zod";
 import { moneyToPence, parseOdds } from "@/features/settlement/finance";
 import { requireOwner } from "@/lib/auth";
 import { londonToUtc } from "@/lib/format";
+import { assertSports } from "./normalize-ledger";
 import { getLedger, saveBet, saveOption, settleBet } from "./repository";
 import type { ActionState } from "./types";
 import { confirmedBetSchema, saveSchema, settlementSchema } from "./validation";
 
 function failure(error: unknown): ActionState {
-  if (error instanceof z.ZodError)
-    return {
-      error: "Check the highlighted fields.",
-      errors: z.flattenError(error).fieldErrors as Record<string, string[]>,
-    };
+  if (error instanceof z.ZodError) {
+    const errors: Record<string, string[]> = {};
+    for (const issue of error.issues) {
+      const path = issue.path[0] === "bet" ? issue.path.slice(1) : issue.path;
+      const key = path.join(".") || "bet";
+      errors[key] = [...new Set([...(errors[key] ?? []), issue.message])];
+      if (path[0] === "legs" && path.length > 1)
+        errors.legs = [
+          ...new Set([
+            ...(errors.legs ?? []),
+            `Leg ${Number(path[1]) + 1}: ${issue.message}`,
+          ]),
+        ];
+    }
+    return { error: "Check the highlighted fields.", errors };
+  }
   return {
     error:
       error instanceof Error
@@ -38,6 +50,7 @@ export async function recordAction(
       allowDuplicate: form.get("allowDuplicate") === "on",
       bet: {
         ...raw,
+        line: raw.line?.trim() || null,
         placedAt: londonToUtc(raw.placedAt),
         acceptedOdds: raw.acceptedOdds.trim()
           ? parseOdds(raw.acceptedOdds)
@@ -48,14 +61,18 @@ export async function recordAction(
           .split(",")
           .map((tag: string) => tag.trim())
           .filter(Boolean),
-        legs: raw.legs.map((leg: { odds: string | null }) => ({
-          ...leg,
-          odds: leg.odds?.trim() ? parseOdds(leg.odds) : null,
-        })),
+        legs: raw.legs.map(
+          (leg: { odds: string | null; line?: string | null }) => ({
+            ...leg,
+            line: leg.line?.trim() || null,
+            odds: leg.odds?.trim() ? parseOdds(leg.odds) : null,
+          }),
+        ),
       },
     });
     const ledger = await getLedger();
     const existing = ledger.bets.find((bet) => bet.id === input.id);
+    assertSports(input.bet, existing);
     if (input.confirm || existing?.status === "open")
       confirmedBetSchema.parse(input.bet);
     id = await saveBet(

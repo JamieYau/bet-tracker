@@ -30,7 +30,7 @@ Cash-only and free/mixed-funded P/L reconcile to overall P/L. Promotional report
 
 History/CSV use placement dates. Settled dashboard metrics/charts use the latest effective settlement date. Inclusive date endpoints are London calendar days; timestamps are stored in UTC. Open exposure ignores the date range while other filters apply; this is labelled on the dashboard.
 
-A sport filter matches the whole bet or any leg and counts the whole bet once. One source belongs to the whole bet; use Me for mixed-source accas. Drafts appear in history/CSV but not profit/exposure.
+Sport, market, event text, Over/Under and line filters match a single pick. For accas, all specified pick filters must match the same leg; matching accas are counted once with their whole cash P/L and stakes. Mixed matches the acca category and can be combined with other leg filters. Event text matching is case-insensitive; line matching compares numeric values. In-play/pre-match filters use the bet’s saved In-play tag. Known sport/market labels are canonicalised for consistent filtering; ambiguous legacy categories remain available without guessing a league. One source belongs to the whole bet; use Me for mixed-source accas. Drafts appear in history/CSV but not profit/exposure.
 
 ## Limits
 

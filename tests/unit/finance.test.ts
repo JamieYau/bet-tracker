@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { history, metrics } from "@/features/analytics/metrics";
+import {
+  history,
+  matchesDimensions,
+  metrics,
+} from "@/features/analytics/metrics";
+import { normalizeSport, sportOptions } from "@/features/bets/catalog";
 import { exportCsv } from "@/features/bets/export";
+import { assertSports } from "@/features/bets/normalize-ledger";
 import type { Bet, Settlement } from "@/features/bets/types";
 import { betSchema, confirmedBetSchema } from "@/features/bets/validation";
 import {
@@ -229,5 +235,99 @@ describe("metrics and inputs", () => {
     );
     expect(csv).toContain("'=SUM(1,2)");
     expect(csv).toContain('a ""quote""');
+  });
+});
+
+describe("structured pick classification", () => {
+  it("normalizes known sport/market labels and lines without guessing old leagues", () => {
+    const input = betSchema.parse(
+      bet({
+        sport: " nba ",
+        market: "player rebounds",
+        event: " Cavaliers @ Heat ",
+        direction: "over",
+        line: "+9.500000",
+      }),
+    );
+    expect(input).toMatchObject({
+      sport: "NBA",
+      market: "Player rebounds",
+      event: "Cavaliers @ Heat",
+      direction: "over",
+      line: "9.5",
+    });
+    expect(normalizeSport("basketball")).toBe("basketball");
+    expect(normalizeSport("football")).toBe("Football");
+    expect(
+      new Set(sportOptions(["Mixed", "football", "FOOTBALL"], true)).size,
+    ).toBe(7);
+    expect(() => assertSports(bet({ sport: "Basketball" }))).toThrow();
+    expect(() =>
+      assertSports(bet({ sport: "Basketball" }), bet({ sport: "Basketball" })),
+    ).not.toThrow();
+  });
+  it("rejects invalid metadata and supports incomplete drafts with absent metadata", () => {
+    for (const changes of [
+      { line: "9.1234567" },
+      { line: "NaN" },
+      { line: "1000001" },
+      { event: "x".repeat(201) },
+    ])
+      expect(betSchema.safeParse(bet(changes)).success).toBe(false);
+    expect(betSchema.parse(bet())).toMatchObject({
+      event: "",
+      direction: "",
+      line: null,
+    });
+  });
+  it("matches acca filters on the same leg and keeps whole-bet accounting", () => {
+    const acca = bet({
+      sport: "Mixed",
+      betType: "acca",
+      legs: [
+        {
+          id: "nba",
+          sport: "NBA",
+          market: "Player rebounds",
+          selection: "Allen",
+          event: "Cavaliers @ Heat",
+          direction: "over",
+          line: "9.500000",
+          odds: "1.91",
+          status: "won",
+        },
+        {
+          id: "nfl",
+          sport: "NFL",
+          market: "Spread",
+          selection: "Lions",
+          event: "Lions @ Bears",
+          direction: "",
+          line: "-3.5",
+          odds: "1.9",
+          status: "won",
+        },
+      ],
+      tags: ["In-play"],
+    });
+    expect(
+      matchesDimensions(acca, {
+        sport: "nba",
+        market: "player rebounds",
+        event: "heat",
+        direction: "over",
+        line: "9.5",
+        inPlay: "yes",
+      }),
+    ).toBe(true);
+    expect(
+      matchesDimensions(acca, { sport: "NFL", market: "Player rebounds" }),
+    ).toBe(false);
+    expect(matchesDimensions(acca, { sport: "NBA", event: "Bears" })).toBe(
+      false,
+    );
+    expect(matchesDimensions(acca, { inPlay: "no" })).toBe(false);
+    expect(history([acca], { sport: "NBA" })).toEqual([acca]);
+    expect(cashProfit(acca)).toBe(1500);
   });
 });

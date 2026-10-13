@@ -6,6 +6,8 @@ test("private password login, recording, settlement, CSV, session persistence an
 }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/login$/);
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveClass(/dark/);
   expect(
     (
       await page.request.post("/api/auth/sign-up/email", {
@@ -31,15 +33,26 @@ test("private password login, recording, settlement, CSV, session persistence an
     page.getByRole("heading", { name: "Your betting, at a glance" }),
   ).toBeVisible();
   await page.reload();
+  await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(
     page.getByRole("heading", { name: "Your betting, at a glance" }),
   ).toBeVisible();
   const fresh = await context.newPage();
   await fresh.goto("/settings");
   await expect(fresh).not.toHaveURL(/login/);
+  await expect(fresh.locator("html")).toHaveClass(/dark/);
   await fresh.close();
   await page.goto("/add");
   await page.getByLabel("Selection").fill("Authenticated browser fixture");
+  await page.getByLabel("Sport", { exact: true }).selectOption("NBA");
+  await page
+    .getByLabel("Market type (optional)")
+    .selectOption("Player rebounds");
+  await page
+    .getByLabel("Event / fixture (optional)")
+    .fill("Fixture Cavaliers @ Heat");
+  await page.getByLabel("Over / Under (optional)").selectOption("over");
+  await page.getByLabel("Line / handicap (optional)").fill("9.5");
 
   await page.getByLabel("Accepted total odds").fill("2.5");
   await page.getByLabel("Cash stake (£)").fill("10");
@@ -51,10 +64,13 @@ test("private password login, recording, settlement, CSV, session persistence an
   await expect(page.getByText("£15.00", { exact: true }).first()).toBeVisible();
   const exported = await page.request.get("/api/export");
   expect(exported.status()).toBe(200);
-  expect(await exported.text()).toContain("Authenticated browser fixture");
+  const csv = await exported.text();
+  expect(csv).toContain("Authenticated browser fixture");
+  expect(csv).toContain('"Fixture Cavaliers @ Heat","over","9.5"');
   await page.goto("/settings");
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
+  await expect(page.locator("html")).toHaveClass(/dark/);
   await page.goto("/bets");
   await expect(page).toHaveURL(/\/login$/);
 });

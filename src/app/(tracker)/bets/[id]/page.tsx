@@ -18,10 +18,11 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
+import { selectionLabel } from "@/features/bets/catalog";
 import { getLedger } from "@/features/bets/repository";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
 import { SettlementForm } from "@/features/settlement/settlement-form";
-import { dateTime, money, outcomeLabel } from "@/lib/format";
+import { dateTime, formatOdds, money, outcomeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 export default async function BetPage({
   params,
@@ -45,7 +46,9 @@ export default async function BetPage({
     ],
     ["Placed", dateTime(bet.placedAt)],
     ["Sport", bet.sport || "—"],
-    ["Accepted odds", bet.acceptedOdds || "—"],
+    ["Event / fixture", bet.event || "—"],
+    ["Market type", bet.market || "—"],
+    ["Accepted odds", formatOdds(bet.acceptedOdds)],
     ["Cash stake", money(bet.cashStakePence)],
     [
       "Free-bet stake",
@@ -64,7 +67,7 @@ export default async function BetPage({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeading
           eyebrow={bet.betType}
-          title={bet.selection || "Untitled draft"}
+          title={selectionLabel(bet) || "Untitled draft"}
           description={bet.market || "Recorded terms and financial settlement."}
         />
         <Badge variant="secondary">
@@ -121,11 +124,12 @@ export default async function BetPage({
                   <Item className="items-start border-0 px-0 py-3">
                     <ItemContent className="min-w-0">
                       <ItemTitle className="line-clamp-none break-words">
-                        {index + 1}. {leg.selection}
+                        {index + 1}. {selectionLabel(leg)}
                       </ItemTitle>
                       <ItemDescription className="line-clamp-none break-words text-xs">
                         {leg.sport} · {leg.market || "No market"}
-                        {leg.odds ? ` · ${leg.odds}` : ""}
+                        {leg.event ? ` · ${leg.event}` : ""}
+                        {leg.odds ? ` · ${formatOdds(leg.odds)}` : ""}
                       </ItemDescription>
                     </ItemContent>
                     <ItemActions>

@@ -8,7 +8,11 @@ export default defineConfig({
     command: "pnpm dev --hostname 127.0.0.1 --port 3100",
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,
-    env: { BET_TRACKER_DEMO: "true", BET_TRACKER_DEMO_FILE: "e2e.json" },
+    env: {
+      BET_TRACKER_DEMO: "true",
+      BET_TRACKER_DEMO_FILE: "e2e.json",
+      NEXT_DIST_DIR: ".next-e2e",
+    },
   },
   projects: [
     {

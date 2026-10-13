@@ -2,6 +2,58 @@
 
 Last updated: 2026-10-13.
 
+## Theme and structured entry branch complete (2026-10-13)
+
+- Finished the agreed branch follow-up: fixed Sport categories (NFL, Football, NCAAF, WNBA, Tennis, NBA), sport-specific Market choices with Other/custom, optional Event/fixture, Over/Under and signed Line/handicap fields. Singles and individual acca legs retain metadata through drafts, confirmation and editing. Acca summary sport follows its legs; different categories become Mixed.
+- Added sport/market/event/direction/line/in-play filters to history, dashboard and CSV. Combined acca pick filters match the same leg and retain whole-bet stakes/P/L; no profit allocation between legs. Existing known case variants normalise on read/new writes. Ambiguous legacy sports/custom markets remain available for old bets, with no automatic league guessing or destructive rewriting.
+- Added reviewed `0004_entry_metadata`: optional/defaulted bet/leg columns, bounded metadata constraints and a replacement of the existing owner-checked, locked, idempotent/versioned save function. Applied it successfully to the configured development Neon database. `db:verify` passed, and live single/acca metadata writes/readbacks were checked inside a rolled-back transaction; verified no fixtures remained. Other environments must apply the migration before the new app version.
+- Included the pending in-play tag control and compact accepted/leg odds display. New nested metadata validation errors now reach their fields; signed numeric lines export as numeric CSV values. Updated the chart regression to inspect line segments after the user's committed removal of fixed dots; active keyboard tooltips remain covered.
+- Verification passed: Biome/TypeScript, 22 unit checks, 23 real disposable PostgreSQL checks, peer compatibility, migration metadata/no-change generation and production build. All 32 demo Chromium/WebKit scenarios passed across the full and focused runs, including new metadata/custom-market/filter/CSV flows and 320/390/768/1280px themes. The initial full run had two outdated dot assertions and one WebKit React development performance-timing exception (`flushComponentPerformance`); updated chart checks and the focused chart/theme rerun passed in both browsers. Two authenticated production Chromium/WebKit checks passed using real Better Auth and disposable PostgreSQL, including structured metadata persistence/CSV, settlement and theme/session login/logout.
+- T3 inspected current single/acca forms at 320px, confirmed the fixed categories/new fields and no overflow. No personal bets were changed by live verification. Actual iPhone Safari/Home Screen and hosted Next.js/production deployment remain separate release checks.
+- Local implementation/review are complete and pushed. [Draft PR #3](https://github.com/JamieYau/bet-tracker/pull/3) is open and linked to the T3 thread for review/merge. Private R2 attachment/import work remains next after branch review/merge.
+
+## Entry classification clarification (2026-10-13)
+
+- The user prefers one fixed Sport dropdown with NFL, Football, NCAAF, WNBA, Tennis and NBA for convenient, consistent filtering. No separate sport/competition hierarchy or league field; tennis tournaments can go in the proposed Event/fixture field.
+- Recorded the agreed design in BUILD_BRIEF/DECISIONS. Documentation only: dropdown/event fields and existing-value mapping remain to be implemented; no application changes or checks performed for this clarification.
+
+## Placed in-play checkbox (2026-10-13)
+
+- Added an accessible shadcn Checkbox near placement time/bet type for singles and accas. Its checked state derives from the existing `In-play` tag; toggling adds/removes that tag case-insensitively without dropping other tags. The Tags input stays synchronised. The control shares the editor's hydration/pending guard.
+- Existing draft/confirmation/edit payloads, detail badges and CSV exports persist/show the tag without schema or financial changes. Recorded semantics: the event had already started at placement; the setting applies to the whole bet.
+- Documented the player's pick/fixture in Selection and Player rebounds in Market for basketball props.
+- Verification: scoped Biome, TypeScript and production build passed. Chromium/WebKit demo checks passed for unchecked default, checked draft/reload/resume/confirmation, CSV and clearing the checkbox while preserving Boost. T3 inspected the Add form and its label toggle/tag synchronisation with no page overflow. No live ledger records were written and actual iPhone Safari remains outstanding.
+
+## Bet detail odds formatting (2026-10-13)
+
+- Fixed accepted odds and acca-leg odds displaying PostgreSQL's six-decimal padding. A shared display formatter removes trailing fractional zeros (2.500000 → 2.5, 1.910000 → 1.91), preserves significant decimal digits and integer zeros, and retains the missing-odds placeholder.
+- This changes detail-page presentation only; stored odds and settlement calculations retain their precision.
+- Verification: scoped Biome and TypeScript checks passed. Formatter smoke checks covered decimal/integer odds, six significant decimals and absent values. Read-only T3 inspection of an existing acca confirmed accepted odds 3.5 and leg odds 1.6/1.9 without padding. No ledger writes or full regression-suite rerun.
+
+## Single-area shadcn chart (2026-10-13)
+
+- At the user’s request, simplified the filled P/L chart to shadcn’s AreaChart pattern: one Area supplies the straight outline, settlement dots and 16% fill toward £0. The existing shadcn card, ChartContainer, ChartConfig and GBP/date tooltip remain in use; both outline and fill follow `--chart-1`.
+- Updated the existing chart regression for area dots, a rendered fill path/opacity and a single keyboard-tooltip value. Its colour assertion now follows the current muted-foreground token so the user's palette experiments are supported. Visible-element selectors account for Next.js retaining hidden page DOM across navigation; earlier Chromium attempts failed on duplicate hidden captions/empty titles.
+- Verification: TypeScript, scoped Biome checks and production build passed. Chart flows passed in Chromium and WebKit using local demo fixture data, covering losses, zero baseline, equal timestamps, correction totals, date exclusions and exact keyboard tooltips. T3 preview confirmed one area outline/fill with matching colours and settlement dots on the existing dashboard. No live ledger writes or actual iPhone Safari verification.
+- The user's palette and other UI experiments remain uncommitted; these chart refinements are left alongside them for review.
+
+## Chart fill correction (2026-10-13)
+
+- Added a translucent area between cumulative P/L and the £0 baseline, using 16% opacity. Corrected the initial attempt: the installed Recharts Area explicitly returns no output inside LineChart; ComposedChart supports the line and area together.
+- The shared chart colour config now reads `--chart-1`, following the user's chosen line colour. Both line and fill use `--color-value`, so future `--chart-1` palette edits update both. The fill is excluded from tooltip entries.
+- Verification: TypeScript passed. T3 preview confirmed an actual area SVG path, 0.16 fill opacity and matching computed line/fill colours; visually inspected the shaded chart on the existing dashboard. No ledger records were changed, and browser regression suites were not rerun for this focused correction. The user's palette and other experimental edits remain in progress.
+
+## Dark mode UI milestone (2026-10-13)
+
+- Created `feature/dark-mode` from `main` after merged backend PR #2. Implemented the saved UI plan with pinned `next-themes` 0.4.6: System default, browser persistence, direct 44px Light/Dark toggles in the app header and login page, and visible System/Light/Dark pressed-button choices in Settings.
+- Added green dark surfaces, mint primary/chart accents, readable negative/error colours and a dark demo notice. Explicit chart axis tick colours fix the generated shadcn selector's mismatch with Recharts 3. Financial definitions, data, schema and authorization are unchanged.
+- Theme startup uses the provider's inline script with root-only hydration-warning suppression. Controls keep stable server markup and remain disabled until hydration. Compact branding/Add bet labels fit narrow phones/tablets; four mobile navigation slots remain intact.
+- Responsive testing exposed Chromium's fieldset minimum content width on Add bet at 320px. Added `min-w-0` to the editor fieldset to keep native controls within the page. The new regression measures actual viewport width as well as document overflow to catch mobile browsers scaling an oversized layout.
+- Demo browser checks use an ignored `.next-e2e` build directory, preserving the user's running development server. Demo/auth suites must run sequentially because Playwright trace output is shared; the initial concurrent run produced artifact deletion failures, resolved by sequential verification.
+- Verification passed: `pnpm check`, 19 unit tests, peer compatibility, production build and all 26 demo Chromium/WebKit E2E checks. The six new theme checks cover System/device changes, explicit override, persisted preferences, keyboard action, startup before hydration and stable geometry/no overflow across four routes at 320/390/768/1280px in both themes. Chart/keyboard-tooltip/correction checks run in dark mode. Two authenticated production Chromium/WebKit checks also passed using real Better Auth and disposable local PostgreSQL, including dark preference across login/reload/new-tab/logout. Database integration suites were not rerun for these UI-only changes.
+- T3 preview inspected dark Dashboard/chart, Settings/Add bet and login, exercised the login toggle and checked 320px header/login fit. Measured dark main/muted/primary/loss/button text contrast ratios of 7.56–14.74 against their intended surfaces. Browser and local database checks are not actual iPhone Safari, hosted deployment or a repeat of Neon ledger verification.
+- Next: review/merge `feature/dark-mode`. Private R2 attachments/import, sample-slip extraction, CI, actual iPhone/Home Screen and personal deployment remain later milestones.
+
 ## Live Neon verification complete (2026-10-13)
 
 - The user provisioned the private account and reported successful password sign-in. `pnpm db:verify` independently passed against the actual pooled Neon connection, including runtime identity/permissions and the configured password account.
@@ -175,9 +227,9 @@ Last updated: 2026-10-13.
 
 ## Next steps
 
-On `feature/modular-backend`, local implementation, branch review and live development Neon verification are complete. Review/merge the branch; hosted Next.js deployment and actual iPhone testing remain separate personal release checks.
+The backend is merged and verified against development Neon. Dark mode and structured entry implementation/review are complete on `feature/dark-mode`; review/merge this branch. The new optional metadata migration is already applied to development Neon and must precede the updated app in other environments.
 
-Recommended next UI milestone after backend review: [dark mode](DECISIONS.md#dark-mode-plan-2026-10-13) on a separate branch. It can precede private R2 attachments/import. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
+Then implement private R2 attachments and persistent screenshot import/extraction/retry/confirmation. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate hosted Next.js/production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 
 ## Modular backend milestone checklist
 

@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { ThemeToggle } from "@/components/theme-controls";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -37,17 +38,17 @@ export function AppShell({
         Skip to content
       </a>
       <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-5 sm:px-8">
           <Link
             href="/"
-            className="flex items-center gap-3 font-semibold tracking-tight"
+            className="flex min-w-0 items-center gap-2 font-semibold tracking-tight sm:gap-3"
           >
-            <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <Wallet className="size-5" />
             </span>
             <span>
               Bet ledger
-              <span className="block text-xs font-normal tracking-normal text-muted-foreground">
+              <span className="hidden text-xs font-normal tracking-normal text-muted-foreground min-[400px]:block md:hidden lg:block">
                 Your bets. A clearer picture.
               </span>
             </span>
@@ -74,15 +75,23 @@ export function AppShell({
                 </Link>
               ))}
           </nav>
-          <Link href="/add" className={cn(buttonVariants(), "h-11 gap-2 px-4")}>
-            <Plus className="size-4" />
-            <span className="hidden sm:inline">Add bet</span>
-            <span className="sr-only sm:hidden">Add bet</span>
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <ThemeToggle />
+            <Link
+              href="/add"
+              aria-label="Add bet"
+              className={cn(buttonVariants(), "h-11 gap-2 px-4")}
+            >
+              <Plus className="size-4" />
+              <span className="hidden sm:inline md:hidden lg:inline">
+                Add bet
+              </span>
+            </Link>
+          </div>
         </div>
       </header>
       {demo && (
-        <div className="border-b bg-amber-50 px-5 py-2 text-center text-xs text-amber-950">
+        <div className="border-b bg-amber-50 px-5 py-2 text-center text-xs text-amber-950 dark:bg-amber-950/40 dark:text-amber-200">
           Local demo · Saved on this computer · No private account connected
         </div>
       )}

@@ -29,6 +29,13 @@
       "when": 1791904497585,
       "tag": "0003_auth_operations",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791918277789,
+      "tag": "0004_entry_metadata",
+      "breakpoints": true
     }
   ]
 }

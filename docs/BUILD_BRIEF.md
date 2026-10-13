@@ -18,16 +18,17 @@ A private, iPhone-first web app for the owner’s personal use that records bets
 - Dashboard, Bets, Add Bet and Settings; mobile bottom navigation and prominent Add Bet action.
 - Accessible shadcn/ui controls with loading, empty, validation and error states.
 - Manual entry plus one or more screenshots for a single bet. AI creates an editable draft; recording requires confirmation.
-- Fields: bookmaker, placement time, sport, selection/market, accepted odds, separate cash/free-bet stakes, bet type and source. Optional reference, notes and promotional tags.
+- Fields: bookmaker, placement time, sport, selection/market, accepted odds, separate cash/free-bet stakes, bet type and source. Optional event/fixture, Over/Under, numeric line/handicap, reference, notes and tags, plus an In-play checkbox.
+- Agreed entry follow-up: one Sport dropdown with NFL, Football, NCAAF, WNBA, Tennis and NBA. No separate league field; tennis tournaments can go in Event/fixture. Sport-specific market choices include a custom fallback; singles and each acca leg carry their own event, direction and line. These entry refinements are implemented.
 - Singles and accas: separate legs, one financial bet. One source per bet; use “Me” for mixed-source accas. Never allocate profit between legs.
 - Editable bookmakers and tipsters. Seed Unibet, Coral, Betfred, Paddy Power, Virgin Bet, Betway, Sky Bet, SBK, 888sport, BetMGM, BoyleSports, Ladbrokes and bet365.
-- History and analytics filters: date, bookmaker, source, sport, bet type and status. Clearly label date semantics.
+- History and analytics filters: date, bookmaker, source, sport, market, event, direction, line, in-play, bet type and status. Clearly label date semantics.
 - Metrics: settled cash P/L, cumulative/monthly P/L, settled bet count, settled cash stakes and open cash exposure. P/L charts use settlement date.
 - Bet details, private attachments, editing, settlement correction history and CSV export of bets and legs.
 
-## Planned dark mode
+## Appearance
 
-The user wants dark mode for personal mobile/desktop use. Implement it as a separate UI milestone after reviewing the backend branch; it is not part of `feature/modular-backend`. Recommended controls, placement and verification are saved in [DECISIONS.md](DECISIONS.md#dark-mode-plan-2026-10-13). No dark-mode interaction has been implemented yet.
+Dark mode is implemented as a separate UI milestone on `feature/dark-mode`. Follow the device appearance by default; provide a direct Light/Dark toggle in the app header and login page, plus System/Light/Dark controls in Settings. Persist the choice in the browser and use a complementary green dark palette. Implementation decisions and verification are recorded in [DECISIONS.md](DECISIONS.md#dark-mode-plan-2026-10-13) and [PROGRESS.md](PROGRESS.md).
 
 ## Future analytics ideas
 

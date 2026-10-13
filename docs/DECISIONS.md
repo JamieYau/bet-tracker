@@ -9,7 +9,13 @@
 - Whole void bets count as settled.
 - A voided acca leg does not settle the whole bet while remaining legs are active. “Lay” in the discussion meant remaining acca, not an exchange lay bet.
 - Acca calculations use accepted total odds or the actual credited return. Do not recalculate from leg odds.
-- The build brief is the agreed product scope. The foundation and first manual recording/settlement milestone have been implemented; the modular backend migration is now the next stage, followed by screenshot import.
+- Bet detail odds display strips insignificant trailing decimal zeros while preserving every significant digit. Database precision and financial calculations are unchanged.
+- Placed in-play records whether the event had started at placement, for singles or the whole acca. Use the existing `In-play` tag as persistence: the checkbox and Tags input stay synchronised, drafts/editing retain the choice, and detail badges/CSV show it. This is recorded context, not a change to settlement rules.
+- Player-prop entry now separates the player/team in Selection, the market type, Event/fixture, optional Over/Under and optional numeric Line/handicap. Existing free-text selections remain readable and are not parsed or rewritten.
+- Agreed follow-up classification: use one fixed Sport dropdown with NFL, Football, NCAAF, WNBA, Tennis and NBA. These are the user's practical betting categories, including competitions; do not add a separate parent-sport/league hierarchy. Store canonical values for consistent filtering. Football does not need a league field; tennis tournaments can be included in Event/fixture. The fixed dropdown and separate event field are implemented.
+- Confirmed entry refinement: Over/Under and numeric line are separate optional fields for filtering/trends. Lines accept a signed number with at most six decimal places, bounded to ±1,000,000. The same structured metadata is stored for singles and acca legs and appended to CSV exports. Market choices depend on Sport, with Other/custom preserving unusual/legacy descriptions.
+- Existing sport/market case variants are normalised when reading and on new app writes. Ambiguous Basketball/American football categories are retained for old bets; new entry uses the six fixed categories. No existing selection, sport or market data is destructively rewritten. Acca summary sport follows its legs (Mixed for different categories), and combined pick filters match the same leg while counting whole-bet P/L once.
+- The build brief is the agreed product scope. The manual workflow, modular backend, dark mode and structured entry are implemented; private R2 attachments/screenshot import remain the next milestone.
 
 ## Proposed implementation defaults
 
@@ -24,7 +30,7 @@ These were suggested during discussion, but were not separately confirmed. Resol
 
 ## Delivery sequence
 
-Current order: migrate authentication/database access to Better Auth, Neon and Drizzle; verify the manual workflow and owner restrictions against the live backend; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
+Current order: the Better Auth/Neon/Drizzle backend is merged and verified against development Neon; review/merge the dark-mode and structured-entry milestone; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
 
 ## Modular backend pivot (2026-10-12)
 
@@ -65,10 +71,11 @@ References: [Better Auth email/password](https://better-auth.com/docs/authentica
 - Controlled settlement and Settings fields use the same readiness/pending guard as the bet editor to prevent pre-hydration entries being replaced by prefills. Hidden settings labels have an explicit one-pixel width so long names cannot widen the page.
 
 - ProfitChart is a client presentation island using shadcn Chart/Recharts 3.10.1. Server metrics/labels supply cumulative pence and a £0 baseline. At the user’s request, straight line segments connect the £0 baseline and each settled bet, including equal timestamps; exact GBP/London tooltips and a visible summary accompany the chart. Animations are disabled, and latest corrections replace effective returns without adding points.
+- Chart fill follow-up: follow shadcn’s area-chart composition with `AreaChart` and one `Area` drawing the straight outline, dots and 16% fill to £0. Share `--chart-1` through `ChartConfig` for outline/fill; retain the existing shadcn container, card and tooltip components. Keep exact settlement data and keyboard access.
 
 ## Dark mode plan (2026-10-13)
 
-The user requested dark mode and asked that this recommendation be preserved. Dark mode is a desired feature; the controls and placement below are proposed implementation defaults, not separately confirmed UI choices.
+The user requested dark mode, then authorised the next UI milestone on a new branch after the backend merge. The saved defaults below are now the implementation choices.
 
 - Recommended sequence: review/finish the backend branch, then use a separate UI branch (suggested name: `feature/dark-mode`). This small personal-use improvement can precede R2 screenshot import; do not fold it into the backend migration or the larger deferred analytics redesign.
 - Follow [shadcn’s Next.js dark-mode guide](https://ui.shadcn.com/docs/dark-mode/next) using `next-themes` and class-based theming. Read relevant installed Next.js guides and verify current dependency compatibility when implementing.
@@ -79,7 +86,9 @@ The user requested dark mode and asked that this recommendation be preserved. Da
 - Existing `.dark` CSS variables are generic grey defaults, not a finished branded theme. Create a complementary green dark palette and audit charts, positive/negative amounts, inputs, focus/error states, notices and navigation for contrast/readability. Preserve financial definitions and chart data.
 - Verification should cover Light/Dark/System, device-theme changes while System is selected, explicit preferences overriding the device, persisted preference across reload/navigation/login/logout, initial rendering/hydration, keyboard/accessibility, chart/tooltips and 320/390/768/1280px layouts without overflow or navigation shifts. Actual iPhone Safari remains a separate live check.
 
-Status: saved for future implementation. No theme provider, toggle, Settings control or palette refinement has been implemented or tested for this feature.
+Implementation: `feature/dark-mode` starts from merged backend `main`. Pinned `next-themes` 0.4.6 supports the installed React 19 peer range. The root client provider follows shadcn's documented class/System approach and uses `bet-ledger-theme` local storage; its inline script applies appearance before hydration. Controls reserve 44px targets and stay disabled until hydration, with matching initial markup. The Settings choices are native button controls with pressed states inside an Appearance fieldset. Theme selection is a browser preference, shared across tabs, independent of the private account.
+
+The dark theme uses green surfaces, mint primary/chart accents and a readable red loss/error colour. Charts explicitly theme axis ticks because Recharts 3 renders a tick-value class that the generated shadcn selector does not match. Compact header branding and Add bet text adapt to narrow phones/tablets. Browser tests use an ignored `.next-e2e` directory so they can run alongside the existing development preview. Verification status is in [PROGRESS.md](PROGRESS.md); actual iPhone/Home Screen checks remain separate.
 
 ## Future analytics UI reference (2026-10-12)
 

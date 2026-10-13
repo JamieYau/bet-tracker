@@ -6,6 +6,10 @@ export function money(pence: number) {
     currency: "GBP",
   }).format(pence / 100);
 }
+export function formatOdds(value: string | null) {
+  if (!value) return "—";
+  return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
+}
 export function dateTime(value: string) {
   return formatInTimeZone(value, TIME_ZONE, "d MMM yyyy, HH:mm");
 }
