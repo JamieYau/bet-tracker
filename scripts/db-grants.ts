@@ -1,6 +1,6 @@
 import { loadEnvConfig } from "@next/env";
 import { Client } from "pg";
-import { grantRuntime } from "../src/lib/db/privileges";
+import { DatabaseSetupError, grantRuntime } from "../src/lib/db/privileges";
 
 async function main() {
   loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production");
@@ -13,18 +13,17 @@ async function main() {
   try {
     await grantRuntime(client, role);
     console.info(
-      "Runtime privileges granted. Verify the role has no inherited administrative privileges before deployment.",
+      "Runtime privileges granted and checked. Run pnpm db:verify after provisioning.",
     );
-  } catch (error) {
-    await client.query("rollback");
-    throw error;
   } finally {
     await client.end();
   }
 }
-main().catch(() => {
+main().catch((error) => {
   console.error(
-    "Runtime grants failed. Check migration configuration and the separate unprivileged role. No connection details were logged.",
+    error instanceof DatabaseSetupError
+      ? error.message
+      : "Runtime grants failed. Check migration configuration and the separate unprivileged role. No connection details were logged.",
   );
   process.exitCode = 1;
 });

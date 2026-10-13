@@ -2,6 +2,20 @@
 
 Last updated: 2026-10-13.
 
+## Runtime permissions review and setup verification (2026-10-13)
+
+- Reviewed the completed backend branch and strengthened the runtime-role audit. It now rejects direct credential/ledger writes including column grants, administrative membership even without inherited privileges, database/table ownership and schema creation. The grant command checks both before and after applying its limited grants.
+- Added `pnpm db:verify`: a read-only check using the actual runtime connection for its role identity, required/forbidden permissions and singleton provisioned password account. Updated the setup guide and command list. No credentials, password hashes or personal records are printed.
+- The user reported successful local PostgreSQL login. Independently, `pnpm db:verify` passed against the configured local database without changing records; this does not verify the personal account's browser login or hosted Neon.
+- Verification passed: `pnpm check`, 19 unit tests, 22 real local PostgreSQL integration checks, two authenticated production-build Chromium/WebKit checks, production build and migration metadata check. The three added integration checks cover read-only setup verification/wrong configuration, password-column grants and administrative membership with inheritance disabled. Browser checks cover login, reload/new-tab persistence, recording/settlement, CSV and logout using disposable fixture data.
+- Local branch review is complete. Hosted Neon, R2 and actual iPhone Safari remain unverified. The existing development server and personal records were preserved. Dark mode is documented as the next UI milestone on a separate branch.
+
+## Dark mode follow-up saved (2026-10-13)
+
+- The user requested dark mode and asked to preserve the recommendation. Recorded the proposed next UI milestone in [DECISIONS.md](DECISIONS.md#dark-mode-plan-2026-10-13), with a pointer in the build brief.
+- Recommended separate branch after backend review: direct Light/Dark header and login toggles, System/Light/Dark in Settings, persisted preference and a green dark palette. Detailed responsive/accessibility/hydration checks are recorded with the plan.
+- Documentation only; dark mode is not implemented. This adds no work to the backend branch’s implementation scope.
+
 ## Supabase cleanup (2026-10-13)
 
 - Removed Supabase SDK/SSR/CLI dependencies and lockfile entries, client modules/generated types, configuration helpers, retired email-link callback, old migrations/config, stand-in integration fixtures/tests and the legacy setup guide. The earlier implementation remains in Git history; no hosted Supabase data existed to migrate.
@@ -9,7 +23,7 @@ Last updated: 2026-10-13.
 - Ported the remaining draft-confirmation retry and atomic acca/void-leg checks into the restricted-role PostgreSQL repository suite before deleting the old suite. The independent loopback demo, financial rules and replacement migrations are preserved.
 - Verification passed: `pnpm check`, 19 unit tests, 19 replacement PostgreSQL integration checks (nine schema and ten auth/repository), two authenticated production Chromium/WebKit flows, migration metadata checks, peer compatibility, frozen-lockfile installation and production build. No Supabase references remain in source, scripts, tests, package manifest or lockfile; the build no longer contains the email-link callback route.
 - These checks used real local PostgreSQL/Better Auth with disposable fixture databases/roles. Hosted Neon, R2 and actual iPhone Safari remain unverified. The existing development server and personal demo data were not changed by verification.
-- Next: configure/verify the development Neon environment, then final branch review. R2 attachments/import remain a later milestone.
+- Next at that milestone: configure/verify the development Neon environment, then final branch review (local review completed in the newer entry above). R2 attachments/import remain a later milestone.
 
 ## Better Auth and PostgreSQL cutover (2026-10-13)
 
@@ -38,7 +52,7 @@ Last updated: 2026-10-13.
 - Update environment examples, scripts and setup documentation; remove superseded Supabase runtime dependencies/integration after the replacement works. Preserve the loopback demo and personal data.
 - Verify local PostgreSQL authorization/concurrency, authenticated flows, the existing manual recording/settlement/CSV behaviour, type/lint checks, unit tests and production build. Live Neon checks depend on configured development credentials and must be recorded separately.
 - Completion means the existing manual tracker works on the replacement auth/database backend with repeatable setup and verified local checks. R2 uploads, screenshot extraction, social login, analytics refinements and deployment are later work.
-- Database foundation and local auth/repository cutover are complete; cleanup and hosted verification remain.
+- Database foundation, local auth/repository cutover, Supabase cleanup and local branch review are complete; hosted verification remains.
 
 ## Modular database foundation (2026-10-12)
 
@@ -145,12 +159,12 @@ Last updated: 2026-10-13.
 
 ## Next steps
 
-On `feature/modular-backend`, the replacement auth/database now runs the manual tracker locally with a restricted runtime role. Remaining branch work:
+On `feature/modular-backend`, the replacement auth/database now runs the manual tracker locally with a restricted runtime role. Local implementation and branch review are complete. Remaining hosted verification and handoff:
 
 1. Configure a development Neon database and restricted runtime role using `SETUP.md`, provision the owner and verify actual hosted login/session persistence, writes/corrections, access restrictions and concurrency. This requires development credentials; do not claim hosted verification from local PostgreSQL tests.
-2. Review the completed branch, ensure docs reflect verified status and prepare it for merge. Actual iPhone testing remains a separate personal release check.
+2. Record the hosted results and prepare the branch for merge. Local review and regression checks are complete; actual iPhone testing remains a separate personal release check.
 
-Later milestones: private R2 attachments/import, CI, sample-slip extraction checks, actual iPhone/Home Screen and separate production deployment. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
+Recommended next UI milestone after backend review: [dark mode](DECISIONS.md#dark-mode-plan-2026-10-13) on a separate branch. It can precede private R2 attachments/import. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 
 ## Modular backend milestone checklist
 
@@ -161,6 +175,7 @@ Later milestones: private R2 attachments/import, CI, sample-slip extraction chec
 - [x] Auth/repository environment example, setup/provisioning guide and workflow integration tests.
 - [x] Local migration, authorization, concurrency and authenticated manual-flow verification.
 - [x] Remove unused Supabase integration/dependencies and rerun relevant checks.
+- [x] Local branch review and read-only runtime setup verification command.
 - [ ] Live Neon/Better Auth verification.
 - [ ] Private R2 attachment workflow and live access verification.
 - [ ] Persistent screenshot import/extraction/retry/confirmation.

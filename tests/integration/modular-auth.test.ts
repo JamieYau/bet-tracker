@@ -15,7 +15,11 @@ import {
 } from "../../src/features/bets/postgres";
 import type { BetInput } from "../../src/features/bets/types";
 import { createDatabase } from "../../src/lib/db/connection";
-import { grantRuntime } from "../../src/lib/db/privileges";
+import {
+  grantRuntime,
+  inspectRuntimeAccess,
+  verifyRuntime,
+} from "../../src/lib/db/privileges";
 import { account, appAccounts, user } from "../../src/lib/db/schema";
 
 const config = {
@@ -29,6 +33,8 @@ let elevated: ReturnType<typeof createDatabase>;
 let runtime: ReturnType<typeof createDatabase>;
 let dbName: string;
 let role: string;
+let operatorUrl: string;
+let runtimeUrl: string;
 let auth: { handler: (request: Request) => Promise<Response> };
 let owner: string;
 
@@ -116,6 +122,7 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
     await admin.query(`create database ${dbName}`);
     await admin.query(`create role ${role} login`);
     url.pathname = `/${dbName}`;
+    operatorUrl = url.href;
     elevated = createDatabase(url.href);
     await migrate(elevated.db, { migrationsFolder: "./drizzle" });
     const migrationClient = new Client({ connectionString: url.href });
@@ -127,6 +134,7 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
     }
     url.username = role;
     url.password = "";
+    runtimeUrl = url.href;
     runtime = createDatabase(url.href);
   });
   afterAll(async () => {
@@ -149,6 +157,64 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
     await manageOwner(elevated.db, config, "provision", password);
     owner = (await elevated.db.select().from(appAccounts))[0].ownerId;
     auth = betterAuth(authOptions(runtime.db, config));
+  });
+  it("verifies the runtime connection and provisioned owner without writes", async () => {
+    const client = new Client({ connectionString: runtimeUrl });
+    await client.connect();
+    try {
+      await client.query("begin read only");
+      await verifyRuntime(client, role, config.ownerEmail);
+      await expect(
+        verifyRuntime(client, role, "missing@example.test"),
+      ).rejects.toThrow("provisioned password account");
+      await expect(
+        verifyRuntime(client, "wrong_role", config.ownerEmail),
+      ).rejects.toThrow("does not use");
+      await client.query("rollback");
+    } finally {
+      await client.end();
+    }
+  });
+  it("rejects credential column writes before granting runtime access", async () => {
+    const client = new Client({ connectionString: operatorUrl });
+    await client.connect();
+    try {
+      await client.query(
+        `grant update(password) on identity.account to ${role}`,
+      );
+      const access = await inspectRuntimeAccess(client, role);
+      expect(access.unsafe).toContain(
+        "Runtime role can modify protected table identity.account.",
+      );
+      await expect(grantRuntime(client, role)).rejects.toThrow(
+        "protected table identity.account",
+      );
+    } finally {
+      await client.query(
+        `revoke update(password) on identity.account from ${role}`,
+      );
+      await client.end();
+    }
+  });
+  it("rejects administrative membership even when privileges are not inherited", async () => {
+    const parent = `${role}_admin`;
+    const client = new Client({ connectionString: operatorUrl });
+    await client.connect();
+    try {
+      await admin.query(`create role ${parent} nologin createrole`);
+      await admin.query(`grant ${parent} to ${role} with inherit false`);
+      const access = await inspectRuntimeAccess(client, role);
+      expect(access.unsafe).toContain(
+        "Runtime role has administrative privileges or membership, or cannot log in.",
+      );
+      await expect(grantRuntime(client, role)).rejects.toThrow(
+        "administrative privileges",
+      );
+    } finally {
+      await admin.query(`revoke ${parent} from ${role}`);
+      await admin.query(`drop role ${parent}`);
+      await client.end();
+    }
   });
   it("provisions exactly one hashed credential and blocks public signup", async () => {
     const [credential] = await elevated.db.select().from(account);

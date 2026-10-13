@@ -66,6 +66,21 @@ References: [Better Auth email/password](https://better-auth.com/docs/authentica
 
 - ProfitChart is a client presentation island using shadcn Chart/Recharts 3.10.1. Server metrics/labels supply cumulative pence and a £0 baseline. At the user’s request, straight line segments connect the £0 baseline and each settled bet, including equal timestamps; exact GBP/London tooltips and a visible summary accompany the chart. Animations are disabled, and latest corrections replace effective returns without adding points.
 
+## Dark mode plan (2026-10-13)
+
+The user requested dark mode and asked that this recommendation be preserved. Dark mode is a desired feature; the controls and placement below are proposed implementation defaults, not separately confirmed UI choices.
+
+- Recommended sequence: review/finish the backend branch, then use a separate UI branch (suggested name: `feature/dark-mode`). This small personal-use improvement can precede R2 screenshot import; do not fold it into the backend migration or the larger deferred analytics redesign.
+- Follow [shadcn’s Next.js dark-mode guide](https://ui.shadcn.com/docs/dark-mode/next) using `next-themes` and class-based theming. Read relevant installed Next.js guides and verify current dependency compatibility when implementing.
+- Default to System and persist the preference on the device/browser across navigation and reloads. Avoid a light flash on dark startup and handle hydration without changing control/navigation geometry.
+- Recommended quick control: a sun/moon button in the top-right header beside Add Bet on both mobile and desktop. It switches the resolved appearance directly between Light and Dark and saves that explicit preference. Give it an accessible action label, keyboard focus and at least a 44px tap target. Adjust compact header spacing/branding if necessary to fit narrow phones; preserve the four mobile navigation slots.
+- Settings should offer an explicit System / Light / Dark selection, including a clear way to return to following the device theme after using the quick toggle. Prefer a visible three-option control over a dropdown. Do not cycle the header button through three modes: System can look identical to an explicit Light/Dark choice.
+- Include the same quick toggle on the login page so theme selection works before authentication. Apply the theme consistently to private pages and the local demo.
+- Existing `.dark` CSS variables are generic grey defaults, not a finished branded theme. Create a complementary green dark palette and audit charts, positive/negative amounts, inputs, focus/error states, notices and navigation for contrast/readability. Preserve financial definitions and chart data.
+- Verification should cover Light/Dark/System, device-theme changes while System is selected, explicit preferences overriding the device, persisted preference across reload/navigation/login/logout, initial rendering/hydration, keyboard/accessibility, chart/tooltips and 320/390/768/1280px layouts without overflow or navigation shifts. Actual iPhone Safari remains a separate live check.
+
+Status: saved for future implementation. No theme provider, toggle, Settings control or palette refinement has been implemented or tested for this feature.
+
 ## Future analytics UI reference (2026-10-12)
 
 The user supplied PropBomb as inspiration and requested that the ideas be preserved for future work. These are candidates to revisit, not a commitment to implement every feature or expand first-release scope.
@@ -108,3 +123,7 @@ These record the original implementation before the cutover. Supabase integratio
 - Actual iPhone Safari verification.
 
 Do not treat unavailable external inputs as a reason to stop independent implementation or mocked checks. Do not claim live verification until performed.
+
+## Runtime database setup checks (2026-10-13)
+
+Use a separately created restricted SQL login role, not a provider dashboard role with administrative membership. `db:grant-runtime` checks effective table and column privileges, role membership/ownership and schema creation before granting the reviewed permissions, then audits the result. `db:verify` checks the runtime connection and provisioned owner in a read-only transaction after setup. These checks supplement authenticated workflow verification; passing locally does not establish hosted Neon behaviour.

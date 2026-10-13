@@ -31,7 +31,8 @@ See the [setup guide](docs/SETUP.md) for the available database foundation comma
 | `pnpm test:db` | PostgreSQL integration tests; requires `TEST_DATABASE_URL` |
 | `pnpm test:e2e:auth` | Production-app password/manual-flow checks on a temporary local database; build first |
 | `pnpm owner:provision` / `pnpm owner:recover` | Hidden-password operator account setup/recovery |
-| `pnpm db:grant-runtime` | Grant limited privileges to a separate existing runtime role |
+| `pnpm db:grant-runtime` | Check and grant limited privileges to a separate existing runtime role |
+| `pnpm db:verify` | Read-only check of runtime identity, permissions and provisioned owner |
 | `pnpm test:db:modular` | Replacement schema checks against disposable loopback PostgreSQL |
 | `pnpm test:e2e` | Mobile Chromium/WebKit manual flow using a separate demo file |
 | `pnpm build` / `pnpm start` | Build/run production server |
