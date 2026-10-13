@@ -122,7 +122,7 @@ export function BetForm({
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="version" value={bet?.version ?? 0} />
       <input type="hidden" name="payload" value={JSON.stringify(payload)} />
-      <fieldset disabled={!ready || pending} className="space-y-5">
+      <fieldset disabled={!ready || pending} className="min-w-0 space-y-5">
         <Card>
           <CardHeader>
             <CardTitle>Bet details</CardTitle>

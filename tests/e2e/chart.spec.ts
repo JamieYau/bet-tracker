@@ -5,6 +5,10 @@ test("chart shows losses, zero baseline, equal settlement times and latest corre
 }) => {
   const sourceName = `Chart ${crypto.randomUUID()}`;
   await page.goto("/settings");
+  await page
+    .getByRole("group", { name: "Appearance" })
+    .getByRole("button", { name: "Dark", exact: true })
+    .click();
   await page.getByLabel("New source name").fill(sourceName);
   await page
     .locator("form")
@@ -49,6 +53,12 @@ test("chart shows losses, zero baseline, equal settlement times and latest corre
     );
     const chart = page.locator('svg[aria-label="Cumulative settled cash P/L"]');
     await expect(chart).toBeVisible();
+    expect(
+      await chart
+        .locator(".recharts-cartesian-axis-tick-value")
+        .first()
+        .evaluate((element) => getComputedStyle(element).fill),
+    ).toBe("rgb(165, 187, 173)");
     await expect(chart.locator(".recharts-line-dot")).toHaveCount(
       outcome === "lost" ? 2 : 3,
     );

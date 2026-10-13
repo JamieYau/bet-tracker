@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { PageHeading } from "@/components/page-heading";
+import { ThemePreference } from "@/components/theme-controls";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,6 +55,7 @@ export default async function SettingsPage() {
           <CardTitle>Preferences</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <ThemePreference />
           <p className="text-sm text-muted-foreground">
             Currency: GBP · Display time: Europe/London · Storage time: UTC
           </p>

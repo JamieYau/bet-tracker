@@ -6,6 +6,8 @@ test("private password login, recording, settlement, CSV, session persistence an
 }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/login$/);
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveClass(/dark/);
   expect(
     (
       await page.request.post("/api/auth/sign-up/email", {
@@ -31,12 +33,14 @@ test("private password login, recording, settlement, CSV, session persistence an
     page.getByRole("heading", { name: "Your betting, at a glance" }),
   ).toBeVisible();
   await page.reload();
+  await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(
     page.getByRole("heading", { name: "Your betting, at a glance" }),
   ).toBeVisible();
   const fresh = await context.newPage();
   await fresh.goto("/settings");
   await expect(fresh).not.toHaveURL(/login/);
+  await expect(fresh.locator("html")).toHaveClass(/dark/);
   await fresh.close();
   await page.goto("/add");
   await page.getByLabel("Selection").fill("Authenticated browser fixture");
@@ -55,6 +59,7 @@ test("private password login, recording, settlement, CSV, session persistence an
   await page.goto("/settings");
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
+  await expect(page.locator("html")).toHaveClass(/dark/);
   await page.goto("/bets");
   await expect(page).toHaveURL(/\/login$/);
 });

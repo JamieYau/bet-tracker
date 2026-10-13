@@ -25,9 +25,9 @@ A private, iPhone-first web app for the owner’s personal use that records bets
 - Metrics: settled cash P/L, cumulative/monthly P/L, settled bet count, settled cash stakes and open cash exposure. P/L charts use settlement date.
 - Bet details, private attachments, editing, settlement correction history and CSV export of bets and legs.
 
-## Planned dark mode
+## Appearance
 
-The user wants dark mode for personal mobile/desktop use. Implement it as a separate UI milestone after reviewing the backend branch; it is not part of `feature/modular-backend`. Recommended controls, placement and verification are saved in [DECISIONS.md](DECISIONS.md#dark-mode-plan-2026-10-13). No dark-mode interaction has been implemented yet.
+Dark mode is implemented as a separate UI milestone on `feature/dark-mode`. Follow the device appearance by default; provide a direct Light/Dark toggle in the app header and login page, plus System/Light/Dark controls in Settings. Persist the choice in the browser and use a complementary green dark palette. Implementation decisions and verification are recorded in [DECISIONS.md](DECISIONS.md#dark-mode-plan-2026-10-13) and [PROGRESS.md](PROGRESS.md).
 
 ## Future analytics ideas
 

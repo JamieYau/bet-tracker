@@ -24,7 +24,7 @@ These were suggested during discussion, but were not separately confirmed. Resol
 
 ## Delivery sequence
 
-Current order: migrate authentication/database access to Better Auth, Neon and Drizzle; verify the manual workflow and owner restrictions against the live backend; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
+Current order: the Better Auth/Neon/Drizzle backend is merged and verified against development Neon; complete the separate dark-mode UI milestone; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
 
 ## Modular backend pivot (2026-10-12)
 
@@ -68,7 +68,7 @@ References: [Better Auth email/password](https://better-auth.com/docs/authentica
 
 ## Dark mode plan (2026-10-13)
 
-The user requested dark mode and asked that this recommendation be preserved. Dark mode is a desired feature; the controls and placement below are proposed implementation defaults, not separately confirmed UI choices.
+The user requested dark mode, then authorised the next UI milestone on a new branch after the backend merge. The saved defaults below are now the implementation choices.
 
 - Recommended sequence: review/finish the backend branch, then use a separate UI branch (suggested name: `feature/dark-mode`). This small personal-use improvement can precede R2 screenshot import; do not fold it into the backend migration or the larger deferred analytics redesign.
 - Follow [shadcn’s Next.js dark-mode guide](https://ui.shadcn.com/docs/dark-mode/next) using `next-themes` and class-based theming. Read relevant installed Next.js guides and verify current dependency compatibility when implementing.
@@ -79,7 +79,9 @@ The user requested dark mode and asked that this recommendation be preserved. Da
 - Existing `.dark` CSS variables are generic grey defaults, not a finished branded theme. Create a complementary green dark palette and audit charts, positive/negative amounts, inputs, focus/error states, notices and navigation for contrast/readability. Preserve financial definitions and chart data.
 - Verification should cover Light/Dark/System, device-theme changes while System is selected, explicit preferences overriding the device, persisted preference across reload/navigation/login/logout, initial rendering/hydration, keyboard/accessibility, chart/tooltips and 320/390/768/1280px layouts without overflow or navigation shifts. Actual iPhone Safari remains a separate live check.
 
-Status: saved for future implementation. No theme provider, toggle, Settings control or palette refinement has been implemented or tested for this feature.
+Implementation: `feature/dark-mode` starts from merged backend `main`. Pinned `next-themes` 0.4.6 supports the installed React 19 peer range. The root client provider follows shadcn's documented class/System approach and uses `bet-ledger-theme` local storage; its inline script applies appearance before hydration. Controls reserve 44px targets and stay disabled until hydration, with matching initial markup. The Settings choices are native button controls with pressed states inside an Appearance fieldset. Theme selection is a browser preference, shared across tabs, independent of the private account.
+
+The dark theme uses green surfaces, mint primary/chart accents and a readable red loss/error colour. Charts explicitly theme axis ticks because Recharts 3 renders a tick-value class that the generated shadcn selector does not match. Compact header branding and Add bet text adapt to narrow phones/tablets. Browser tests use an ignored `.next-e2e` directory so they can run alongside the existing development preview. Verification status is in [PROGRESS.md](PROGRESS.md); actual iPhone/Home Screen checks remain separate.
 
 ## Future analytics UI reference (2026-10-12)
 

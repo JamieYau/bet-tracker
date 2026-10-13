@@ -56,6 +56,7 @@ export function ProfitChart({
         >
           <CartesianGrid vertical={false} />
           <XAxis
+            tick={{ fill: "var(--muted-foreground)" }}
             dataKey="index"
             tickLine={false}
             axisLine={false}
@@ -65,6 +66,7 @@ export function ProfitChart({
             tickFormatter={(index) => points[Number(index)]?.axisLabel ?? ""}
           />
           <YAxis
+            tick={{ fill: "var(--muted-foreground)" }}
             width={64}
             tickLine={false}
             axisLine={false}

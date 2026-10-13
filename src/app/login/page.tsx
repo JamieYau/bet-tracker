@@ -1,5 +1,6 @@
 import { Wallet } from "lucide-react";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-controls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Card,
@@ -20,7 +21,10 @@ export default async function LoginPage({
     <main className="flex min-h-dvh items-center justify-center px-5 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="gap-4">
-          <Wallet className="size-9 text-primary" />
+          <div className="flex items-center justify-between">
+            <Wallet className="size-9 text-primary" />
+            <ThemeToggle />
+          </div>
           <CardTitle className="text-2xl">Your private bet ledger</CardTitle>
           <CardDescription className="text-sm leading-6 text-muted-foreground">
             One place to record your bets and understand your returns.

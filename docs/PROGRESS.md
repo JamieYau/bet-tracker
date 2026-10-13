@@ -2,6 +2,17 @@
 
 Last updated: 2026-10-13.
 
+## Dark mode UI milestone (2026-10-13)
+
+- Created `feature/dark-mode` from `main` after merged backend PR #2. Implemented the saved UI plan with pinned `next-themes` 0.4.6: System default, browser persistence, direct 44px Light/Dark toggles in the app header and login page, and visible System/Light/Dark pressed-button choices in Settings.
+- Added green dark surfaces, mint primary/chart accents, readable negative/error colours and a dark demo notice. Explicit chart axis tick colours fix the generated shadcn selector's mismatch with Recharts 3. Financial definitions, data, schema and authorization are unchanged.
+- Theme startup uses the provider's inline script with root-only hydration-warning suppression. Controls keep stable server markup and remain disabled until hydration. Compact branding/Add bet labels fit narrow phones/tablets; four mobile navigation slots remain intact.
+- Responsive testing exposed Chromium's fieldset minimum content width on Add bet at 320px. Added `min-w-0` to the editor fieldset to keep native controls within the page. The new regression measures actual viewport width as well as document overflow to catch mobile browsers scaling an oversized layout.
+- Demo browser checks use an ignored `.next-e2e` build directory, preserving the user's running development server. Demo/auth suites must run sequentially because Playwright trace output is shared; the initial concurrent run produced artifact deletion failures, resolved by sequential verification.
+- Verification passed: `pnpm check`, 19 unit tests, peer compatibility, production build and all 26 demo Chromium/WebKit E2E checks. The six new theme checks cover System/device changes, explicit override, persisted preferences, keyboard action, startup before hydration and stable geometry/no overflow across four routes at 320/390/768/1280px in both themes. Chart/keyboard-tooltip/correction checks run in dark mode. Two authenticated production Chromium/WebKit checks also passed using real Better Auth and disposable local PostgreSQL, including dark preference across login/reload/new-tab/logout. Database integration suites were not rerun for these UI-only changes.
+- T3 preview inspected dark Dashboard/chart, Settings/Add bet and login, exercised the login toggle and checked 320px header/login fit. Measured dark main/muted/primary/loss/button text contrast ratios of 7.56–14.74 against their intended surfaces. Browser and local database checks are not actual iPhone Safari, hosted deployment or a repeat of Neon ledger verification.
+- Next: review/merge `feature/dark-mode`. Private R2 attachments/import, sample-slip extraction, CI, actual iPhone/Home Screen and personal deployment remain later milestones.
+
 ## Live Neon verification complete (2026-10-13)
 
 - The user provisioned the private account and reported successful password sign-in. `pnpm db:verify` independently passed against the actual pooled Neon connection, including runtime identity/permissions and the configured password account.
@@ -175,9 +186,9 @@ Last updated: 2026-10-13.
 
 ## Next steps
 
-On `feature/modular-backend`, local implementation, branch review and live development Neon verification are complete. Review/merge the branch; hosted Next.js deployment and actual iPhone testing remain separate personal release checks.
+The modular backend branch is merged into `main`; local review and live development Neon verification are complete. Dark mode implementation and local verification are complete on `feature/dark-mode`; review/merge this UI branch (see the newest milestone above).
 
-Recommended next UI milestone after backend review: [dark mode](DECISIONS.md#dark-mode-plan-2026-10-13) on a separate branch. It can precede private R2 attachments/import. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
+After reviewing the theme branch, implement private R2 attachments and persistent screenshot import/extraction/retry/confirmation. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate hosted Next.js/production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 
 ## Modular backend milestone checklist
 
