@@ -2,15 +2,15 @@
 
 ## Goal
 
-A private, iPhone-first web app that records bets faster than a spreadsheet, supports desktop use and installation on the iPhone Home Screen.
+A private, iPhone-first web app for the owner’s personal use that records bets faster than a spreadsheet, supports desktop use and installation on the iPhone Home Screen. No public signup, shared accounts, subscriptions or commercial product features are planned.
 
 ## Architecture
 
 - Next.js App Router, strict TypeScript, Tailwind CSS and shadcn/ui.
-- Supabase PostgreSQL, email-link authentication and private screenshot storage; Vercel deployment.
+- Neon PostgreSQL, Better Auth and Drizzle ORM; private screenshot storage in Cloudflare R2. Next.js hosting remains separate, with Vercel the current deployment target. R2 does not require hosting the app on Cloudflare Workers.
 - Server Components for initial reads, Server Actions for ordinary mutations, a Route Handler for screenshot extraction. Share validation and business logic across entry points.
-- Server-side validation, authorised mutations, financial calculations and AI extraction. Supabase clients and generated database types; Zod for external inputs.
-- One repository: `src/app`, `src/components`, `src/features`, `src/lib`, `supabase/migrations`, `tests`.
+- Server-side validation, authorised mutations, financial calculations and AI extraction. Drizzle schema-derived types and reviewed SQL migrations; Zod for external inputs.
+- One repository: `src/app`, `src/components`, `src/features`, `src/lib`, `drizzle`, `tests`. The auth/repository cutover is implemented, and the old Supabase integration has been removed.
 - Financial logic independent of UI/database calls; straightforward modules and thin routes. Migrations are the schema source of truth. Use pnpm with a committed lockfile.
 
 ## First release
@@ -24,6 +24,18 @@ A private, iPhone-first web app that records bets faster than a spreadsheet, sup
 - History and analytics filters: date, bookmaker, source, sport, bet type and status. Clearly label date semantics.
 - Metrics: settled cash P/L, cumulative/monthly P/L, settled bet count, settled cash stakes and open cash exposure. P/L charts use settlement date.
 - Bet details, private attachments, editing, settlement correction history and CSV export of bets and legs.
+
+## Planned dark mode
+
+The user wants dark mode for personal mobile/desktop use. Implement it as a separate UI milestone after reviewing the backend branch; it is not part of `feature/modular-backend`. Recommended controls, placement and verification are saved in [DECISIONS.md](DECISIONS.md#dark-mode-plan-2026-10-13). No dark-mode interaction has been implemented yet.
+
+## Future analytics ideas
+
+Revisit a focused analytics UI milestone after live backend verification, screenshot import and some real usage. These are saved ideas, not additional first-release requirements. References, candidate features and unresolved metric definitions are recorded in [DECISIONS.md](DECISIONS.md#future-analytics-ui-reference-2026-10-12).
+
+- Quick time filters and clearer performance summaries around the P/L graph.
+- Clickable source/tipster summaries leading to individual performance views.
+- Consider win/loss records and profit in units only after agreeing their definitions.
 
 ## Financial rules
 
@@ -42,11 +54,11 @@ A private, iPhone-first web app that records bets faster than a spreadsheet, sup
 
 ## Authentication, storage and import
 
-- Provision one private account; disable public registration and preserve sessions.
-- Enforce owner access in server operations and database/storage RLS.
-- Direct PNG/JPEG uploads to private Supabase Storage, at most 10 MB per image. Backend receives attachment IDs.
+- Provision one private Better Auth account; disable public registration and preserve sessions. Confirmed initial login is Better Auth email/password, with no routine email-delivery dependency. Provide an operator-only recovery procedure that revokes existing sessions.
+- Enforce the provisioned owner’s identity in every server read/mutation and attachment operation. Use a restricted runtime database role, transactional writes and database constraints; decide any additional PostgreSQL RLS design during the migration. Never expose database or R2 credentials to the browser.
+- Direct PNG/JPEG uploads to private Cloudflare R2 through short-lived, server-authorized signed URLs, at most 10 MB per image. Backend receives attachment IDs and validates uploaded object metadata before accepting an attachment.
 - Keep readable originals until deleted; images stay outside PostgreSQL. Store metadata/references and use authenticated access or short-lived signed URLs. Attachment deletion preserves its bet.
-- Server-only OpenAI adapter with configurable model. Compare sample slips for accuracy, speed and cost before selecting the initial image-capable model.
+- Server-only OpenAI adapter with configurable model. Compare sample slips for accuracy and speed before selecting the initial image-capable model.
 - Extract structured fields, leave absent fields blank, flag ambiguity and visibly disclose placement time defaulting to now.
 - Warn about apparent return discrepancies, duplicate references and image hashes. Never silently merge. Confirmation must be idempotent.
 - Preserve drafts through processing failures; offer retry/manual completion. Manual entry works without AI credentials.
@@ -60,5 +72,5 @@ A private, iPhone-first web app that records bets faster than a spreadsheet, sup
 - Verify database/image owner isolation, duplicate confirmation, ambiguous/missing fields, failed imports and attachment deletion.
 - Playwright for main recording/settlement flow. Run type checking, lint, tests and production build.
 - Verify uploads/core interactions on actual iPhone Safari before declaring deployment ready.
-- Deliver source, migrations, generated database types, environment examples, setup/deployment instructions and metric definitions.
+- Deliver source, reviewed migrations, typed database schema, environment examples, setup/deployment instructions and metric definitions.
 - Separate preview and production data. When credentials/slips are absent, complete manual workflows and mocked integration checks, documenting outstanding live verification.

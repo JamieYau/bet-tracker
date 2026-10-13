@@ -12,8 +12,7 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
       <CardHeader>
         <h1 className="text-xl font-semibold">Unable to load your ledger</h1>
         <CardDescription>
-          Please retry. If this persists, check the Supabase configuration and
-          migrations.
+          Please try again. If the problem continues, return later.
         </CardDescription>
       </CardHeader>
       <CardContent>

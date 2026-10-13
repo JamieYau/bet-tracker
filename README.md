@@ -1,8 +1,8 @@
 # Bet ledger
 
-A private, iPhone-first betting tracker built with Next.js App Router, strict TypeScript, Tailwind CSS, shadcn/ui and Supabase.
+A private, iPhone-first betting tracker for personal use, built with Next.js App Router, strict TypeScript, Tailwind CSS and shadcn/ui. The website uses PostgreSQL/Drizzle and Better Auth password login, with Neon as the hosted database target. Private Cloudflare R2 attachments are planned next.
 
-The manual milestone includes singles/accas, saved incomplete drafts, cash/free-bet funding, settlement correction history, dashboard totals, filters, editable lists and CSV exports. Screenshot uploads/extraction are the next stage; their private database/storage schema is prepared.
+The manual milestone includes singles/accas, saved incomplete drafts, cash/free-bet funding, settlement correction history, dashboard totals, filters, editable lists and CSV exports. The replacement database/authentication and repository are implemented and verified locally and against development Neon. Dark mode is the next UI milestone, followed by private R2 screenshots/import. Hosted Next.js deployment and actual iPhone verification remain outstanding.
 
 ## Run locally
 
@@ -16,7 +16,7 @@ pnpm dev:demo
 
 Open http://127.0.0.1:3000. The explicit local demo saves test entries in `.local/ledger-data/demo.json`, requires no credentials and binds to loopback. It has no real authentication, is labelled in the UI and is disabled in production/Vercel. Use test data only. To start fresh, stop the demo and remove `.local/ledger-data/demo.json`.
 
-For real private storage/login, follow [Supabase setup](docs/SETUP.md), create `.env.local` from `.env.example`, then run `pnpm dev`.
+See the [setup guide](docs/SETUP.md) for the available database foundation commands and remaining backend migration work. Use a separate restricted runtime database connection, and provision your one private account through the operator command.
 
 ## Commands
 
@@ -29,9 +29,16 @@ For real private storage/login, follow [Supabase setup](docs/SETUP.md), create `
 | `pnpm typecheck` | Generate route types and check TypeScript |
 | `pnpm test` | Financial, metrics and validation tests |
 | `pnpm test:db` | PostgreSQL integration tests; requires `TEST_DATABASE_URL` |
+| `pnpm test:e2e:auth` | Production-app password/manual-flow checks on a temporary local database; build first |
+| `pnpm owner:provision` / `pnpm owner:recover` | Hidden-password operator account setup/recovery |
+| `pnpm db:grant-runtime` | Check and grant limited privileges to a separate existing runtime role |
+| `pnpm db:verify` | Read-only check of runtime identity, permissions and provisioned owner |
+| `pnpm test:db:modular` | Replacement schema checks against disposable loopback PostgreSQL |
 | `pnpm test:e2e` | Mobile Chromium/WebKit manual flow using a separate demo file |
 | `pnpm build` / `pnpm start` | Build/run production server |
-| `pnpm db:types` | Regenerate types from local Supabase |
+| `pnpm db:generate` | Generate replacement SQL migrations from the Drizzle schema |
+| `pnpm db:check` | Check Drizzle migration metadata |
+| `pnpm db:migrate` | Apply reviewed migrations using `MIGRATION_DATABASE_URL` |
 
 Install the recommended Biome editor extension for format/fix on save. Commit `pnpm-lock.yaml` when dependencies change. Static public assets, generated Next.js types and ignored build/dependency files are excluded from Biome.
 
