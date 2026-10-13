@@ -77,9 +77,8 @@ test("chart shows losses, zero baseline, equal settlement times and latest corre
         .locator(".recharts-area-area")
         .evaluate((element) => getComputedStyle(element).fillOpacity),
     ).toBe("0.16");
-    await expect(chart.locator(".recharts-area-dot")).toHaveCount(
-      outcome === "lost" ? 2 : 3,
-    );
+    const path = await chart.locator(".recharts-area-curve").getAttribute("d");
+    expect(path?.match(/[ML]/g)).toHaveLength(outcome === "lost" ? 2 : 3);
     if (outcome === "lost") {
       await chart.focus();
       await chart.press("ArrowRight");
@@ -108,7 +107,10 @@ test("chart shows losses, zero baseline, equal settlement times and latest corre
   await expect(page.locator("figcaption:visible")).toContainText(
     "£10.00 across 2 settled bets",
   );
-  await expect(page.locator("svg:visible .recharts-area-dot")).toHaveCount(3);
+  const correctedPath = await page
+    .locator("svg:visible .recharts-area-curve")
+    .getAttribute("d");
+  expect(correctedPath?.match(/[ML]/g)).toHaveLength(3);
   await page.goto(`/?source=${sourceId}&from=2026-10-13`);
   await expect(
     page

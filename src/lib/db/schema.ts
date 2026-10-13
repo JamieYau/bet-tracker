@@ -73,6 +73,11 @@ export const bets = pgTable(
     sport: text("sport").notNull().default(""),
     selection: text("selection").notNull().default(""),
     market: text("market").notNull().default(""),
+    event: text("event").notNull().default(""),
+    direction: text("direction", { enum: ["", "over", "under"] })
+      .notNull()
+      .default(""),
+    line: odds("line"),
     acceptedOdds: odds("accepted_odds"),
     cashStakePence: money("cash_stake_pence"),
     freeStakePence: money("free_stake_pence"),
@@ -100,6 +105,12 @@ export const bets = pgTable(
     index("bets_owner_reference")
       .on(table.ownerId, table.reference)
       .where(sql`${table.reference} <> ''`),
+    check("bets_event_check", sql`length(${table.event}) <= 200`),
+    check(
+      "bets_direction_check",
+      sql`${table.direction} in ('', 'over', 'under')`,
+    ),
+    check("bets_line_check", sql`${table.line} between -1000000 and 1000000`),
     check("bets_odds_check", sql`${table.acceptedOdds} between 1 and 1000000`),
     check(
       "bets_cash_stake_check",
@@ -134,6 +145,11 @@ export const legs = pgTable(
     position: integer("position").notNull(),
     selection: text("selection").notNull(),
     market: text("market").notNull().default(""),
+    event: text("event").notNull().default(""),
+    direction: text("direction", { enum: ["", "over", "under"] })
+      .notNull()
+      .default(""),
+    line: odds("line"),
     sport: text("sport").notNull(),
     odds: odds("odds"),
     status: text("status", { enum: ["open", "won", "lost", "void"] }).notNull(),
@@ -145,6 +161,12 @@ export const legs = pgTable(
       foreignColumns: [bets.ownerId, bets.id],
     }).onDelete("cascade"),
     check("legs_position_check", sql`${table.position} between 0 and 29`),
+    check("legs_event_check", sql`length(${table.event}) <= 200`),
+    check(
+      "legs_direction_check",
+      sql`${table.direction} in ('', 'over', 'under')`,
+    ),
+    check("legs_line_check", sql`${table.line} between -1000000 and 1000000`),
     check("legs_odds_check", sql`${table.odds} between 1 and 1000000`),
     check(
       "legs_status_check",

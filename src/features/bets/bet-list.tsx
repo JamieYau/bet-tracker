@@ -20,6 +20,7 @@ import {
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
 import { dateTime, money, outcomeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { selectionLabel } from "./catalog";
 import type { Bet, Ledger } from "./types";
 export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
   if (!bets.length)
@@ -60,7 +61,7 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <ItemTitle className="min-w-0 font-semibold sm:text-base">
                     <span className="truncate">
-                      {bet.selection || "Untitled draft"}
+                      {selectionLabel(bet) || "Untitled draft"}
                     </span>
                   </ItemTitle>
                   <Badge variant="secondary">
@@ -83,6 +84,11 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                     ? `${bet.legs.length}-leg acca`
                     : bet.sport}
                 </ItemDescription>
+                {bet.event && (
+                  <ItemDescription className="truncate text-xs">
+                    {bet.event}
+                  </ItemDescription>
+                )}
                 <ItemDescription className="text-xs">
                   {dateTime(bet.placedAt)}
                 </ItemDescription>

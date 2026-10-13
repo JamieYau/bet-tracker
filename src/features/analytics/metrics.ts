@@ -1,4 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
+import { normalizeMarket, normalizeSport } from "@/features/bets/catalog";
 import type { Bet } from "@/features/bets/types";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
 import { TIME_ZONE } from "@/lib/format";
@@ -9,16 +10,56 @@ export type Filters = {
   bookmaker?: string;
   source?: string;
   sport?: string;
+  market?: string;
+  event?: string;
+  direction?: string;
+  line?: string;
+  inPlay?: string;
   type?: string;
   status?: string;
 };
 export function matchesDimensions(bet: Bet, filters: Filters) {
+  const picks = bet.betType === "acca" ? bet.legs : [bet];
+  const hasPickFilters =
+    filters.sport ||
+    filters.market ||
+    filters.event ||
+    filters.direction ||
+    filters.line;
+  const matchesPick =
+    !hasPickFilters ||
+    picks.some(
+      (pick) =>
+        (!filters.sport ||
+          (filters.sport === "Mixed"
+            ? normalizeSport(bet.sport) === "Mixed"
+            : normalizeSport(pick.sport).toLowerCase() ===
+              normalizeSport(filters.sport).toLowerCase())) &&
+        (!filters.market ||
+          normalizeMarket(pick.market).toLowerCase() ===
+            normalizeMarket(filters.market).toLowerCase()) &&
+        (!filters.event ||
+          (pick.event ?? "")
+            .toLowerCase()
+            .includes(filters.event.toLowerCase())) &&
+        (!filters.direction || pick.direction === filters.direction) &&
+        (!filters.line ||
+          (pick.line != null && Number(pick.line) === Number(filters.line))),
+    ) ||
+    ((picks.length === 0 || filters.sport === "Mixed") &&
+      filters.sport &&
+      !filters.market &&
+      !filters.event &&
+      !filters.direction &&
+      !filters.line &&
+      normalizeSport(bet.sport).toLowerCase() ===
+        normalizeSport(filters.sport).toLowerCase());
+  const inPlay = bet.tags.some((tag) => tag.toLowerCase() === "in-play");
   return (
     (!filters.bookmaker || bet.bookmakerId === filters.bookmaker) &&
     (!filters.source || bet.sourceId === filters.source) &&
-    (!filters.sport ||
-      bet.sport === filters.sport ||
-      bet.legs.some((leg) => leg.sport === filters.sport)) &&
+    Boolean(matchesPick) &&
+    (!filters.inPlay || (filters.inPlay === "yes" ? inPlay : !inPlay)) &&
     (!filters.type || bet.betType === filters.type) &&
     (!filters.status ||
       bet.status === filters.status ||

@@ -1,5 +1,7 @@
+import Decimal from "decimal.js";
 import { z } from "zod";
 import { MAX_PENCE, parseOdds } from "@/features/settlement/finance";
+import { normalizeMarket, normalizeSport } from "./catalog";
 import { OUTCOMES } from "./types";
 
 const text = (max: number) => z.string().trim().max(max);
@@ -13,14 +15,37 @@ const odds = z
     }
   }, "Enter valid accepted odds.")
   .nullable();
+const line = z
+  .string()
+  .trim()
+  .regex(/^[+-]?\d+(\.\d{1,6})?$/, "Enter a numeric line, e.g. 9.5 or -3.5.")
+  .pipe(
+    z
+      .string()
+      .refine(
+        (value) => Math.abs(Number(value)) <= 1_000_000,
+        "Line is too large.",
+      ),
+  )
+  .nullable()
+  .default(null)
+  .transform((value) =>
+    value === null ? null : new Decimal(value).toString(),
+  );
+const pickMetadata = {
+  event: text(200).default(""),
+  direction: z.enum(["", "over", "under"]).default(""),
+  line,
+};
 const pence = z.number().int().min(0).max(MAX_PENCE);
 export const betSchema = z.object({
   bookmakerId: z.uuid(),
   sourceId: z.uuid(),
   placedAt: z.iso.datetime({ offset: true }),
-  sport: text(80),
+  sport: text(80).transform(normalizeSport),
   selection: text(500),
-  market: text(200),
+  market: text(200).transform(normalizeMarket),
+  ...pickMetadata,
   acceptedOdds: odds,
   cashStakePence: pence,
   freeStakePence: pence,
@@ -34,8 +59,9 @@ export const betSchema = z.object({
       z.object({
         id: z.uuid(),
         selection: text(500),
-        market: text(200),
-        sport: text(80),
+        market: text(200).transform(normalizeMarket),
+        ...pickMetadata,
+        sport: text(80).transform(normalizeSport),
         odds,
         status: z.enum(["open", "won", "lost", "void"]),
       }),

@@ -26,9 +26,11 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
-import { londonInput } from "@/lib/format";
+import { formatOdds, londonInput } from "@/lib/format";
 import { useClientReady } from "@/lib/use-client-ready";
 import { recordAction } from "./actions";
+import { normalizeSport } from "./catalog";
+import { PickFields } from "./pick-fields";
 import type { Bet, Leg, NamedOption } from "./types";
 
 export function BetForm({
@@ -52,10 +54,13 @@ export function BetForm({
     sourceId:
       bet?.sourceId ?? sources.find((option) => option.name === "Me")?.id ?? "",
     placedAt: londonInput(bet?.placedAt ?? now),
-    sport: bet?.sport ?? "Football",
+    sport: normalizeSport(bet?.sport ?? "Football"),
     selection: bet?.selection ?? "",
     market: bet?.market ?? "",
-    acceptedOdds: bet?.acceptedOdds ?? "",
+    event: bet?.event ?? "",
+    direction: bet?.direction ?? "",
+    line: bet?.line ?? "",
+    acceptedOdds: bet?.acceptedOdds ? formatOdds(bet.acceptedOdds) : "",
     cashStake: bet ? String(bet.cashStakePence / 100) : "",
     freeStake: bet?.freeStakePence ? String(bet.freeStakePence / 100) : "",
     freeStakeReturned: bet?.freeStakeReturned ?? false,
@@ -65,10 +70,24 @@ export function BetForm({
     tagsText: bet?.tags.join(", ") ?? "",
   });
   const [legs, setLegs] = useState<Leg[]>(
-    bet?.betType === "acca" ? bet.legs : [],
+    bet?.betType === "acca"
+      ? bet.legs.map((leg) => ({ ...leg, sport: normalizeSport(leg.sport) }))
+      : [],
   );
   function text(key: keyof typeof values, value: string) {
     setValues((previous) => ({ ...previous, [key]: value }));
+  }
+  const tags = values.tagsText
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  const inPlay = tags.some((tag) => tag.toLowerCase() === "in-play");
+  function setInPlay(checked: boolean) {
+    const otherTags = tags.filter((tag) => tag.toLowerCase() !== "in-play");
+    text(
+      "tagsText",
+      [...otherTags, ...(checked ? ["In-play"] : [])].join(", "),
+    );
   }
   function legChange(id: string, key: keyof Leg, value: string) {
     setLegs((previous) =>
@@ -101,8 +120,17 @@ export function BetForm({
       </Field>
     );
   };
+  const legSports = [
+    ...new Set(legs.map((leg) => normalizeSport(leg.sport)).filter(Boolean)),
+  ];
   const payload = {
     ...values,
+    sport:
+      values.betType === "acca" && legSports.length
+        ? legSports.length === 1
+          ? legSports[0]
+          : "Mixed"
+        : values.sport,
     legs:
       values.betType === "single"
         ? [
@@ -111,6 +139,9 @@ export function BetForm({
               selection: values.selection,
               market: values.market,
               sport: values.sport,
+              event: values.event,
+              direction: values.direction,
+              line: values.line,
               odds: null,
               status: bet?.legs[0]?.status ?? "open",
             },
@@ -231,16 +262,37 @@ export function BetForm({
                 {state.errors?.betType?.join(" ")}
               </FieldError>
             </Field>
-            {input(
-              "sport",
-              "Sport",
-              "Use Mixed if the acca covers multiple sports.",
-            )}
+            <Field orientation="horizontal" className="min-h-11 sm:col-span-2">
+              <Checkbox
+                id="inPlay"
+                aria-labelledby="inPlay-label"
+                checked={inPlay}
+                onCheckedChange={setInPlay}
+                disabled={!ready || pending}
+              />
+              <div className="min-w-0">
+                <FieldLabel
+                  id="inPlay-label"
+                  htmlFor="inPlay"
+                  className="min-h-11"
+                >
+                  In-play
+                </FieldLabel>
+              </div>
+            </Field>
+            <PickFields
+              id="bet"
+              pick={values}
+              change={text}
+              errors={state.errors}
+              includeMixed={values.betType === "acca"}
+              metadata={values.betType === "single"}
+            />
             {input(
               "selection",
               values.betType === "acca" ? "Acca name" : "Selection",
             )}
-            {input("market", "Market (optional)")}
+
             {input(
               "acceptedOdds",
               "Accepted total odds",
@@ -267,8 +319,7 @@ export function BetForm({
                     {(
                       [
                         ["selection", "Selection"],
-                        ["market", "Market"],
-                        ["sport", "Sport"],
+
                         ["odds", "Leg odds (optional)"],
                       ] as const
                     ).map(([key, label]) => (
@@ -286,6 +337,19 @@ export function BetForm({
                         />
                       </Field>
                     ))}
+                    <PickFields
+                      id={leg.id}
+                      pick={leg}
+                      errors={Object.fromEntries(
+                        ["sport", "market", "event", "direction", "line"].map(
+                          (key) => [
+                            key,
+                            state.errors?.[`legs.${index}.${key}`],
+                          ],
+                        ),
+                      )}
+                      change={(key, value) => legChange(leg.id, key, value)}
+                    />
                     <Field>
                       <FieldLabel htmlFor={`${leg.id}-status`}>
                         Leg status
@@ -337,7 +401,10 @@ export function BetForm({
                       id: crypto.randomUUID(),
                       selection: "",
                       market: "",
-                      sport: values.sport,
+                      sport: values.sport === "Mixed" ? "" : values.sport,
+                      event: "",
+                      direction: "",
+                      line: null,
                       odds: null,
                       status: "open",
                     },
@@ -423,7 +490,7 @@ export function BetForm({
             {input("reference", "Bookmaker reference")}
             {input(
               "tagsText",
-              "Promotional tags",
+              "Tags",
               "Separate tags with commas, e.g. Boost, Welcome offer.",
             )}
             <div className="sm:col-span-2">

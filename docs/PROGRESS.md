@@ -2,6 +2,34 @@
 
 Last updated: 2026-10-13.
 
+## Theme and structured entry branch complete (2026-10-13)
+
+- Finished the agreed branch follow-up: fixed Sport categories (NFL, Football, NCAAF, WNBA, Tennis, NBA), sport-specific Market choices with Other/custom, optional Event/fixture, Over/Under and signed Line/handicap fields. Singles and individual acca legs retain metadata through drafts, confirmation and editing. Acca summary sport follows its legs; different categories become Mixed.
+- Added sport/market/event/direction/line/in-play filters to history, dashboard and CSV. Combined acca pick filters match the same leg and retain whole-bet stakes/P/L; no profit allocation between legs. Existing known case variants normalise on read/new writes. Ambiguous legacy sports/custom markets remain available for old bets, with no automatic league guessing or destructive rewriting.
+- Added reviewed `0004_entry_metadata`: optional/defaulted bet/leg columns, bounded metadata constraints and a replacement of the existing owner-checked, locked, idempotent/versioned save function. Applied it successfully to the configured development Neon database. `db:verify` passed, and live single/acca metadata writes/readbacks were checked inside a rolled-back transaction; verified no fixtures remained. Other environments must apply the migration before the new app version.
+- Included the pending in-play tag control and compact accepted/leg odds display. New nested metadata validation errors now reach their fields; signed numeric lines export as numeric CSV values. Updated the chart regression to inspect line segments after the user's committed removal of fixed dots; active keyboard tooltips remain covered.
+- Verification passed: Biome/TypeScript, 22 unit checks, 23 real disposable PostgreSQL checks, peer compatibility, migration metadata/no-change generation and production build. All 32 demo Chromium/WebKit scenarios passed across the full and focused runs, including new metadata/custom-market/filter/CSV flows and 320/390/768/1280px themes. The initial full run had two outdated dot assertions and one WebKit React development performance-timing exception (`flushComponentPerformance`); updated chart checks and the focused chart/theme rerun passed in both browsers. Two authenticated production Chromium/WebKit checks passed using real Better Auth and disposable PostgreSQL, including structured metadata persistence/CSV, settlement and theme/session login/logout.
+- T3 inspected current single/acca forms at 320px, confirmed the fixed categories/new fields and no overflow. No personal bets were changed by live verification. Actual iPhone Safari/Home Screen and hosted Next.js/production deployment remain separate release checks.
+- Implementation and review are complete; commit/push and draft PR handoff are the final branch steps. Private R2 attachment/import work remains next after branch review/merge.
+
+## Entry classification clarification (2026-10-13)
+
+- The user prefers one fixed Sport dropdown with NFL, Football, NCAAF, WNBA, Tennis and NBA for convenient, consistent filtering. No separate sport/competition hierarchy or league field; tennis tournaments can go in the proposed Event/fixture field.
+- Recorded the agreed design in BUILD_BRIEF/DECISIONS. Documentation only: dropdown/event fields and existing-value mapping remain to be implemented; no application changes or checks performed for this clarification.
+
+## Placed in-play checkbox (2026-10-13)
+
+- Added an accessible shadcn Checkbox near placement time/bet type for singles and accas. Its checked state derives from the existing `In-play` tag; toggling adds/removes that tag case-insensitively without dropping other tags. The Tags input stays synchronised. The control shares the editor's hydration/pending guard.
+- Existing draft/confirmation/edit payloads, detail badges and CSV exports persist/show the tag without schema or financial changes. Recorded semantics: the event had already started at placement; the setting applies to the whole bet.
+- Documented the player's pick/fixture in Selection and Player rebounds in Market for basketball props.
+- Verification: scoped Biome, TypeScript and production build passed. Chromium/WebKit demo checks passed for unchecked default, checked draft/reload/resume/confirmation, CSV and clearing the checkbox while preserving Boost. T3 inspected the Add form and its label toggle/tag synchronisation with no page overflow. No live ledger records were written and actual iPhone Safari remains outstanding.
+
+## Bet detail odds formatting (2026-10-13)
+
+- Fixed accepted odds and acca-leg odds displaying PostgreSQL's six-decimal padding. A shared display formatter removes trailing fractional zeros (2.500000 → 2.5, 1.910000 → 1.91), preserves significant decimal digits and integer zeros, and retains the missing-odds placeholder.
+- This changes detail-page presentation only; stored odds and settlement calculations retain their precision.
+- Verification: scoped Biome and TypeScript checks passed. Formatter smoke checks covered decimal/integer odds, six significant decimals and absent values. Read-only T3 inspection of an existing acca confirmed accepted odds 3.5 and leg odds 1.6/1.9 without padding. No ledger writes or full regression-suite rerun.
+
 ## Single-area shadcn chart (2026-10-13)
 
 - At the user’s request, simplified the filled P/L chart to shadcn’s AreaChart pattern: one Area supplies the straight outline, settlement dots and 16% fill toward £0. The existing shadcn card, ChartContainer, ChartConfig and GBP/date tooltip remain in use; both outline and fill follow `--chart-1`.
@@ -199,9 +227,9 @@ Last updated: 2026-10-13.
 
 ## Next steps
 
-The modular backend branch is merged into `main`; local review and live development Neon verification are complete. Dark mode implementation and local verification are complete on `feature/dark-mode`; review/merge this UI branch (see the newest milestone above).
+The backend is merged and verified against development Neon. Dark mode and structured entry implementation/review are complete on `feature/dark-mode`; review/merge this branch. The new optional metadata migration is already applied to development Neon and must precede the updated app in other environments.
 
-After reviewing the theme branch, implement private R2 attachments and persistent screenshot import/extraction/retry/confirmation. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate hosted Next.js/production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
+Then implement private R2 attachments and persistent screenshot import/extraction/retry/confirmation. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate hosted Next.js/production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 
 ## Modular backend milestone checklist
 

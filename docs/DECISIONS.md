@@ -9,7 +9,13 @@
 - Whole void bets count as settled.
 - A voided acca leg does not settle the whole bet while remaining legs are active. “Lay” in the discussion meant remaining acca, not an exchange lay bet.
 - Acca calculations use accepted total odds or the actual credited return. Do not recalculate from leg odds.
-- The build brief is the agreed product scope. The foundation and first manual recording/settlement milestone have been implemented; the modular backend migration is now the next stage, followed by screenshot import.
+- Bet detail odds display strips insignificant trailing decimal zeros while preserving every significant digit. Database precision and financial calculations are unchanged.
+- Placed in-play records whether the event had started at placement, for singles or the whole acca. Use the existing `In-play` tag as persistence: the checkbox and Tags input stay synchronised, drafts/editing retain the choice, and detail badges/CSV show it. This is recorded context, not a change to settlement rules.
+- Player-prop entry now separates the player/team in Selection, the market type, Event/fixture, optional Over/Under and optional numeric Line/handicap. Existing free-text selections remain readable and are not parsed or rewritten.
+- Agreed follow-up classification: use one fixed Sport dropdown with NFL, Football, NCAAF, WNBA, Tennis and NBA. These are the user's practical betting categories, including competitions; do not add a separate parent-sport/league hierarchy. Store canonical values for consistent filtering. Football does not need a league field; tennis tournaments can be included in Event/fixture. The fixed dropdown and separate event field are implemented.
+- Confirmed entry refinement: Over/Under and numeric line are separate optional fields for filtering/trends. Lines accept a signed number with at most six decimal places, bounded to ±1,000,000. The same structured metadata is stored for singles and acca legs and appended to CSV exports. Market choices depend on Sport, with Other/custom preserving unusual/legacy descriptions.
+- Existing sport/market case variants are normalised when reading and on new app writes. Ambiguous Basketball/American football categories are retained for old bets; new entry uses the six fixed categories. No existing selection, sport or market data is destructively rewritten. Acca summary sport follows its legs (Mixed for different categories), and combined pick filters match the same leg while counting whole-bet P/L once.
+- The build brief is the agreed product scope. The manual workflow, modular backend, dark mode and structured entry are implemented; private R2 attachments/screenshot import remain the next milestone.
 
 ## Proposed implementation defaults
 
@@ -24,7 +30,7 @@ These were suggested during discussion, but were not separately confirmed. Resol
 
 ## Delivery sequence
 
-Current order: the Better Auth/Neon/Drizzle backend is merged and verified against development Neon; complete the separate dark-mode UI milestone; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
+Current order: the Better Auth/Neon/Drizzle backend is merged and verified against development Neon; review/merge the dark-mode and structured-entry milestone; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
 
 ## Modular backend pivot (2026-10-12)
 

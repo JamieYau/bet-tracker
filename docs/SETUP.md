@@ -23,7 +23,7 @@ pnpm db:check
 pnpm db:migrate
 ```
 
-`db:migrate` uses the node-postgres Drizzle migrator and applies pending migrations transactionally. It loads root environment files using Next.js environment conventions, requires the migration variable explicitly and never falls back to `DATABASE_URL`. It does not reset/drop tables. Do not apply these replacement migrations to the legacy Supabase database or a database containing personal records; this milestone has no in-place legacy data migration.
+`db:migrate` uses the node-postgres Drizzle migrator and applies pending migrations transactionally. It loads root environment files using Next.js environment conventions, requires the migration variable explicitly and never falls back to `DATABASE_URL`. It does not reset/drop tables. Do not apply the replacement foundation to a legacy Supabase database: no in-place Supabase data migration is provided. Reviewed follow-up migrations can be applied to an existing matching Neon/PostgreSQL ledger. `0004_entry_metadata` adds optional pick metadata and replaces the write function without rewriting existing bets; apply it before running/deploying the updated application.
 
 To change the schema, use `pnpm db:generate --name DESCRIPTIVE_NAME`, inspect the generated SQL, then format generated metadata with `pnpm exec biome format --write drizzle/meta`. Use `pnpm db:generate --custom --name DESCRIPTIVE_NAME` for functions/triggers. Keep schema, snapshots, journal and SQL together in Git. No credentials are needed to generate/check migrations.
 

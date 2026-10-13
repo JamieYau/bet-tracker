@@ -9,11 +9,12 @@ import {
   settlements,
   sources,
 } from "../../lib/db/schema";
+import { normalizeLedger } from "./normalize-ledger";
 import type { BetInput, Ledger } from "./types";
 import type { settlementSchema } from "./validation";
 
 export async function readLedger(db: Database, owner: string): Promise<Ledger> {
-  return db.transaction(
+  const ledger = await db.transaction(
     async (tx) => {
       const [account] = await tx
         .select()
@@ -56,6 +57,9 @@ export async function readLedger(db: Database, owner: string): Promise<Ledger> {
               id: leg.id,
               selection: leg.selection,
               market: leg.market,
+              event: leg.event,
+              direction: leg.direction,
+              line: leg.line,
               sport: leg.sport,
               odds: leg.odds,
               status: leg.status,
@@ -72,6 +76,7 @@ export async function readLedger(db: Database, owner: string): Promise<Ledger> {
     },
     { isolationLevel: "repeatable read", accessMode: "read only" },
   );
+  return normalizeLedger(ledger);
 }
 async function write<T>(run: () => Promise<T>) {
   try {

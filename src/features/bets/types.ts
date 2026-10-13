@@ -19,6 +19,9 @@ export type Leg = {
   id: string;
   selection: string;
   market: string;
+  event?: string;
+  direction?: "" | "over" | "under";
+  line?: string | null;
   sport: string;
   odds: string | null;
   status: "open" | "won" | "lost" | "void";
@@ -30,6 +33,9 @@ export type BetInput = {
   sport: string;
   selection: string;
   market: string;
+  event?: string;
+  direction?: "" | "over" | "under";
+  line?: string | null;
   acceptedOdds: string | null;
   cashStakePence: number;
   freeStakePence: number;

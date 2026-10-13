@@ -5,6 +5,7 @@ import { requireOwner } from "@/lib/auth";
 import { isDemo } from "@/lib/config";
 import { database } from "@/lib/db/server";
 import { demoMutate, demoRead } from "@/lib/demo-store";
+import { normalizeLedger } from "./normalize-ledger";
 import {
   readLedger,
   savePostgresBet,
@@ -18,10 +19,10 @@ export async function getLedger(): Promise<Ledger> {
   const owner = await requireOwner();
   if (isDemo()) {
     const ledger = await demoRead();
-    return {
+    return normalizeLedger({
       ...ledger,
       bets: ledger.bets.filter((bet) => bet.ownerId === owner),
-    };
+    });
   }
   return readLedger(database(), owner);
 }

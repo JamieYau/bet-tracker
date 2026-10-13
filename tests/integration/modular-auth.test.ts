@@ -108,6 +108,103 @@ function settlement(betId: string, changes = {}) {
 }
 
 describe("real Better Auth and restricted PostgreSQL repository", () => {
+  it("persists pick metadata atomically and retains confirmation/version guarantees", async () => {
+    const ledger = await readLedger(runtime.db, owner);
+    const id = randomUUID();
+    const input = bet(ledger, {
+      sport: "Mixed",
+      betType: "acca",
+      event: "Weekend picks",
+      line: null,
+      legs: [
+        {
+          id: randomUUID(),
+          sport: "NBA",
+          market: "Player rebounds",
+          selection: "Jarrett Allen",
+          event: "Cavaliers @ Heat",
+          direction: "over",
+          line: "9.5",
+          odds: "1.91",
+          status: "open",
+        },
+        {
+          id: randomUUID(),
+          sport: "NFL",
+          market: "Spread",
+          selection: "Lions",
+          event: "Lions @ Bears",
+          direction: "",
+          line: "-3.5",
+          odds: "1.9",
+          status: "open",
+        },
+      ],
+    });
+    await savePostgresBet(runtime.db, owner, id, 0, input, true, false);
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      id,
+      0,
+      { ...input, event: "Retry must not change terms" },
+      true,
+      false,
+    );
+    let stored = (await readLedger(runtime.db, owner)).bets.find(
+      (item) => item.id === id,
+    );
+    expect(stored?.event).toBe("Weekend picks");
+    expect(stored?.legs[0]).toMatchObject({
+      event: "Cavaliers @ Heat",
+      direction: "over",
+      line: "9.5",
+      sport: "NBA",
+      market: "Player rebounds",
+    });
+    expect(stored?.legs[1].line).toBe("-3.5");
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      id,
+      1,
+      { ...input, legs: input.legs.map((leg) => ({ ...leg, line: "10.5" })) },
+      false,
+      false,
+    );
+    await expect(
+      savePostgresBet(runtime.db, owner, id, 1, input, false, false),
+    ).rejects.toThrow("changed");
+    stored = (await readLedger(runtime.db, owner)).bets.find(
+      (item) => item.id === id,
+    );
+    expect(stored?.version).toBe(2);
+    expect(stored?.legs[0].line).toBe("10.5");
+    const invalidId = randomUUID();
+    await expect(
+      savePostgresBet(
+        runtime.db,
+        owner,
+        invalidId,
+        0,
+        {
+          ...input,
+          legs: input.legs.map((leg) => ({
+            ...leg,
+            id: randomUUID(),
+            line: "1000001",
+          })),
+        },
+        true,
+        false,
+      ),
+    ).rejects.toThrow();
+    expect(
+      (await readLedger(runtime.db, owner)).bets.some(
+        (item) => item.id === invalidId,
+      ),
+    ).toBe(false);
+  });
   beforeAll(async () => {
     if (!process.env.TEST_DATABASE_URL)
       throw new Error("Disposable local TEST_DATABASE_URL required.");

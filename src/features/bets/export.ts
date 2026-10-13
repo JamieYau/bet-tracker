@@ -19,6 +19,9 @@ export function exportCsv(bets: Bet[], ledger: Ledger, kind: "bets" | "legs") {
             "sport",
             "decimal_odds",
             "status",
+            "event",
+            "direction",
+            "line",
           ],
         ]
       : [
@@ -43,6 +46,9 @@ export function exportCsv(bets: Bet[], ledger: Ledger, kind: "bets" | "legs") {
             "reference",
             "notes",
             "tags",
+            "event",
+            "direction",
+            "line",
           ],
         ];
   for (const bet of bets) {
@@ -57,6 +63,9 @@ export function exportCsv(bets: Bet[], ledger: Ledger, kind: "bets" | "legs") {
           leg.sport,
           leg.odds,
           leg.status,
+          leg.event ?? "",
+          leg.direction ?? "",
+          leg.line != null ? Number(leg.line) : "",
         ]);
       });
       continue;
@@ -83,6 +92,9 @@ export function exportCsv(bets: Bet[], ledger: Ledger, kind: "bets" | "legs") {
       bet.reference,
       bet.notes,
       bet.tags.join("; "),
+      bet.event ?? "",
+      bet.direction ?? "",
+      bet.line != null ? Number(bet.line) : "",
     ]);
   }
   return `\uFEFF${rows.map((row) => row.map(cell).join(",")).join("\r\n")}\r\n`;

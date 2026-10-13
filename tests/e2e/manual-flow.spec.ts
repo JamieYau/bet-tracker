@@ -1,5 +1,70 @@
 import { expect, test } from "@playwright/test";
 
+test("in-play choice survives drafts and confirmation and can be cleared without losing other tags", async ({
+  page,
+}) => {
+  const selection = `In-play ${crypto.randomUUID()}`;
+  await page.goto("/add");
+  await expect(
+    page.getByRole("checkbox", { name: "In-play", exact: true }),
+  ).not.toBeChecked();
+  await page.getByLabel("Selection", { exact: true }).fill(selection);
+  await page.getByLabel("Tags", { exact: true }).fill("Boost");
+  await page.getByRole("checkbox", { name: "In-play", exact: true }).check();
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect(
+    page
+      .locator('[data-slot="badge"]:visible')
+      .filter({ hasText: /^In-play$/ }),
+  ).toBeVisible();
+  await page.reload();
+  await page.getByRole("link", { name: "Complete draft" }).click();
+  await expect(
+    page.getByRole("checkbox", { name: "In-play", exact: true }),
+  ).toBeChecked();
+  await page.getByLabel("Sport", { exact: true }).selectOption("NBA");
+  await page
+    .getByLabel("Market type (optional)")
+    .selectOption("Player rebounds");
+  await page.getByLabel("Accepted total odds").fill("1.91");
+  await page.getByLabel("Cash stake (£)", { exact: true }).fill("10");
+  await page.getByRole("button", { name: "Confirm bet", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: selection, exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('[data-slot="badge"]:visible')
+      .filter({ hasText: /^In-play$/ }),
+  ).toBeVisible();
+  const exported = await page.request.get("/api/export");
+  const row = (await exported.text())
+    .split("\n")
+    .find((line) => line.includes(selection));
+  expect(row).toContain("Boost; In-play");
+  await page.getByRole("link", { name: "Edit bet", exact: true }).click();
+  await expect(
+    page.getByRole("checkbox", { name: "In-play", exact: true }),
+  ).toBeChecked();
+  await page.getByRole("checkbox", { name: "In-play", exact: true }).uncheck();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: selection, exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator('[data-slot="badge"]:visible')
+      .filter({ hasText: /^In-play$/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('[data-slot="badge"]:visible').filter({ hasText: /^Boost$/ }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Edit bet", exact: true }).click();
+  await expect(
+    page.getByRole("checkbox", { name: "In-play", exact: true }),
+  ).not.toBeChecked();
+});
+
 test("record, settle, correct, export and reconcile a manual bet", async ({
   page,
 }) => {
