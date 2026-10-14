@@ -61,12 +61,9 @@ export default async function BetPage({
       "Free-bet stake",
       `${money(bet.freeStakePence)}${bet.unitSizePence ? ` · ${units(inUnits(bet.freeStakePence, bet.unitSizePence))}` : ""}`,
     ],
-    [
-      "Unit size",
-      bet.unitSizePence
-        ? `${money(bet.unitSizePence)} per unit`
-        : "Not assigned · £ only",
-    ],
+    ...(bet.unitSizePence
+      ? [["Unit size", `${money(bet.unitSizePence)} per unit`]]
+      : []),
     ["Reference", bet.reference || "—"],
   ];
   return (

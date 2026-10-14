@@ -43,9 +43,7 @@ async function runUnits(page: Page) {
     return { path: new URL(page.url()).pathname, sourceId };
   }
   const legacy = await record(`${source} legacy`, "10");
-  await expect(
-    main.getByText("Not assigned · £ only", { exact: true }),
-  ).toBeVisible();
+  await expect(main.getByText("£ only", { exact: false })).toHaveCount(0);
   await main.getByRole("button", { name: "Settle bet", exact: true }).click();
   await expect(
     main.getByText("Revision 1 · Won", { exact: true }),
@@ -64,6 +62,10 @@ async function runUnits(page: Page) {
     main.getByText("No unit results in this period", { exact: true }),
   ).toBeVisible();
   await page.goto("/add");
+  await expect(
+    main.getByText("Unit size for this bet", { exact: true }),
+  ).toHaveCount(0);
+  await expect(main.getByLabel("Unit size (£)")).toHaveCount(0);
   await expect(main.getByLabel("Cash stake (£)", { exact: true })).toHaveValue(
     "50",
   );
@@ -87,7 +89,7 @@ async function runUnits(page: Page) {
   await expect(
     main.getByText("1u · £50.00 per unit", { exact: true }),
   ).toBeVisible();
-  await expect(main.getByLabel("Historical unit size (£)")).toHaveCount(0);
+  await expect(main.getByLabel("Unit size (£)")).toHaveCount(0);
   await main.getByLabel("Notes").fill("Edited after unit size change");
   await main.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(
@@ -107,7 +109,9 @@ async function runUnits(page: Page) {
     }),
   ).toBeVisible();
   await expect(
-    main.getByText(/1 settled and 0 open bets without a unit/),
+    main.getByText("Units available for 2 of 3 settled bets.", {
+      exact: false,
+    }),
   ).toBeVisible();
   await expect(
     main.getByText(/Cumulative settled cash P\/L: 2u across 2 bets/),
@@ -137,11 +141,11 @@ async function runUnits(page: Page) {
   await expect(main.getByText("1u", { exact: true })).toHaveCount(2);
   await expect(
     main.getByText("cash P/L · £ only", { exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await page.goto(legacy.path);
   await main.getByRole("link", { name: "Edit bet", exact: true }).click();
   await main.getByText("Unit size for this bet", { exact: true }).click();
-  await main.getByLabel("Historical unit size (£)").fill("10");
+  await main.getByLabel("Unit size (£)").fill("10");
   await main.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(
     main.getByText("£10.00 per unit", { exact: true }),

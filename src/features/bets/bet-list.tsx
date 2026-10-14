@@ -110,7 +110,6 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                   </p>
                   <p className="text-[11px] text-muted-foreground">
                     {profit === null ? "cash stake" : "cash P/L"}
-                    {mode === "units" && !bet.unitSizePence ? " · £ only" : ""}
                   </p>
                 </div>
                 <ArrowUpRight

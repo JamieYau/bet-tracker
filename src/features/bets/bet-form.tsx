@@ -497,15 +497,13 @@ export function BetForm({
               <p className="text-xs text-muted-foreground sm:col-span-2">
                 This bet keeps its original unit size when edited or settled.
               </p>
-            ) : (
+            ) : bet ? (
               <details className="sm:col-span-2">
                 <summary className="cursor-pointer py-2 text-sm text-muted-foreground">
                   Unit size for this bet
                 </summary>
                 <Field className="mt-3">
-                  <FieldLabel htmlFor="betUnitSize">
-                    Historical unit size (£)
-                  </FieldLabel>
+                  <FieldLabel htmlFor="betUnitSize">Unit size (£)</FieldLabel>
                   <Input
                     id="betUnitSize"
                     inputMode="decimal"
@@ -515,12 +513,12 @@ export function BetForm({
                     aria-describedby="betUnitSize-hint"
                   />
                   <FieldDescription id="betUnitSize-hint">
-                    Use the unit size you used when placing this bet. Leave
-                    blank for pounds only. Once saved, this size is retained.
+                    Set the unit size used for this bet. It is retained when you
+                    edit or settle it.
                   </FieldDescription>
                 </Field>
               </details>
-            )}
+            ) : null}
             <FieldError>{state.errors?.unitSizePence?.join(" ")}</FieldError>
           </CardContent>
         </Card>

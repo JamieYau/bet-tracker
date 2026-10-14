@@ -68,13 +68,11 @@ export function Dashboard({
       {useUnits && (
         <p className="mb-4 text-xs text-muted-foreground">
           Each bet uses its saved unit size. Cash-only ROI uses pounds.
-          {(totals.units.missingSettledCount > 0 ||
-            totals.units.missingOpenCount > 0) && (
+          {totals.units.missingSettledCount > 0 && (
             <span>
               {" "}
-              {totals.units.missingSettledCount} settled and{" "}
-              {totals.units.missingOpenCount} open bets without a unit size are
-              excluded from unit totals. £ totals include all bets.
+              Units available for {totals.units.settledCount} of{" "}
+              {totals.settledCount} settled bets.
             </span>
           )}
         </p>
@@ -171,7 +169,7 @@ export function Dashboard({
                   </EmptyTitle>
                   <EmptyDescription>
                     {useUnits && totals.settledCount > 0
-                      ? "Assign historical unit sizes to these bets, or switch to pounds to see their results."
+                      ? "Set a unit size in Edit bet, or switch to pounds to see these results."
                       : "Your chart appears when a settled bet matches the filters."}
                   </EmptyDescription>
                 </EmptyHeader>
@@ -234,7 +232,7 @@ export function Dashboard({
                   <EmptyTitle>No monthly results</EmptyTitle>
                   <EmptyDescription>
                     {useUnits && totals.settledCount > 0
-                      ? "Switch to pounds or assign historical unit sizes to see these results."
+                      ? "Switch to pounds to see these results."
                       : "No settled bets match this period."}
                   </EmptyDescription>
                 </EmptyHeader>
