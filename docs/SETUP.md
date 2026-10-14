@@ -56,7 +56,7 @@ The repository uses a consistent read transaction and transactional SQL function
 
 ## Later attachments and release work
 
-Implement private R2 uploads/downloads/deletion, metadata validation and persistent import drafts/extraction/retry/confirmation on later branches. Keep development/preview and production buckets/data separate. Actual R2 access, production Neon, actual iPhone Safari/Home Screen and hosted Next.js deployment remain separate live checks.
+Implement private R2 uploads/downloads/deletion, metadata validation and import form review/extraction/retry/recording on later branches. Keep development/preview and production buckets/data separate. Actual R2 access, production Neon, actual iPhone Safari/Home Screen and hosted Next.js deployment remain separate live checks.
 
 ## Verification — current scripts
 
@@ -95,3 +95,19 @@ Before declaring the app ready for personal use, verify live authentication/data
 - [shadcn/ui](https://ui.shadcn.com/docs/installation/next), [Vitest](https://vitest.dev/guide/), [Playwright](https://playwright.dev/docs/intro)
 
 Installed Next.js guides in `node_modules/next/dist/docs` govern version-specific APIs.
+
+
+## Units migration
+
+`0006_betting_units` adds nullable per-bet unit snapshots and account unit/display preferences, preserves existing snapshots on edits, and introduces restricted settings/display functions. Apply it with `pnpm db:migrate`, rerun `pnpm db:grant-runtime`, then `pnpm db:verify` before using this branch against an existing environment. Existing bets remain GBP only; no automatic unit backfill or cash rewrite occurs. The account starts with no unit size and GBP display.
+
+
+## Development output
+
+Default `pnpm dev` and `pnpm dev:demo` output is isolated in ignored `.next-dev` so the live development stylesheet/cache is separate from production build checks in `.next`. Production `pnpm build`/`pnpm start` retain their normal output. `NEXT_DIST_DIR` continues to override either default; demo browser tests retain their separate `.next-e2e` directory. TypeScript includes generated route types from both default directories.
+
+
+Migration 0007 removes saved Draft status. It converts complete old drafts to Open, preserving saved terms and Trash state; incomplete drafts cause the migration to roll back and must be completed or deliberately removed first. New saves require complete bet terms, and existing settled bets keep their settlement history on edit.
+
+
+Migration 0008 removes redundant single leg rows after checking their selection terms match their parent bets. Differing terms abort the migration for reconciliation. Affected bet versions increment to invalidate stale editors; acca legs and settlement history are preserved. New and edited singles must submit an empty legs array, and legs CSV exports only acca selections.

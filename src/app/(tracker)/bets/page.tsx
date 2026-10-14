@@ -5,6 +5,8 @@ import { FilterForm } from "@/features/analytics/filters";
 import { history } from "@/features/analytics/metrics";
 import { BetList } from "@/features/bets/bet-list";
 import { getLedger } from "@/features/bets/repository";
+import { DisplayToggle } from "@/features/units/controls";
+import { defaultPreferences } from "@/features/units/units";
 export default async function BetsPage({
   searchParams,
 }: {
@@ -24,8 +26,9 @@ export default async function BetsPage({
       <PageHeading
         eyebrow="History"
         title="Your bets"
-        description="A record of every bet, from draft to credited return."
+        description="A record of every bet, from placement to credited return."
       />
+      <DisplayToggle preferences={ledger.preferences ?? defaultPreferences} />
       <FilterForm
         ledger={ledger}
         filters={filters}

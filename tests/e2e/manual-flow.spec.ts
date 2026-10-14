@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("in-play choice survives drafts and confirmation and can be cleared without losing other tags", async ({
+test("in-play choice survives recording and editing and can be cleared without losing other tags", async ({
   page,
 }) => {
   const selection = `In-play ${crypto.randomUUID()}`;
@@ -11,14 +11,16 @@ test("in-play choice survives drafts and confirmation and can be cleared without
   await page.getByLabel("Selection", { exact: true }).fill(selection);
   await page.getByLabel("Tags", { exact: true }).fill("Boost");
   await page.getByRole("checkbox", { name: "In-play", exact: true }).check();
-  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await page.getByLabel("Accepted total odds").fill("2");
+  await page.getByLabel("Cash stake (£)", { exact: true }).fill("10");
+  await page.getByRole("button", { name: "Confirm bet", exact: true }).click();
   await expect(
     page
       .locator('[data-slot="badge"]:visible')
       .filter({ hasText: /^In-play$/ }),
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("link", { name: "Complete draft" }).click();
+  await page.getByRole("link", { name: "Edit bet" }).click();
   await expect(
     page.getByRole("checkbox", { name: "In-play", exact: true }),
   ).toBeChecked();
@@ -29,7 +31,7 @@ test("in-play choice survives drafts and confirmation and can be cleared without
     .click();
   await page.getByLabel("Accepted total odds").fill("1.91");
   await page.getByLabel("Cash stake (£)", { exact: true }).fill("10");
-  await page.getByRole("button", { name: "Confirm bet", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: selection, exact: true }),
   ).toBeVisible();
@@ -118,16 +120,18 @@ test("record, settle, correct, export and reconcile a manual bet", async ({
     ),
   ).toBe(true);
 });
-test("incomplete drafts survive navigation and an acca void remains open", async ({
+test("incomplete bets cannot be saved and an acca void remains open", async ({
   page,
 }) => {
   await page.goto("/add");
-  const name = `Draft ${crypto.randomUUID()}`;
+  const name = `Open acca ${crypto.randomUUID()}`;
   await page.getByLabel("Selection", { exact: true }).fill(name);
-  await page.getByRole("button", { name: "Save draft" }).click();
-  await expect(page.getByText("Draft", { exact: true })).toBeVisible();
-  await page.reload();
-  await page.getByRole("link", { name: "Complete draft" }).click();
+  await expect(page.getByRole("button", { name: "Save draft" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Confirm bet", exact: true }).click();
+  await expect(
+    page.getByText("Add the accepted total odds.", { exact: true }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/add$/);
   await page.getByLabel("Bet type").selectOption("acca");
   await page.getByLabel("Accepted total odds").fill("5.00");
   await page.getByLabel("Cash stake (£)", { exact: true }).fill("5");

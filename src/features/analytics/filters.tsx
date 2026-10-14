@@ -135,7 +135,6 @@ export function FilterForm({
           >
             <NativeSelectOption value="">All statuses</NativeSelectOption>
             {[
-              ["draft", "Draft"],
               ["open", "Open"],
               ["settled", "Settled"],
               ["won", "Won"],

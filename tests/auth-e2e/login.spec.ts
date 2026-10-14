@@ -1,10 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { verifyBetEditDelete } from "../helpers/bet-edit-delete";
+import { verifyEditStakes } from "../helpers/edit-stakes";
+import { verifyUnits } from "../helpers/units";
 
 test("private password login, recording, settlement, CSV, session persistence and logout", async ({
   page,
   context,
 }) => {
+  test.setTimeout(120_000);
   await page.goto("/");
   await expect(page).toHaveURL(/\/login$/);
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
@@ -70,6 +73,8 @@ test("private password login, recording, settlement, CSV, session persistence an
   expect(csv).toContain("Authenticated browser fixture");
   expect(csv).toContain('"Fixture Cavaliers @ Heat","over","9.5"');
   await verifyBetEditDelete(page);
+  await verifyUnits(page);
+  await verifyEditStakes(page);
   await page.goto("/settings");
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);

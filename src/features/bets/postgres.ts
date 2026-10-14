@@ -54,6 +54,11 @@ export async function readLedger(
             .orderBy(asc(table.name))
         ).map((row) => ({ id: row.id, name: row.name, active: row.active }));
       return {
+        preferences: {
+          unitSizePence: account.unitSizePence,
+          displayMode: account.displayMode,
+          version: account.preferencesVersion,
+        },
         bookmakers: await options(bookmakers),
         sources: await options(sources),
         bets: rows.map((row) => ({
@@ -168,4 +173,27 @@ export async function setPostgresBetDeleted(
     ),
   );
   return id;
+}
+
+export async function savePostgresPreferences(
+  db: Database,
+  owner: string,
+  unitSizePence: number | null,
+  displayMode: "gbp" | "units",
+  version: number,
+) {
+  await write(() =>
+    db.execute(
+      sql`select public.save_unit_preferences(${owner}, ${unitSizePence}::bigint, ${displayMode}, ${version})`,
+    ),
+  );
+}
+export async function savePostgresDisplayMode(
+  db: Database,
+  owner: string,
+  displayMode: "gbp" | "units",
+) {
+  await write(() =>
+    db.execute(sql`select public.set_display_mode(${owner}, ${displayMode})`),
+  );
 }

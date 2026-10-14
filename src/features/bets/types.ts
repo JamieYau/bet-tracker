@@ -26,7 +26,13 @@ export type Leg = {
   odds: string | null;
   status: "open" | "won" | "lost" | "void";
 };
+export type UnitPreferences = {
+  unitSizePence: number | null;
+  displayMode: "gbp" | "units";
+  version: number;
+};
 export type BetInput = {
+  unitSizePence?: number | null;
   bookmakerId: string;
   sourceId: string;
   placedAt: string;
@@ -61,7 +67,7 @@ export type Settlement = {
 export type Bet = BetInput & {
   id: string;
   ownerId: string;
-  status: "draft" | "open" | "settled";
+  status: "open" | "settled";
   version: number;
   createdAt: string;
   settlements: Settlement[];
@@ -69,6 +75,7 @@ export type Bet = BetInput & {
 };
 export type NamedOption = { id: string; name: string; active: boolean };
 export type Ledger = {
+  preferences?: UnitPreferences;
   bets: Bet[];
   bookmakers: NamedOption[];
   sources: NamedOption[];

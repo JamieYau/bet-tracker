@@ -1,4 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
+import Decimal from "decimal.js";
 import { normalizeMarket, normalizeSport } from "@/features/bets/catalog";
 import type { Bet } from "@/features/bets/types";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
@@ -112,7 +113,71 @@ export function metrics(bets: Bet[], filters: Filters = {}) {
       cumulative += cashProfit(bet) ?? 0;
       return { id: bet.id, date: settlement.settledAt, value: cumulative };
     });
+  const covered = settled.filter((bet) => bet.unitSizePence);
+  const sumUnits = (list: Bet[], amount: (bet: Bet) => number | null) =>
+    list
+      .filter((bet) => bet.unitSizePence)
+      .reduce(
+        (sum, bet) =>
+          sum.plus(new Decimal(amount(bet) ?? 0).div(bet.unitSizePence ?? 1)),
+        new Decimal(0),
+      )
+      .toNumber();
+  const unitMonthly = new Map<string, Decimal>();
+  let runningUnits = new Decimal(0);
+  let coveredCash = 0;
+  const unitSeries = [...dated]
+    .filter(({ bet }) => bet.unitSizePence)
+    .sort(
+      (a, b) =>
+        a.settlement.settledAt.localeCompare(b.settlement.settledAt) ||
+        a.bet.id.localeCompare(b.bet.id),
+    )
+    .map(({ bet, settlement }) => {
+      const result = new Decimal(cashProfit(bet) ?? 0).div(
+        bet.unitSizePence ?? 1,
+      );
+      runningUnits = runningUnits.plus(result);
+      coveredCash += cashProfit(bet) ?? 0;
+      const month = formatInTimeZone(
+        settlement.settledAt,
+        TIME_ZONE,
+        "yyyy-MM",
+      );
+      unitMonthly.set(
+        month,
+        (unitMonthly.get(month) ?? new Decimal(0)).plus(result),
+      );
+      return {
+        id: bet.id,
+        date: settlement.settledAt,
+        value: runningUnits.toNumber(),
+        cashValue: coveredCash,
+      };
+    });
   return {
+    units: {
+      profit: sumUnits(covered, cashProfit),
+      settledCount: covered.length,
+      missingSettledCount: settled.length - covered.length,
+      missingOpenCount: selected.filter(
+        (bet) => bet.status === "open" && !bet.unitSizePence,
+      ).length,
+      cashStakes: sumUnits(covered, (bet) => bet.cashStakePence),
+      cashOnlyProfit: sumUnits(cashOnly, cashProfit),
+      promotionalProfit: sumUnits(
+        settled.filter((bet) => bet.freeStakePence > 0),
+        cashProfit,
+      ),
+      openExposure: sumUnits(
+        selected.filter((bet) => bet.status === "open"),
+        (bet) => bet.cashStakePence,
+      ),
+      monthly: [...unitMonthly]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, value]) => [month, value.toNumber()] as [string, number]),
+      series: unitSeries,
+    },
     profit: profit(settled),
     settledCount: settled.length,
     cashStakes: stakes(settled),

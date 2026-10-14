@@ -39,6 +39,7 @@ const pickMetadata = {
 };
 const pence = z.number().int().min(0).max(MAX_PENCE);
 export const betSchema = z.object({
+  unitSizePence: z.number().int().min(1).max(MAX_PENCE).nullable().optional(),
   bookmakerId: z.uuid(),
   sourceId: z.uuid(),
   placedAt: z.iso.datetime({ offset: true }),
@@ -99,11 +100,11 @@ export const confirmedBetSchema = betSchema.superRefine((bet, context) => {
       path: ["legs"],
       message: "An acca needs at least two legs.",
     });
-  if (bet.betType === "single" && bet.legs.length > 1)
+  if (bet.betType === "single" && bet.legs.length > 0)
     context.addIssue({
       code: "custom",
       path: ["legs"],
-      message: "A single can have only one leg.",
+      message: "Single selections are stored on the bet; remove any legs.",
     });
   if (
     bet.betType === "acca" &&
@@ -120,7 +121,7 @@ export const saveSchema = z.object({
   version: z.number().int().min(0),
   confirm: z.boolean(),
   allowDuplicate: z.boolean(),
-  bet: betSchema,
+  bet: confirmedBetSchema,
 });
 export const settlementSchema = z
   .object({

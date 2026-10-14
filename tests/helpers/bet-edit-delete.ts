@@ -14,7 +14,9 @@ export async function verifyBetEditDelete(page: Page) {
   await page.goto("/add");
   await page.getByLabel("Source", { exact: true }).fill(source);
   await page.getByRole("option", { name: source, exact: true }).click();
-  const sourceId = await page.locator('input[name="sourceId"]').inputValue();
+  const sourceId = await page
+    .locator('main:visible input[name="sourceId"]')
+    .inputValue();
   await page.getByLabel("Selection", { exact: true }).fill(name);
   await page.getByLabel("Accepted total odds").fill("2.5");
   await page.getByLabel("Cash stake (£)", { exact: true }).fill("10");

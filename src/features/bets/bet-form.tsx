@@ -27,12 +27,13 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
+import { stakeHint } from "@/features/units/units";
 import { formatOdds, londonInput } from "@/lib/format";
 import { useClientReady } from "@/lib/use-client-ready";
 import { recordAction } from "./actions";
 import { normalizeSport } from "./catalog";
 import { PickFields } from "./pick-fields";
-import type { Bet, Leg, NamedOption } from "./types";
+import type { Bet, Leg, NamedOption, UnitPreferences } from "./types";
 
 export function BetForm({
   id,
@@ -40,15 +41,20 @@ export function BetForm({
   sources,
   bet,
   now,
+  preferences,
 }: {
   id: string;
   bookmakers: NamedOption[];
   sources: NamedOption[];
   bet?: Bet;
   now: string;
+  preferences?: UnitPreferences;
 }) {
   const [state, action, pending] = useActionState(recordAction, {});
   const ready = useClientReady();
+  const initialUnitSize = bet
+    ? (bet.unitSizePence ?? null)
+    : (preferences?.unitSizePence ?? null);
   const [values, setValues] = useState({
     bookmakerId:
       bet?.bookmakerId ?? bookmakers.find((option) => option.active)?.id ?? "",
@@ -62,8 +68,13 @@ export function BetForm({
     direction: bet?.direction ?? "",
     line: bet?.line ?? "",
     acceptedOdds: bet?.acceptedOdds ? formatOdds(bet.acceptedOdds) : "",
-    cashStake: bet ? String(bet.cashStakePence / 100) : "",
-    freeStake: bet?.freeStakePence ? String(bet.freeStakePence / 100) : "",
+    unitSize: initialUnitSize ? String(initialUnitSize / 100) : "",
+    cashStake: bet
+      ? String(bet.cashStakePence / 100)
+      : initialUnitSize
+        ? String(initialUnitSize / 100)
+        : "",
+    freeStake: bet ? String(bet.freeStakePence / 100) : "",
     freeStakeReturned: bet?.freeStakeReturned ?? false,
     betType: bet?.betType ?? "single",
     reference: bet?.reference ?? "",
@@ -78,6 +89,9 @@ export function BetForm({
   function text(key: keyof typeof values, value: string) {
     setValues((previous) => ({ ...previous, [key]: value }));
   }
+  const unitSizePence = /^\d+(\.\d{0,2})?$/.test(values.unitSize)
+    ? Math.round(Number(values.unitSize) * 100)
+    : null;
   const tags = values.tagsText
     .split(",")
     .map((tag) => tag.trim())
@@ -132,22 +146,7 @@ export function BetForm({
           ? legSports[0]
           : "Mixed"
         : values.sport,
-    legs:
-      values.betType === "single"
-        ? [
-            {
-              id: bet?.legs[0]?.id ?? id,
-              selection: values.selection,
-              market: values.market,
-              sport: values.sport,
-              event: values.event,
-              direction: values.direction,
-              line: values.line,
-              odds: null,
-              status: bet?.legs[0]?.status ?? "open",
-            },
-          ]
-        : legs,
+    legs: values.betType === "single" ? [] : legs,
   };
   return (
     <form action={action} className="mx-auto max-w-3xl space-y-5">
@@ -450,6 +449,10 @@ export function BetForm({
                   aria-invalid={Boolean(state.errors?.[`${key}Pence`]?.length)}
                   aria-describedby={
                     [
+                      unitSizePence &&
+                      (key === "cashStake" || Number(values[key]) > 0)
+                        ? `${key}-hint`
+                        : undefined,
                       state.errors?.[`${key}Pence`]?.length
                         ? `${key}-error`
                         : undefined,
@@ -464,11 +467,44 @@ export function BetForm({
                   value={values[key]}
                   onChange={(event) => text(key, event.target.value)}
                 />
+                {unitSizePence &&
+                  (key === "cashStake" || Number(values[key]) > 0) && (
+                    <FieldDescription id={`${key}-hint`}>
+                      {stakeHint(values[key], unitSizePence)}
+                    </FieldDescription>
+                  )}
                 <FieldError id={`${key}-error`}>
                   {state.errors?.[`${key}Pence`]?.join(" ")}
                 </FieldError>
               </Field>
             ))}
+            {bet?.unitSizePence ? (
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                This bet keeps its original unit size when edited or settled.
+              </p>
+            ) : bet ? (
+              <details className="sm:col-span-2">
+                <summary className="cursor-pointer py-2 text-sm text-muted-foreground">
+                  Unit size for this bet
+                </summary>
+                <Field className="mt-3">
+                  <FieldLabel htmlFor="betUnitSize">Unit size (£)</FieldLabel>
+                  <Input
+                    id="betUnitSize"
+                    inputMode="decimal"
+                    className="h-11 text-base"
+                    value={values.unitSize}
+                    onChange={(event) => text("unitSize", event.target.value)}
+                    aria-describedby="betUnitSize-hint"
+                  />
+                  <FieldDescription id="betUnitSize-hint">
+                    Set the unit size used for this bet. It is retained when you
+                    edit or settle it.
+                  </FieldDescription>
+                </Field>
+              </details>
+            ) : null}
+            <FieldError>{state.errors?.unitSizePence?.join(" ")}</FieldError>
           </CardContent>
         </Card>
         <Card>
@@ -530,31 +566,18 @@ export function BetForm({
             type="submit"
             className="h-12 flex-1 sm:flex-none sm:px-8"
             name="intent"
-            value={bet && bet.status !== "draft" ? "save" : "confirm"}
+            value={bet ? "save" : "confirm"}
             disabled={pending}
             aria-busy={pending}
           >
             <PendingLabel pending={pending}>
-              {bet && bet.status !== "draft" ? "Save changes" : "Confirm bet"}
+              {bet ? "Save changes" : "Confirm bet"}
             </PendingLabel>
           </Button>
-          {(!bet || bet.status === "draft") && (
-            <Button
-              type="submit"
-              className="h-12"
-              variant="outline"
-              name="intent"
-              value="draft"
-              disabled={pending}
-              aria-busy={pending}
-            >
-              <PendingLabel pending={pending}>Save draft</PendingLabel>
-            </Button>
-          )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Drafts are excluded from profit and open exposure. Screenshot import
-          will be added in the next stage.
+          Open bets count towards cash exposure. Profit is recorded when they
+          settle.
         </p>
       </fieldset>
     </form>

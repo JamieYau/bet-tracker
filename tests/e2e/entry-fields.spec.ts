@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("player props retain structured fields through drafts, edits, filters and CSV", async ({
+test("player props retain structured fields through recording, edits, filters and CSV", async ({
   page,
 }) => {
   const event = `Cavaliers @ Heat · fixture ${crypto.randomUUID()}`;
@@ -16,15 +16,17 @@ test("player props retain structured fields through drafts, edits, filters and C
   await page.getByLabel("Over / Under (optional)").selectOption("over");
   await page.getByLabel("Line / handicap (optional)").fill("+9.500000");
   await page.getByRole("checkbox", { name: "In-play", exact: true }).check();
-  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await page.getByLabel("Accepted total odds").fill("1.91");
+  await page.getByLabel("Cash stake (£)", { exact: true }).fill("10");
+  await page.getByRole("button", { name: "Confirm bet", exact: true }).click();
   await expect(
     page.getByRole("heading", {
-      name: "Jarrett Allen · Over 9.5",
+      name: /Jarrett Allen (?:· )?Over 9\.5/,
       exact: true,
     }),
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("link", { name: "Complete draft" }).click();
+  await page.getByRole("link", { name: "Edit bet" }).click();
   await expect(page.getByLabel("Sport", { exact: true })).toHaveValue("NBA");
   await expect(page.getByLabel("Event / fixture (optional)")).toHaveValue(
     event,
@@ -40,13 +42,16 @@ test("player props retain structured fields through drafts, edits, filters and C
         document.documentElement.clientWidth,
     ),
   ).toBe(false);
-  await page.getByLabel("Accepted total odds").fill("1.91");
-  await page.getByLabel("Cash stake (£)", { exact: true }).fill("10");
-  await page.getByRole("button", { name: "Confirm bet", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(
     page.getByRole("link", { name: "Edit bet", exact: true }),
   ).toBeVisible();
   const url = page.url();
+  const singleId = new URL(url).pathname.split("/").at(-1);
+  expect(singleId).toBeTruthy();
+  expect(
+    await (await page.request.get("/api/export?kind=legs")).text(),
+  ).not.toContain(singleId);
   const csv = await (await page.request.get("/api/export")).text();
   expect(csv.split("\n").find((row) => row.includes(event))).toContain(
     `"${event}","over","9.5"`,
@@ -61,7 +66,7 @@ test("player props retain structured fields through drafts, edits, filters and C
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(
     page.getByRole("heading", {
-      name: "Jarrett Allen · Over 10.5",
+      name: /Jarrett Allen (?:· )?Over 10\.5/,
       exact: true,
     }),
   ).toBeVisible();
@@ -75,7 +80,9 @@ test("player props retain structured fields through drafts, edits, filters and C
   });
   await page.goto(`/bets?${query}`);
   await expect(
-    page.getByRole("link").filter({ hasText: "Jarrett Allen · Over 10.5" }),
+    page
+      .getByRole("link")
+      .filter({ hasText: /Jarrett Allen (?:· )?Over 10\.5/ }),
   ).toBeVisible();
   const filtered = await (
     await page.request.get(`/api/export?${query}`)

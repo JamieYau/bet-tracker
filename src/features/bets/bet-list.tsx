@@ -17,12 +17,14 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
-import { dateTime, money } from "@/lib/format";
+import { betAmount, defaultPreferences } from "@/features/units/units";
+import { dateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { selectionLabel } from "./catalog";
 import { StatusBadge } from "./status-badge";
 import type { Bet, Ledger } from "./types";
 export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
+  const mode = (ledger.preferences ?? defaultPreferences).displayMode;
   if (!bets.length)
     return (
       <Empty className="border bg-card py-10">
@@ -61,7 +63,7 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <ItemTitle className="min-w-0 font-semibold sm:text-base">
                     <span className="truncate">
-                      {selectionLabel(bet) || "Untitled draft"}
+                      {selectionLabel(bet) || "Untitled bet"}
                     </span>
                   </ItemTitle>
                   <StatusBadge status={settlement?.outcome ?? bet.status} />
@@ -96,15 +98,13 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                   <p
                     className={cn(
                       "text-sm font-semibold tabular-nums",
-                      profit !== null &&
-                        (profit >= 0
-                          ? "text-profit-positive"
-                          : "text-destructive"),
+                      profit !== null && profit > 0 && "text-profit-positive",
+                      profit !== null && profit < 0 && "text-destructive",
                     )}
                   >
                     {profit === null
-                      ? money(bet.cashStakePence)
-                      : money(profit)}
+                      ? betAmount(bet.cashStakePence, bet, mode)
+                      : betAmount(profit, bet, mode)}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
                     {profit === null ? "cash stake" : "cash P/L"}

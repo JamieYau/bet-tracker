@@ -20,13 +20,32 @@ export * from "./auth-schema";
 export const appAccounts = pgTable(
   "app_accounts",
   {
+    unitSizePence: bigint("unit_size_pence", { mode: "number" }),
+    displayMode: text("display_mode", { enum: ["gbp", "units"] })
+      .notNull()
+      .default("gbp"),
+    preferencesVersion: integer("preferences_version").notNull().default(0),
     singleton: boolean("singleton").primaryKey().default(true),
     ownerId: text("owner_id")
       .notNull()
       .unique()
       .references(() => user.id),
   },
-  (table) => [check("app_accounts_singleton_check", sql`${table.singleton}`)],
+  (table) => [
+    check("app_accounts_singleton_check", sql`${table.singleton}`),
+    check(
+      "app_accounts_unit_size_check",
+      sql`${table.unitSizePence} between 1 and 1000000000`,
+    ),
+    check(
+      "app_accounts_display_mode_check",
+      sql`${table.displayMode} in ('gbp', 'units') and (${table.displayMode} = 'gbp' or ${table.unitSizePence} is not null)`,
+    ),
+    check(
+      "app_accounts_preferences_version_check",
+      sql`${table.preferencesVersion} >= 0`,
+    ),
+  ],
 );
 
 // Text owner IDs follow Better Auth's ID model. Financial bet/leg IDs remain UUIDs.
@@ -79,11 +98,12 @@ export const bets = pgTable(
       .default(""),
     line: odds("line"),
     acceptedOdds: odds("accepted_odds"),
+    unitSizePence: bigint("unit_size_pence", { mode: "number" }),
     cashStakePence: money("cash_stake_pence"),
     freeStakePence: money("free_stake_pence"),
     freeStakeReturned: boolean("free_stake_returned").notNull().default(false),
     betType: text("bet_type", { enum: ["single", "acca"] }).notNull(),
-    status: text("status", { enum: ["draft", "open", "settled"] }).notNull(),
+    status: text("status", { enum: ["open", "settled"] }).notNull(),
     reference: text("reference").notNull().default(""),
     notes: text("notes").notNull().default(""),
     tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
@@ -122,17 +142,18 @@ export const bets = pgTable(
       sql`${table.freeStakePence} between 0 and 1000000000`,
     ),
     check("bets_type_check", sql`${table.betType} in ('single', 'acca')`),
-    check(
-      "bets_status_check",
-      sql`${table.status} in ('draft', 'open', 'settled')`,
-    ),
+    check("bets_status_check", sql`${table.status} in ('open', 'settled')`),
     check(
       "bets_version_check",
       sql`${table.version} > 0 and (${table.confirmedFromVersion} is null or ${table.confirmedFromVersion} >= 0)`,
     ),
     check(
+      "bets_unit_size_check",
+      sql`${table.unitSizePence} between 1 and 1000000000`,
+    ),
+    check(
       "bets_confirmed_fields_check",
-      sql`${table.status} = 'draft' or (${table.acceptedOdds} is not null and length(trim(${table.selection})) > 0 and length(trim(${table.sport})) > 0 and ${table.cashStakePence} + ${table.freeStakePence} > 0)`,
+      sql`(${table.acceptedOdds} is not null and length(trim(${table.selection})) > 0 and length(trim(${table.sport})) > 0 and ${table.cashStakePence} + ${table.freeStakePence} > 0)`,
     ),
   ],
 );

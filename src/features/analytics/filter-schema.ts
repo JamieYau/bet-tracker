@@ -25,7 +25,7 @@ const schema = z.object({
   inPlay: z.enum(["yes", "no"]).optional(),
   type: z.enum(["single", "acca"]).optional(),
   status: z
-    .enum(["draft", "open", "settled", "won", "lost", "void", "cash_out"])
+    .enum(["open", "settled", "won", "lost", "void", "cash_out"])
     .optional(),
 });
 export function readFilters(

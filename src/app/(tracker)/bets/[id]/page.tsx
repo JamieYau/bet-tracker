@@ -25,6 +25,7 @@ import { StatusBadge } from "@/features/bets/status-badge";
 import { TrashForm } from "@/features/bets/trash-form";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
 import { SettlementForm } from "@/features/settlement/settlement-form";
+import { inUnits, unitProfit, units } from "@/features/units/units";
 import { dateTime, formatOdds, money, outcomeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 export default async function BetPage({
@@ -52,8 +53,17 @@ export default async function BetPage({
     ["Event / fixture", bet.event || "—"],
     ["Market type", bet.market || "—"],
     ["Accepted odds", formatOdds(bet.acceptedOdds)],
-    ["Cash stake", money(bet.cashStakePence)],
-    ["Free-bet stake", `${money(bet.freeStakePence)}`],
+    [
+      "Cash stake",
+      `${money(bet.cashStakePence)}${bet.unitSizePence ? ` · ${units(inUnits(bet.cashStakePence, bet.unitSizePence))}` : ""}`,
+    ],
+    [
+      "Free-bet stake",
+      `${money(bet.freeStakePence)}${bet.unitSizePence ? ` · ${units(inUnits(bet.freeStakePence, bet.unitSizePence))}` : ""}`,
+    ],
+    ...(bet.unitSizePence
+      ? [["Unit size", `${money(bet.unitSizePence)} per unit`]]
+      : []),
     ["Reference", bet.reference || "—"],
   ];
   return (
@@ -67,7 +77,7 @@ export default async function BetPage({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeading
           eyebrow={bet.betType}
-          title={selectionLabel(bet) || "Untitled draft"}
+          title={selectionLabel(bet) || "Untitled bet"}
           description={bet.market || "Recorded terms and financial settlement."}
         />
         <StatusBadge status={current?.outcome ?? bet.status} />
@@ -113,7 +123,7 @@ export default async function BetPage({
                 "mt-5 h-11",
               )}
             >
-              {bet.status === "draft" ? "Complete draft" : "Edit bet"}
+              Edit bet
             </Link>
           )}
         </CardContent>
@@ -166,13 +176,17 @@ export default async function BetPage({
               <p
                 className={cn(
                   "mt-1 text-2xl font-semibold",
-                  (profit ?? 0) >= 0
-                    ? "text-profit-positive"
-                    : "text-destructive",
+                  profit !== null && profit > 0 && "text-profit-positive",
+                  profit !== null && profit < 0 && "text-destructive",
                 )}
               >
                 {money(profit ?? 0)}
               </p>
+              {bet.unitSizePence && (
+                <p className="text-sm text-muted-foreground">
+                  {units(unitProfit(bet))}
+                </p>
+              )}
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Settled</p>
@@ -181,7 +195,7 @@ export default async function BetPage({
           </CardContent>
         </Card>
       )}
-      {!bet.deletedAt && bet.status !== "draft" && (
+      {!bet.deletedAt && (
         <Card>
           <CardHeader>
             <CardTitle>

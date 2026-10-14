@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { eq } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client } from "pg";
@@ -120,7 +121,7 @@ describe("modular PostgreSQL schema foundation", () => {
           "select * from drizzle.__drizzle_migrations",
         )
       ).rowCount,
-    ).toBe(6);
+    ).toBe(9);
     expect(
       (await connection.db.select().from(bookmakers))
         .map((row) => row.name)
@@ -137,6 +138,142 @@ describe("modular PostgreSQL schema foundation", () => {
       ).rowCount,
     ).toBe(0);
   });
+  it.each([true, false])(
+    "upgrades complete legacy drafts and rolls back incomplete ones (complete=%s)",
+    async (complete) => {
+      const client = await connection.pool.connect();
+      const id = randomUUID();
+      try {
+        await client.query("begin");
+        await client.query(
+          "alter table bets drop constraint bets_status_check, drop constraint bets_confirmed_fields_check; alter table bets add constraint bets_status_check check (status in ('draft','open','settled')), add constraint bets_confirmed_fields_check check (status='draft' or (accepted_odds is not null and length(trim(selection))>0 and length(trim(sport))>0 and cash_stake_pence+free_stake_pence>0))",
+        );
+        await client.query(
+          "insert into bets (id,owner_id,bookmaker_id,source_id,placed_at,sport,selection,accepted_odds,cash_stake_pence,free_stake_pence,bet_type,status,unit_size_pence,deleted_at) values ($1,$2,$3,$4,now(),'Football','Legacy sample',$5,1000,0,'single','draft',5000,now())",
+          [id, owner, bookmakerId, sourceId, complete ? 2 : null],
+        );
+        const migration = await readFile(
+          "drizzle/0007_remove_drafts.sql",
+          "utf8",
+        );
+        if (complete) {
+          await client.query(migration);
+          const {
+            rows: [saved],
+          } = await client.query(
+            "select status,version,unit_size_pence,cash_stake_pence,deleted_at from bets where id=$1",
+            [id],
+          );
+          expect(saved).toMatchObject({
+            status: "open",
+            version: 2,
+            unit_size_pence: "5000",
+            cash_stake_pence: "1000",
+          });
+          expect(saved.deleted_at).toBeTruthy();
+        } else {
+          await expect(client.query(migration)).rejects.toThrow(
+            "Complete or remove incomplete drafts",
+          );
+        }
+      } finally {
+        await client.query("rollback");
+        client.release();
+      }
+      expect(
+        (
+          await connection.pool.query(
+            "select count(*)::int as count from bets where id=$1",
+            [id],
+          )
+        ).rows[0].count,
+      ).toBe(0);
+    },
+  );
+  it.each([false, true])(
+    "cleans redundant single legs while preserving accas, or rolls back differing terms (mismatch=%s)",
+    async (mismatch) => {
+      const [single] = await connection.db
+        .insert(bets)
+        .values(
+          bet({
+            status: "settled",
+            unitSizePence: 5000,
+            deletedAt: new Date(),
+          }),
+        )
+        .returning();
+      const [acca] = await connection.db
+        .insert(bets)
+        .values(bet({ betType: "acca" }))
+        .returning();
+      const [history] = await connection.db
+        .insert(settlements)
+        .values(settlement(single.id))
+        .returning();
+      const [singleLeg, accaLeg] = await connection.db
+        .insert(legs)
+        .values([
+          {
+            id: randomUUID(),
+            ownerId: owner,
+            betId: single.id,
+            position: 0,
+            selection: mismatch ? "Different selection" : single.selection,
+            sport: single.sport,
+            market: single.market,
+            status: "open",
+          },
+          {
+            id: randomUUID(),
+            ownerId: owner,
+            betId: acca.id,
+            position: 0,
+            selection: "Acca selection",
+            sport: "Football",
+            status: "void",
+          },
+        ])
+        .returning();
+      const client = await connection.pool.connect();
+      try {
+        await client.query("begin");
+        const migration = await readFile(
+          "drizzle/0008_acca_only_legs.sql",
+          "utf8",
+        );
+        if (mismatch) {
+          await expect(client.query(migration)).rejects.toThrow(
+            "Reconcile differing single-leg terms",
+          );
+          await client.query("rollback");
+        } else {
+          await client.query(migration);
+          await client.query("commit");
+        }
+      } finally {
+        await client.query("rollback");
+        client.release();
+      }
+      const saved = (
+        await connection.db.select().from(bets).where(eq(bets.id, single.id))
+      )[0];
+      expect(saved).toEqual({
+        ...single,
+        version: mismatch ? single.version : single.version + 1,
+      });
+      expect(await connection.db.select().from(settlements)).toEqual([history]);
+      expect(
+        await connection.db
+          .select()
+          .from(legs)
+          .where(eq(legs.betId, single.id)),
+      ).toEqual(mismatch ? [singleLeg] : []);
+      expect(
+        await connection.db.select().from(legs).where(eq(legs.betId, acca.id)),
+      ).toEqual([accaLeg]);
+    },
+  );
   it("permits one provisioned account and rejects unprovisioned ledger owners", async () => {
     await expect(
       connection.db.insert(appAccounts).values({ ownerId: other }),
@@ -155,7 +292,13 @@ describe("modular PostgreSQL schema foundation", () => {
       connection.db.insert(bets).values(bet({ ownerId: other })),
     ).rejects.toThrow();
     expect(await connection.db.select().from(appAccounts)).toEqual([
-      { singleton: true, ownerId: owner },
+      {
+        singleton: true,
+        ownerId: owner,
+        unitSizePence: null,
+        displayMode: "gbp",
+        preferencesVersion: 0,
+      },
     ]);
   });
   it("round-trips exact decimal odds, integer pence and UTC instants through Drizzle", async () => {
@@ -168,16 +311,13 @@ describe("modular PostgreSQL schema foundation", () => {
     expect(saved.version).toBe(1);
     expect(saved.confirmedFromVersion).toBeNull();
   });
-  it("allows incomplete drafts but rejects invalid confirmed fields, money, odds and versions", async () => {
-    await connection.db.insert(bets).values(
-      bet({
-        status: "draft",
-        acceptedOdds: null,
-        selection: "",
-        sport: "",
-        cashStakePence: 0,
-      }),
-    );
+  it("rejects drafts, incomplete bets, invalid money, odds and versions", async () => {
+    await expect(
+      connection.pool.query(
+        "insert into bets (id,owner_id,bookmaker_id,source_id,placed_at,sport,selection,accepted_odds,cash_stake_pence,free_stake_pence,bet_type,status) values ($1,$2,$3,$4,now(),'Football','Home win',2,1000,0,'single','draft')",
+        [randomUUID(), owner, bookmakerId, sourceId],
+      ),
+    ).rejects.toThrow();
     for (const changes of [
       { acceptedOdds: null },
       { acceptedOdds: "0.9" },
@@ -193,6 +333,7 @@ describe("modular PostgreSQL schema foundation", () => {
       await expect(
         connection.db.insert(bets).values(bet(changes)),
       ).rejects.toThrow();
+    await connection.db.insert(bets).values(bet());
     await expect(
       connection.pool.query("update bets set status='invalid'"),
     ).rejects.toThrow();

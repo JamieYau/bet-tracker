@@ -6,9 +6,14 @@ test("saving keeps button dimensions and history rows remain links", async ({
   const name = `Presentation ${crypto.randomUUID()}`;
   await page.goto("/add");
   await page.getByLabel("Selection", { exact: true }).fill(name);
-  const save = page.getByRole("button", { name: "Save draft", exact: true });
+  await page.getByLabel("Accepted total odds").fill("2");
+  await page.getByLabel("Cash stake (£)", { exact: true }).fill("10");
+  await expect(
+    page.getByRole("button", { name: "Save draft", exact: true }),
+  ).toHaveCount(0);
+  const save = page.getByRole("button", { name: "Confirm bet", exact: true });
   // Measure the text itself: a blank icon slot can centre the group but offset the label.
-  for (const label of ["Confirm bet", "Save draft"]) {
+  for (const label of ["Confirm bet"]) {
     const offset = await page
       .getByRole("button", { name: label, exact: true })
       .evaluate((button) => {
@@ -33,7 +38,7 @@ test("saving keeps button dimensions and history rows remain links", async ({
   });
   try {
     await save.click();
-    const busy = page.locator('button[name="intent"][value="draft"]');
+    const busy = page.locator('button[name="intent"][value="confirm"]');
     await expect(busy).toHaveAttribute("aria-busy", "true");
     await expect(busy).toBeDisabled();
     await expect(busy.locator('[data-slot="spinner"]')).toBeVisible();
