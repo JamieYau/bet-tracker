@@ -89,6 +89,7 @@ export const bets = pgTable(
     tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
     version: integer("version").notNull().default(1),
     confirmedFromVersion: integer("confirmed_from_version"),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (table) => [

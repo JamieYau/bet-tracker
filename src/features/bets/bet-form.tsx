@@ -154,6 +154,15 @@ export function BetForm({
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="version" value={bet?.version ?? 0} />
       <input type="hidden" name="payload" value={JSON.stringify(payload)} />
+      {bet?.status === "settled" && (
+        <Alert>
+          <AlertDescription>
+            Editing keeps the recorded cash return. Changing the stake updates
+            your profit and ROI. Use Correct settlement on the bet page to
+            change the outcome or cash return.
+          </AlertDescription>
+        </Alert>
+      )}
       <fieldset disabled={!ready || pending} className="min-w-0 space-y-5">
         <Card>
           <CardHeader>
@@ -460,27 +469,6 @@ export function BetForm({
                 </FieldError>
               </Field>
             ))}
-            <Field orientation="horizontal" className="min-h-11 sm:col-span-2">
-              <Checkbox
-                id="freeStakeReturned"
-                aria-labelledby="freeStakeReturned-label"
-                disabled={!ready || pending}
-                checked={values.freeStakeReturned}
-                onCheckedChange={(checked) =>
-                  setValues((previous) => ({
-                    ...previous,
-                    freeStakeReturned: checked,
-                  }))
-                }
-              />
-              <FieldLabel
-                id="freeStakeReturned-label"
-                htmlFor="freeStakeReturned"
-                className="min-h-11"
-              >
-                Free-bet stake is returned with winnings
-              </FieldLabel>
-            </Field>
           </CardContent>
         </Card>
         <Card>
@@ -542,15 +530,15 @@ export function BetForm({
             type="submit"
             className="h-12 flex-1 sm:flex-none sm:px-8"
             name="intent"
-            value="confirm"
+            value={bet && bet.status !== "draft" ? "save" : "confirm"}
             disabled={pending}
             aria-busy={pending}
           >
             <PendingLabel pending={pending}>
-              {bet?.status === "open" ? "Save changes" : "Confirm bet"}
+              {bet && bet.status !== "draft" ? "Save changes" : "Confirm bet"}
             </PendingLabel>
           </Button>
-          {bet?.status !== "open" && (
+          {(!bet || bet.status === "draft") && (
             <Button
               type="submit"
               className="h-12"

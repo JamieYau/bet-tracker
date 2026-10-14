@@ -10,12 +10,12 @@ export default async function EditPage({
   const { id } = await params;
   const ledger = await getLedger();
   const bet = ledger.bets.find((bet) => bet.id === id);
-  if (!bet || bet.status === "settled") notFound();
+  if (!bet) notFound();
   return (
     <>
       <PageHeading
         title={bet.status === "draft" ? "Complete your draft" : "Edit bet"}
-        description="Update the recorded terms. Voiding an acca leg keeps the bet financially open."
+        description="Update the recorded details, stakes, odds and legs."
       />
       <BetForm
         id={bet.id}

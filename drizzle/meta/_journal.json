@@ -36,6 +36,13 @@
       "when": 1791918277789,
       "tag": "0004_entry_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791936479613,
+      "tag": "0005_bet_edit_delete",
+      "breakpoints": true
     }
   ]
 }

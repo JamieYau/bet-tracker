@@ -10,21 +10,24 @@ import {
   readLedger,
   savePostgresBet,
   savePostgresOption,
+  setPostgresBetDeleted,
   settlePostgresBet,
 } from "./postgres";
 import type { Bet, BetInput, Ledger } from "./types";
 import type { settlementSchema } from "./validation";
 
-export async function getLedger(): Promise<Ledger> {
+export async function getLedger(includeDeleted = false): Promise<Ledger> {
   const owner = await requireOwner();
   if (isDemo()) {
     const ledger = await demoRead();
     return normalizeLedger({
       ...ledger,
-      bets: ledger.bets.filter((bet) => bet.ownerId === owner),
+      bets: ledger.bets.filter(
+        (bet) => bet.ownerId === owner && (includeDeleted || !bet.deletedAt),
+      ),
     });
   }
-  return readLedger(database(), owner);
+  return readLedger(database(), owner, includeDeleted);
 }
 
 export async function saveBet(
@@ -40,6 +43,8 @@ export async function saveBet(
       const existing = ledger.bets.find((bet) => bet.id === id);
       if (existing && existing.ownerId !== owner)
         throw new Error("Unauthorized");
+      if (existing?.deletedAt)
+        throw new Error("Restore this bet from Trash before editing.");
       const stored = existing as
         | (Bet & { confirmedFromVersion?: number })
         | undefined;
@@ -49,16 +54,16 @@ export async function saveBet(
         stored?.confirmedFromVersion === version
       )
         return id;
-      if (existing && existing.status === "settled")
-        throw new Error(
-          "Settled bets are locked; correct the settlement instead.",
-        );
       if ((existing?.version ?? 0) !== version)
         throw new Error("This bet changed. Refresh before editing.");
       const status: Bet["status"] =
-        confirm || existing?.status === "open" ? "open" : "draft";
+        existing?.status === "settled"
+          ? "settled"
+          : confirm || existing?.status === "open"
+            ? "open"
+            : "draft";
       if (
-        status === "open" &&
+        status !== "draft" &&
         !allowDuplicate &&
         input.reference &&
         ledger.bets.some(
@@ -66,6 +71,7 @@ export async function saveBet(
             bet.ownerId === owner &&
             bet.id !== id &&
             bet.status !== "draft" &&
+            !bet.deletedAt &&
             bet.bookmakerId === input.bookmakerId &&
             bet.reference === input.reference,
         )
@@ -121,6 +127,8 @@ export async function settleBet(input: z.infer<typeof settlementSchema>) {
         (bet) => bet.id === input.betId && bet.ownerId === owner,
       );
       if (!bet) throw new Error("Bet not found.");
+      if (bet.deletedAt)
+        throw new Error("Restore this bet from Trash before settling.");
       if (bet.settlements.some((item) => item.requestKey === input.requestKey))
         return bet.id;
       if (bet.status === "draft")
@@ -168,4 +176,28 @@ export async function saveOption(
       return id;
     });
   return savePostgresOption(database(), owner, kind, id, name, active);
+}
+
+export async function setBetDeleted(
+  id: string,
+  version: number,
+  deleted: boolean,
+) {
+  const owner = await requireOwner();
+  if (isDemo())
+    return demoMutate((ledger) => {
+      const bet = ledger.bets.find(
+        (bet) => bet.id === id && bet.ownerId === owner,
+      );
+      if (!bet) throw new Error("Bet not found.");
+      if (bet.version !== version)
+        throw new Error(
+          "This bet changed. Refresh before deleting or restoring.",
+        );
+      if (Boolean(bet.deletedAt) === deleted) return id;
+      bet.deletedAt = deleted ? new Date().toISOString() : null;
+      bet.version += 1;
+      return id;
+    });
+  return setPostgresBetDeleted(database(), owner, id, version, deleted);
 }

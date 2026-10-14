@@ -1,25 +1,22 @@
 import { expect, test } from "@playwright/test";
 
-for (const returned of [false, true]) {
-  test(`free-bet stake returned ${returned}, early payout and correction`, async ({
+for (const cashStake of [0, 5]) {
+  test(`free-bet stake not returned with £${cashStake} cash funding, early payout and correction`, async ({
     page,
   }) => {
     const name = `Funding ${crypto.randomUUID()}`;
     await page.goto("/add");
     await page.getByLabel("Selection", { exact: true }).fill(name);
     await page.getByLabel("Accepted total odds").fill("3");
-    await page.getByLabel("Cash stake (£)", { exact: true }).fill("5");
+    await page
+      .getByLabel("Cash stake (£)", { exact: true })
+      .fill(String(cashStake));
     await page.getByLabel("Free-bet stake (£)", { exact: true }).fill("10");
-    const returnedCheckbox = page.getByRole("checkbox", {
-      name: "Free-bet stake is returned with winnings",
-    });
-    await expect(returnedCheckbox).not.toBeChecked();
-    if (returned) {
-      await page
-        .getByText("Free-bet stake is returned with winnings", { exact: true })
-        .click();
-      await expect(returnedCheckbox).toBeChecked();
-    }
+    await expect(
+      page.getByRole("checkbox", {
+        name: "Free-bet stake is returned with winnings",
+      }),
+    ).toHaveCount(0);
     await page
       .getByRole("button", { name: "Confirm bet", exact: true })
       .click();
@@ -28,7 +25,7 @@ for (const returned of [false, true]) {
     ).toBeVisible();
     await expect(
       page.getByLabel("Actual credited cash return (£)"),
-    ).toHaveValue(returned ? "45.00" : "35.00");
+    ).toHaveValue(cashStake ? "35.00" : "20.00");
     const early = page.getByRole("checkbox", {
       name: "Early payout",
       exact: true,

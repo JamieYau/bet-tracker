@@ -14,6 +14,7 @@ const readTables = [
 const writableTables = ["identity.session", "identity.rate_limit"];
 const protectedTables = [...readTables, "identity.verification"];
 const writeFunctions = [
+  "public.set_bet_deleted(text,uuid,integer,boolean)",
   "public.save_bet(text,uuid,jsonb,jsonb,boolean,integer,boolean)",
   "public.settle_bet(text,uuid,uuid,integer,text,bigint,timestamptz,boolean,text)",
   "public.save_option(text,text,uuid,text,boolean)",
