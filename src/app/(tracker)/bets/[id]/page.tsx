@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/page-heading";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -20,6 +21,8 @@ import {
 } from "@/components/ui/item";
 import { selectionLabel } from "@/features/bets/catalog";
 import { getLedger } from "@/features/bets/repository";
+import { StatusBadge } from "@/features/bets/status-badge";
+import { TrashForm } from "@/features/bets/trash-form";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
 import { SettlementForm } from "@/features/settlement/settlement-form";
 import { dateTime, formatOdds, money, outcomeLabel } from "@/lib/format";
@@ -30,7 +33,7 @@ export default async function BetPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const ledger = await getLedger();
+  const ledger = await getLedger(true);
   const bet = ledger.bets.find((bet) => bet.id === id);
   if (!bet) notFound();
   const current = currentSettlement(bet);
@@ -50,19 +53,16 @@ export default async function BetPage({
     ["Market type", bet.market || "—"],
     ["Accepted odds", formatOdds(bet.acceptedOdds)],
     ["Cash stake", money(bet.cashStakePence)],
-    [
-      "Free-bet stake",
-      `${money(bet.freeStakePence)}${bet.freeStakeReturned ? " · stake returned" : " · stake not returned"}`,
-    ],
+    ["Free-bet stake", `${money(bet.freeStakePence)}`],
     ["Reference", bet.reference || "—"],
   ];
   return (
     <div className="space-y-5">
       <Link
-        href="/bets"
+        href={bet.deletedAt ? "/bets/trash" : "/bets"}
         className="text-sm text-muted-foreground hover:underline"
       >
-        ← All bets
+        ← {bet.deletedAt ? "Trash" : "All bets"}
       </Link>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeading
@@ -70,10 +70,16 @@ export default async function BetPage({
           title={selectionLabel(bet) || "Untitled draft"}
           description={bet.market || "Recorded terms and financial settlement."}
         />
-        <Badge variant="secondary">
-          {outcomeLabel(current?.outcome ?? bet.status)}
-        </Badge>
+        <StatusBadge status={current?.outcome ?? bet.status} />
       </div>
+      {bet.deletedAt && (
+        <Alert>
+          <AlertDescription>
+            Deleted {dateTime(bet.deletedAt)}. This bet is excluded from your
+            totals and exports. Restore it to edit or settle it.
+          </AlertDescription>
+        </Alert>
+      )}
       <Card>
         <CardContent className="pt-6">
           <dl className="grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -99,7 +105,7 @@ export default async function BetPage({
             ))}
             {current?.earlyPayout && <Badge>Early payout</Badge>}
           </div>
-          {bet.status !== "settled" && (
+          {!bet.deletedAt && (
             <Link
               href={`/bets/${id}/edit`}
               className={cn(
@@ -133,9 +139,7 @@ export default async function BetPage({
                       </ItemDescription>
                     </ItemContent>
                     <ItemActions>
-                      <Badge variant="outline">
-                        {outcomeLabel(leg.status)}
-                      </Badge>
+                      <StatusBadge status={leg.status} />
                     </ItemActions>
                   </Item>
                 </li>
@@ -162,7 +166,9 @@ export default async function BetPage({
               <p
                 className={cn(
                   "mt-1 text-2xl font-semibold",
-                  (profit ?? 0) >= 0 ? "text-primary" : "text-destructive",
+                  (profit ?? 0) >= 0
+                    ? "text-profit-positive"
+                    : "text-destructive",
                 )}
               >
                 {money(profit ?? 0)}
@@ -175,7 +181,7 @@ export default async function BetPage({
           </CardContent>
         </Card>
       )}
-      {bet.status !== "draft" && (
+      {!bet.deletedAt && bet.status !== "draft" && (
         <Card>
           <CardHeader>
             <CardTitle>
@@ -184,7 +190,7 @@ export default async function BetPage({
             {current && (
               <CardDescription className="text-sm text-muted-foreground">
                 Corrections replace the effective settlement and preserve
-                history. Recorded stakes are locked.
+                history.
               </CardDescription>
             )}
           </CardHeader>
@@ -198,6 +204,7 @@ export default async function BetPage({
           </CardContent>
         </Card>
       )}
+      <TrashForm key={`trash-${bet.version}`} bet={bet} />
       {bet.settlements.length > 0 && (
         <Card>
           <CardHeader>

@@ -1,4 +1,4 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import type { z } from "zod";
 import type { Database } from "../../lib/db/connection";
 import {
@@ -13,7 +13,11 @@ import { normalizeLedger } from "./normalize-ledger";
 import type { BetInput, Ledger } from "./types";
 import type { settlementSchema } from "./validation";
 
-export async function readLedger(db: Database, owner: string): Promise<Ledger> {
+export async function readLedger(
+  db: Database,
+  owner: string,
+  includeDeleted = false,
+): Promise<Ledger> {
   const ledger = await db.transaction(
     async (tx) => {
       const [account] = await tx
@@ -24,7 +28,12 @@ export async function readLedger(db: Database, owner: string): Promise<Ledger> {
       const rows = await tx
         .select()
         .from(bets)
-        .where(eq(bets.ownerId, owner))
+        .where(
+          and(
+            eq(bets.ownerId, owner),
+            includeDeleted ? undefined : isNull(bets.deletedAt),
+          ),
+        )
         .orderBy(desc(bets.placedAt), asc(bets.id));
       const legRows = await tx
         .select()
@@ -49,6 +58,7 @@ export async function readLedger(db: Database, owner: string): Promise<Ledger> {
         sources: await options(sources),
         bets: rows.map((row) => ({
           ...row,
+          deletedAt: row.deletedAt?.toISOString() ?? null,
           placedAt: row.placedAt.toISOString(),
           createdAt: row.createdAt.toISOString(),
           legs: legRows
@@ -140,6 +150,21 @@ export async function savePostgresOption(
   await write(() =>
     db.execute(
       sql`select public.save_option(${owner}, ${kind}, ${id}::uuid, ${name}, ${active})`,
+    ),
+  );
+  return id;
+}
+
+export async function setPostgresBetDeleted(
+  db: Database,
+  owner: string,
+  id: string,
+  version: number,
+  deleted: boolean,
+) {
+  await write(() =>
+    db.execute(
+      sql`select public.set_bet_deleted(${owner}, ${id}::uuid, ${version}, ${deleted})`,
     ),
   );
   return id;

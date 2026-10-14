@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PageHeading } from "@/components/page-heading";
 import { readFilters } from "@/features/analytics/filter-schema";
 import { FilterForm } from "@/features/analytics/filters";
@@ -34,7 +35,10 @@ export default async function BetsPage({
         <span className="text-muted-foreground">
           {bets.length} {bets.length === 1 ? "bet" : "bets"}
         </span>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
+          <Link href="/bets/trash" className="text-primary underline">
+            Trash
+          </Link>
           <a
             href={`/api/export?${query}`}
             download="bets.csv"

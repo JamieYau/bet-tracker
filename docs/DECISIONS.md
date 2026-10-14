@@ -30,7 +30,7 @@ These were suggested during discussion, but were not separately confirmed. Resol
 
 ## Delivery sequence
 
-Current order: the Better Auth/Neon/Drizzle backend is merged and verified against development Neon; dark mode and structured entry are now on main; complete the searchable-control/filter branch; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
+Current order: the Better Auth/Neon/Drizzle backend is merged and verified against development Neon; dark mode and structured entry are now on main; review the settled-editing/Trash branch; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
 
 ## Modular backend pivot (2026-10-12)
 
@@ -43,7 +43,7 @@ The user approved updating the approach to Neon PostgreSQL, Better Auth, Drizzle
 - Social login can be added later through Better Auth account linking: link an approved provider identity to the existing owner user so ledger ownership stays unchanged, retain password login if desired, and keep public account creation disabled. Provider credentials, callbacks and linking/access checks require implementation and verification. Passkeys remain another deferred option. Neither is required for the initial migration; magic links are no longer the planned initial login.
 - Every private read, mutation, export and attachment request must check the authenticated, provisioned owner. Browser clients never access PostgreSQL directly. Preserve owner IDs/scoping despite having one legitimate user; test unauthenticated and unprovisioned identities.
 - Replace Supabase JWT/`auth.uid()` assumptions deliberately. Use a restricted runtime database role separate from migration credentials. Additional RLS may be retained with transaction-local identity if justified, but must not be claimed to work automatically with Better Auth. R2 authorization belongs to the application, not PostgreSQL policies.
-- Preserve atomic bet/leg saves, idempotent confirmation, optimistic versions, serialized settlement revisions, duplicate warnings and locked settled terms. Decide whether to adapt existing SQL functions or use Drizzle transactions after reviewing the migration; an ORM must not weaken these guarantees.
+- Preserve atomic bet/leg saves, idempotent confirmation, optimistic versions, serialized settlement revisions, duplicate warnings and settlement history (the settled-term lock is superseded by the editing decision below). Decide whether to adapt existing SQL functions or use Drizzle transactions after reviewing the migration; an ORM must not weaken these guarantees.
 - R2 buckets remain private. The server assigns object keys and checks draft/bet ownership before issuing short-lived upload/download URLs. Validate size/type and uploaded metadata; provide deletion independent of bets. Keep R2 credentials server-side and configure narrow browser-upload CORS.
 - Separate development/preview and production databases, buckets and auth secrets. No live Supabase data migration is currently required; preserve local demo data and avoid destructive commands against any configured database.
 
@@ -117,7 +117,7 @@ These record the original implementation before the cutover. Supabase integratio
 
 - Private pages render per request. Removed the scaffold's Cache Components/partial-prefetch flags to keep authenticated reads straightforward; no shared user-data caching.
 - Manual incomplete drafts are explicitly saved through Save draft. Automatic draft saving is not implemented; imported draft persistence belongs to the import stage.
-- Settlement history is append-only and latest revision determines all metrics. Lock settled recorded terms; correct credited returns with a required explanation.
+- Settlement history is append-only and latest revision determines all metrics. The original settled-term lock is superseded by the editing decision below; credited-return corrections still require an explanation.
 - Bet IDs and confirmation-from-version identify repeated confirmation. RPCs serialize owner saves and check optimistic versions; settlement retries use request keys.
 - Date-filter and cash-only/promotional reporting semantics are defined in `METRICS.md`. Open exposure ignores the date range; other filters apply.
 - A local development-only, loopback demo enables manual testing without Supabase credentials. It is clearly labelled, stores test data separately and cannot run in production/Vercel. Production uses Supabase exclusively.
@@ -148,3 +148,27 @@ Use a separately created restricted SQL login role, not a provider dashboard rol
 - Added registry Combobox/InputGroup files using the existing Base UI dependency; no package or lockfile changes were needed. Removed redundant InputGroup group roles and addon click-to-focus behaviour; the input and labelled trigger provide keyboard interaction. Reference: [shadcn Base UI Combobox](https://ui.shadcn.com/docs/components/base/combobox), [Base UI Combobox](https://base-ui.com/react/components/combobox).
 
 - Combobox focus selects the displayed text so typing replaces it immediately. Click/before-input selection also handles touch browsers that reposition the caret after focus. Search text remains separate from the selected value; Escape restores the selected label.
+
+## Bet editing and reversible deletion (2026-10-14)
+
+- The user approved full bet editing and deletion on a new branch for this personal tracker. Drafts, open bets and settled bets may have their recorded details, placement time, bookmaker/source, stakes/funding, accepted odds, bet type and legs edited. Ordinary edits do not require a reason.
+- Settled edits retain settled status and every settlement revision. The actual credited return is preserved; changing odds does not recalculate money already received. Changing cash stake/funding immediately changes P/L, ROI and promotional categories. Outcome/return/time changes continue through settlement corrections with a required reason.
+- Delete means move to Trash after an inline confirmation, for any bet status. Store deleted_at and increment the optimistic version without removing legs, settlement history or attachment references. No permanent deletion or automatic expiry is introduced. Restore retains original status/details/history and makes the bet count again.
+- Default owner-scoped ledger reads exclude deleted bets so history, dashboard/chart/group totals, filter choices and bets/legs CSV exclude them consistently. Trash and bet detail deliberately include deleted records. Deleted records cannot be edited, confirmed or settled until restored; database functions enforce this before retry handling.
+- Existing transactional saves, confirmation retry behavior, owner authorization and version checks remain. Deletion/restoration use a restricted security-definer function with owner and version checks; the runtime role still cannot directly mutate ledger tables. Archived references do not trigger duplicate warnings for new entries; restoration retains the original reference even if another bet now shares it.
+- Reviewed migration 0005_bet_edit_delete adds the nullable timestamp and replaces save/settlement functions without rewriting existing records. Apply the migration and rerun runtime grants before using this app version in an existing environment. No dependency or lockfile changes are required. Compatibility references: [Next.js mutations](https://nextjs.org/docs/app/getting-started/mutating-data), [Drizzle migration generation](https://orm.drizzle.team/docs/drizzle-kit-generate).
+
+## Free-bet entry simplification (2026-10-14)
+
+- The user requested removing the Free-bet stake is returned with winnings toggle because they do not use that promotion type. New manual bets continue to default to stake not returned; the editor no longer offers a switch.
+- Preserve the stored freeStakeReturned field for existing records, detail display, CSV and financial calculations. Editing an older record retains its value, avoiding an implicit change to recorded terms. No schema migration or historical rewrite is needed. Actual credited returns remain editable for unusual promotion terms.
+
+## Outcome badge colours (2026-10-14)
+
+- The user requested green Won badges, destructive red Lost badges and neutral Open/Void badges. Full Cash-out remains neutral because it may produce either profit or loss; Draft/Settled fallback badges are also neutral. The P/L amount continues to show the actual profit/loss colour independently.
+- Share StatusBadge across all BetList uses (history, dashboard and Trash), the bet detail header and acca legs. Add a soft emerald success variant to the existing Badge; use its existing destructive/secondary variants for loss/neutral. Light/dark palettes retain explicit outcome labels so colour is supplementary. No financial, settlement, data or dependency changes.
+
+## Positive cash P/L colour (2026-10-14)
+
+- The user requested a separate positive P/L variable so profit remains green when the primary theme colour changes. Define --profit-positive in light/dark palettes and map it to Tailwind text-profit-positive through @theme inline.
+- Use a readable green in light mode and a brighter green in dark mode for the existing non-negative cash P/L text in shared bet lists and bet details. Negative amounts retain destructive red; the current zero/non-negative rule is retained. Dashboard recent bets and Trash inherit the shared list styling. No financial or data changes.

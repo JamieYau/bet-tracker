@@ -6,7 +6,13 @@ import { moneyToPence, parseOdds } from "@/features/settlement/finance";
 import { requireOwner } from "@/lib/auth";
 import { londonToUtc } from "@/lib/format";
 import { assertSports } from "./normalize-ledger";
-import { getLedger, saveBet, saveOption, settleBet } from "./repository";
+import {
+  getLedger,
+  saveBet,
+  saveOption,
+  setBetDeleted,
+  settleBet,
+} from "./repository";
 import type { ActionState } from "./types";
 import { confirmedBetSchema, saveSchema, settlementSchema } from "./validation";
 
@@ -73,7 +79,7 @@ export async function recordAction(
     const ledger = await getLedger();
     const existing = ledger.bets.find((bet) => bet.id === input.id);
     assertSports(input.bet, existing);
-    if (input.confirm || existing?.status === "open")
+    if (input.confirm || (existing && existing.status !== "draft"))
       confirmedBetSchema.parse(input.bet);
     id = await saveBet(
       input.id,
@@ -137,4 +143,32 @@ export async function optionAction(
   }
   revalidatePath("/", "layout");
   return { success: "List updated." };
+}
+
+export async function trashAction(
+  _state: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  await requireOwner();
+  let input: { id: string; version: number; deleted: boolean };
+  try {
+    input = z
+      .object({
+        id: z.uuid(),
+        version: z.number().int().min(1),
+        deleted: z.boolean(),
+      })
+      .parse({
+        id: field(form, "id"),
+        version: Number(field(form, "version")),
+        deleted: field(form, "intent") === "delete",
+      });
+    if (!["delete", "restore"].includes(field(form, "intent")))
+      throw new Error("Choose delete or restore.");
+    await setBetDeleted(input.id, input.version, input.deleted);
+  } catch (error) {
+    return failure(error);
+  }
+  revalidatePath("/", "layout");
+  redirect(input.deleted ? "/bets/trash" : `/bets/${input.id}`);
 }

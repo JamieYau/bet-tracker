@@ -1,6 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
@@ -18,9 +17,10 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
-import { dateTime, money, outcomeLabel } from "@/lib/format";
+import { dateTime, money } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { selectionLabel } from "./catalog";
+import { StatusBadge } from "./status-badge";
 import type { Bet, Ledger } from "./types";
 export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
   if (!bets.length)
@@ -64,9 +64,7 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                       {selectionLabel(bet) || "Untitled draft"}
                     </span>
                   </ItemTitle>
-                  <Badge variant="secondary">
-                    {outcomeLabel(settlement?.outcome ?? bet.status)}
-                  </Badge>
+                  <StatusBadge status={settlement?.outcome ?? bet.status} />
                 </div>
                 <ItemDescription className="truncate text-xs">
                   {
@@ -99,7 +97,9 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                     className={cn(
                       "text-sm font-semibold tabular-nums",
                       profit !== null &&
-                        (profit >= 0 ? "text-primary" : "text-destructive"),
+                        (profit >= 0
+                          ? "text-profit-positive"
+                          : "text-destructive"),
                     )}
                   >
                     {profit === null

@@ -3,14 +3,17 @@ import { betterAuth } from "better-auth";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { metrics } from "../../src/features/analytics/metrics";
 import { handleAuthentication } from "../../src/features/auth/http";
 import { manageOwner } from "../../src/features/auth/operator";
 import { authOptions } from "../../src/features/auth/options";
 import { isProvisionedOwner } from "../../src/features/auth/owner";
+import { exportCsv } from "../../src/features/bets/export";
 import {
   readLedger,
   savePostgresBet,
   savePostgresOption,
+  setPostgresBetDeleted,
   settlePostgresBet,
 } from "../../src/features/bets/postgres";
 import type { BetInput } from "../../src/features/bets/types";
@@ -473,9 +476,35 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
     expect(stored?.settlements.map((item) => item.returnPence)).toEqual([
       2500, 2000,
     ]);
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      id,
+      3,
+      { ...input, cashStakePence: 1500 },
+      false,
+      true,
+    );
+    const edited = (await readLedger(runtime.db, owner)).bets.find(
+      (item) => item.id === id,
+    );
+    expect(edited).toMatchObject({
+      status: "settled",
+      version: 4,
+      cashStakePence: 1500,
+    });
+    expect(edited?.settlements).toEqual(stored?.settlements);
+    expect(metrics(edited ? [edited] : []).profit).toBe(500);
     await expect(
-      savePostgresBet(runtime.db, owner, id, 3, input, true, false),
-    ).rejects.toThrow("locked");
+      savePostgresBet(runtime.db, owner, id, 3, input, false, false),
+    ).rejects.toThrow("changed");
+    await expect(
+      settlePostgresBet(
+        runtime.db,
+        owner,
+        settlement(id, { version: 3, reason: "Stale" }),
+      ),
+    ).rejects.toThrow("changed");
     const open = randomUUID();
     await savePostgresBet(runtime.db, owner, open, 0, bet(ledger), true, false);
     const result = await Promise.allSettled([
@@ -485,6 +514,162 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
     expect(result.filter((item) => item.status === "fulfilled")).toHaveLength(
       1,
     );
+  });
+  it("deletes and restores drafts, open bets and settled accas with history intact", async () => {
+    const initial = await readLedger(runtime.db, owner);
+    for (const status of ["draft", "open", "settled"] as const) {
+      const id = randomUUID();
+      const input = bet(initial, {
+        betType: "acca",
+        reference: `REF-${status}`,
+        legs: [
+          {
+            id: randomUUID(),
+            selection: "A",
+            market: "",
+            sport: "Football",
+            odds: "2",
+            status: "void",
+          },
+          {
+            id: randomUUID(),
+            selection: "B",
+            market: "",
+            sport: "NFL",
+            odds: "1.5",
+            status: "open",
+          },
+        ],
+      });
+      await savePostgresBet(
+        runtime.db,
+        owner,
+        id,
+        0,
+        input,
+        status !== "draft",
+        false,
+      );
+      if (status === "settled")
+        await settlePostgresBet(runtime.db, owner, settlement(id));
+      const original = (await readLedger(runtime.db, owner)).bets.find(
+        (item) => item.id === id,
+      );
+      if (!original) throw new Error("Missing original fixture");
+      await setPostgresBetDeleted(
+        runtime.db,
+        owner,
+        id,
+        original.version,
+        true,
+      );
+      const active = await readLedger(runtime.db, owner);
+      expect(active.bets.some((item) => item.id === id)).toBe(false);
+      expect(exportCsv(active.bets, active, "bets")).not.toContain(id);
+      expect(exportCsv(active.bets, active, "legs")).not.toContain(id);
+      expect(metrics(active.bets).openExposure).toBe(0);
+      expect(metrics(active.bets).settledCount).toBe(0);
+      const trashed = (await readLedger(runtime.db, owner, true)).bets.find(
+        (item) => item.id === id,
+      );
+      if (!trashed) throw new Error("Missing trashed fixture");
+      expect(trashed.deletedAt).toBeTruthy();
+      expect(trashed.legs).toEqual(original.legs);
+      expect(trashed.settlements).toEqual(original.settlements);
+      await expect(
+        savePostgresBet(
+          runtime.db,
+          owner,
+          id,
+          trashed.version,
+          input,
+          true,
+          false,
+        ),
+      ).rejects.toThrow("Restore");
+      await expect(
+        settlePostgresBet(
+          runtime.db,
+          owner,
+          settlement(id, { version: trashed.version }),
+        ),
+      ).rejects.toThrow("Restore");
+      await expect(
+        setPostgresBetDeleted(runtime.db, owner, id, original.version, false),
+      ).rejects.toThrow("changed");
+      await setPostgresBetDeleted(
+        runtime.db,
+        owner,
+        id,
+        trashed.version,
+        false,
+      );
+      const restored = (await readLedger(runtime.db, owner)).bets.find(
+        (item) => item.id === id,
+      );
+      if (!restored) throw new Error("Missing restored fixture");
+      expect(restored).toEqual({
+        ...original,
+        version: original.version + 2,
+        deletedAt: null,
+      });
+      expect(metrics([restored]).settledCount).toBe(
+        status === "settled" ? 1 : 0,
+      );
+      expect(metrics([restored]).openExposure).toBe(
+        status === "open" ? 1000 : 0,
+      );
+      // Keep each iteration's ledger empty while retaining archived records.
+      await setPostgresBetDeleted(
+        runtime.db,
+        owner,
+        id,
+        restored.version,
+        true,
+      );
+    }
+  });
+  it("serializes deletion against edits and rejects unauthorized deletion/restore", async () => {
+    const ledger = await readLedger(runtime.db, owner);
+    const id = randomUUID();
+    const input = bet(ledger);
+    await savePostgresBet(runtime.db, owner, id, 0, input, true, false);
+    await expect(
+      setPostgresBetDeleted(runtime.db, "unprovisioned", id, 1, true),
+    ).rejects.toThrow("Unauthorized");
+    await expect(
+      setPostgresBetDeleted(runtime.db, "unprovisioned", id, 1, false),
+    ).rejects.toThrow("Unauthorized");
+    await expect(
+      setPostgresBetDeleted(runtime.db, owner, randomUUID(), 1, true),
+    ).rejects.toThrow("Bet not found");
+    const results = await Promise.allSettled([
+      setPostgresBetDeleted(runtime.db, owner, id, 1, true),
+      savePostgresBet(
+        runtime.db,
+        owner,
+        id,
+        1,
+        { ...input, cashStakePence: 2000 },
+        false,
+        false,
+      ),
+    ]);
+    expect(results.filter((item) => item.status === "fulfilled")).toHaveLength(
+      1,
+    );
+    const stored = (await readLedger(runtime.db, owner, true)).bets[0];
+    expect(stored.version).toBe(2);
+    if (stored.deletedAt) expect(stored.cashStakePence).toBe(1000);
+    else expect(stored.cashStakePence).toBe(2000);
+    await expect(
+      runtime.pool.query("update bets set deleted_at=now()"),
+    ).rejects.toThrow("permission denied");
+    await expect(
+      runtime.pool.query("select public.set_bet_deleted(null, $1, 2, true)", [
+        id,
+      ]),
+    ).rejects.toThrow("Unauthorized");
   });
   it("retries draft confirmation without double recording", async () => {
     const ledger = await readLedger(runtime.db, owner);

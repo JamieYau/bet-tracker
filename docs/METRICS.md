@@ -18,7 +18,7 @@ Cash-only and free/mixed-funded P/L reconcile to overall P/L. Promotional report
 
 ## Return prefills
 
-- Won: cash stake × accepted odds, plus free stake × (accepted odds − 1). When the free stake is returned, use free stake × accepted odds instead.
+- Won: cash stake × accepted odds, plus free stake × (accepted odds − 1). New manual entries use stake not returned. Previously recorded bets with stake returned retain their terms and use free stake × accepted odds instead.
 - Lost: zero credited cash return.
 - Void: cash stake returned; reinstated promotional credit is not cash return.
 - Full cash-out: manual actual credited cash return.
@@ -36,4 +36,6 @@ Sport, market, event text, Over/Under and line filters match a single pick. For 
 
 Individual stakes/returns are capped at £10 million; accepted odds at 1,000,000. Money inputs reject more than two decimal places. Missing London spring-forward times are rejected. The autumn repeated hour has no offset selector and uses date-fns-tz's offset choice; verify unusual historical entries.
 
-Open bets can be edited. Settled recorded terms are locked to preserve financial history; correct credited returns with a documented settlement revision. Partial cash-outs, exchange lays and each-way prefills are outside v1.
+Drafts, open bets and settled bets can be edited. Settled edits retain the latest actual credited return and settlement history. P/L, stakes, ROI and cash-only/promotional categories use the current bet terms; odds changes do not automatically change an already credited return. Correct outcome, return or settlement time with a documented settlement revision.
+
+Deleted bets are excluded from history, all metrics/charts/group totals, filter choices and bets/legs CSV. Trash retains their details, legs and settlement history. Restoring returns the bet to its original status and includes it in totals again. Partial cash-outs, exchange lays and each-way prefills are outside v1.

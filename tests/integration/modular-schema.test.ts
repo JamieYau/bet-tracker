@@ -120,7 +120,7 @@ describe("modular PostgreSQL schema foundation", () => {
           "select * from drizzle.__drizzle_migrations",
         )
       ).rowCount,
-    ).toBe(5);
+    ).toBe(6);
     expect(
       (await connection.db.select().from(bookmakers))
         .map((row) => row.name)

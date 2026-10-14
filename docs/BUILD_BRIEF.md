@@ -24,11 +24,13 @@ A private, iPhone-first web app for the owner’s personal use that records bets
 - Editable bookmakers and tipsters. Seed Unibet, Coral, Betfred, Paddy Power, Virgin Bet, Betway, Sky Bet, SBK, 888sport, BetMGM, BoyleSports, Ladbrokes and bet365.
 - History and analytics filters: date, bookmaker, source, sport, market, event, direction, line, in-play, bet type and status. Clearly label date semantics.
 - Metrics: settled cash P/L, cumulative/monthly P/L, settled bet count, settled cash stakes and open cash exposure. P/L charts use settlement date.
-- Bet details, private attachments, editing, settlement correction history and CSV export of bets and legs.
+- Bet details, private attachments, editing for drafts/open/settled bets, reversible deletion through Trash, settlement correction history and CSV export of bets and legs.
 
 ## Appearance
 
 Dark mode is implemented as a separate UI milestone on `feature/dark-mode`. Follow the device appearance by default; provide a direct Light/Dark toggle in the app header and login page, plus System/Light/Dark controls in Settings. Persist the choice in the browser and use a complementary green dark palette. Implementation decisions and verification are recorded in [DECISIONS.md](DECISIONS.md#dark-mode-plan-2026-10-13) and [PROGRESS.md](PROGRESS.md).
+
+Outcome badges use green for Won, destructive red for Lost, and neutral colours for Draft, Open, Void and Full Cash-out. Keep labels visible alongside colour. Positive cash P/L uses its own green colour token, independent of the primary theme colour, with separate light/dark values.
 
 ## Future analytics ideas
 
@@ -42,13 +44,14 @@ Revisit a focused analytics UI milestone after live backend verification, screen
 
 - Owner-scoped bets, legs, settlements, attachments, bookmakers and sources.
 - Money as integer pence; precise decimal odds; UTC timestamps. Default GBP and Europe/London display times. Accept fractional or decimal odds.
-- Separate cash/free-bet stakes and record whether the free-bet stake is returned.
+- Separate cash/free-bet stakes. New manual bets use stake-not-returned free bets; no stake-return toggle. Preserve any previously recorded stake-return terms.
 - Final cash P/L = actual credited cash return − cash stake. A losing free bet has £0 cash loss.
 - Separate cash-only performance from promotional winnings. Cash-only ROI = settled cash-only P/L / corresponding cash stakes; exclude free/mixed-funded bets.
 - Use accepted total odds for accas and boosts; do not derive financial odds from legs.
 - Won, Lost, Void and Full Cash-out. Prefill ordinary returns; allow actual credited returns to override calculations.
 - Early payouts close the bet using credited return and an “Early payout” tag. Sporting results do not automatically reverse them.
 - Drafts/open bets stay outside settled P/L. Corrections must not double-count returns.
+- Editing settled terms preserves the actual credited return and settlement history; metrics use the current stakes/funding. Deleted bets are excluded from history, metrics and CSV until restored.
 - Whole void bets count as settled. Voiding one acca leg leaves the acca open while remaining legs are active.
 - Mixed cash/free-bet stakes share accepted odds. Different terms can be entered as two separate bets.
 - Partial cash-outs, exchange lay tracking and dedicated each-way calculations are outside v1. Unusual settlements may use manual actual returns.

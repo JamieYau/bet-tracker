@@ -65,6 +65,7 @@ export type Bet = BetInput & {
   version: number;
   createdAt: string;
   settlements: Settlement[];
+  deletedAt?: string | null;
 };
 export type NamedOption = { id: string; name: string; active: boolean };
 export type Ledger = {

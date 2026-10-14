@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { verifyBetEditDelete } from "../helpers/bet-edit-delete";
 
 test("private password login, recording, settlement, CSV, session persistence and logout", async ({
   page,
@@ -45,9 +46,10 @@ test("private password login, recording, settlement, CSV, session persistence an
   await page.goto("/add");
   await page.getByLabel("Selection").fill("Authenticated browser fixture");
   await page.getByLabel("Sport", { exact: true }).selectOption("NBA");
+  await page.getByLabel("Market type (optional)").fill("rebounds");
   await page
-    .getByLabel("Market type (optional)")
-    .selectOption("Player rebounds");
+    .getByRole("option", { name: "Player rebounds", exact: true })
+    .click();
   await page
     .getByLabel("Event / fixture (optional)")
     .fill("Fixture Cavaliers @ Heat");
@@ -67,6 +69,7 @@ test("private password login, recording, settlement, CSV, session persistence an
   const csv = await exported.text();
   expect(csv).toContain("Authenticated browser fixture");
   expect(csv).toContain('"Fixture Cavaliers @ Heat","over","9.5"');
+  await verifyBetEditDelete(page);
   await page.goto("/settings");
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);

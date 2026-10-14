@@ -2,6 +2,30 @@
 
 Last updated: 2026-10-14.
 
+## Independent positive P/L colour (2026-10-14)
+
+- Added --profit-positive with light/dark values and Tailwind text-profit-positive on `feature/bet-edit-delete`. Replaced the positive cash P/L text-primary usage in shared bet lists and bet details, so primary theme changes no longer recolour these amounts.
+- Biome/TypeScript and production build passed. T3 checked isolated demo list/detail at 320px in light/dark; positive green remained unchanged when temporarily overriding primary to purple. Measured text/card contrast was approximately 4.95:1 light and 10.08:1 dark, with no horizontal overflow. An initially stale development stylesheet was resolved by refreshing the ignored preview build cache. No new tests, financial/database changes or live record mutations; actual iPhone remains unverified.
+
+## Outcome badge colours (2026-10-14)
+
+- Added a shared StatusBadge on `feature/bet-edit-delete`: green Won, destructive red Lost, neutral Draft/Open/Void/Full Cash-out/Settled fallback. Applied it to all shared bet lists, detail status and acca-leg statuses, using a soft emerald Badge success variant that supports both themes.
+- Biome/TypeScript and production build passed. T3 preview checked computed colours for all six displayed statuses in light/dark at 320px using isolated demo fixtures; checked the detail/acca Won/Lost/Void/Open badges and no horizontal overflow on list/detail. No new tests were added for this styling change, and no financial/database/live-account records were changed. Actual iPhone Safari remains unverified.
+
+## Free-bet toggle removal (2026-10-14)
+
+- Removed Free-bet stake is returned with winnings from Add/Edit on `feature/bet-edit-delete`. New manual bets retain the existing false default; saved records retain their stored flag through editing. Historical calculation/detail/CSV support remains, with no schema change or data rewrite.
+- Updated the existing funding browser checks to cover free-only and mixed cash/free funding with stake not returned, correct return prefills, early payout and settlement corrections. All four focused Chromium/WebKit scenarios passed, alongside Biome/TypeScript, 23 unit checks and production build. No database/live ledger changes or actual iPhone verification were performed for this UI removal.
+
+## Bet editing and reversible deletion (2026-10-14)
+
+- Implemented on `feature/bet-edit-delete`, created from clean `main`. Settled bets now use the full editor for details, stakes/funding, accepted odds, bookmaker/source, placement time, bet type and legs. Saves retain settled status and all settlement revisions; current actual return stays unchanged and current terms drive metrics. Settled edits have Save changes and no Save draft action. Settlement corrections still require a reason.
+- Added an inline delete confirmation, owner-scoped Trash page linked from Bets, and restoration from the deleted detail page. Deletion preserves records/legs/history/attachment references and removes bets from default ledger reads, history, dashboard/chart/group totals, filter choices and bets/legs CSV. Deleted records cannot be edited/confirmed/settled until restored. Both demo and PostgreSQL enforce version checks and preserve original status on restore.
+- Reviewed/generated `0005_bet_edit_delete` and matching schema/snapshot. The save function accepts settled edits with confirmed-field/leg validation; settlement rejects deleted records; the new restricted deletion/restore function checks owner/version and uses the existing owner/bet locks. Runtime grants/inspection include the new function and still reject direct ledger writes. No dependency or lockfile changes.
+- Verification passed: Biome/TypeScript, 23 unit checks, 25 real disposable PostgreSQL checks, migration metadata/no-change generation, production build, six existing manual Chromium/WebKit flows, two new edit/delete/restore demo flows, and two authenticated production Chromium/WebKit flows including the new feature. Database checks cover retained revisions, revised P/L, deleted drafts/open/settled accas, both CSV kinds, restored totals, unauthorized mutations, stale writes and concurrent edit/deletion. Initial failures were an outdated migration-count assertion, an edit fixture needing the existing duplicate override, and a CSV assertion expecting settled instead of its exported Won outcome; these were corrected and the affected checks passed.
+- T3 preview inspected the settled editor, delete confirmation, Trash and deleted detail/restoration using an isolated demo fixture at 320px; the detail and editor had no horizontal overflow. No live account was used for these preview interactions.
+- Applied the migration to configured development Neon and reran runtime grants and read-only `db:verify`; all passed. Live settled editing/deletion/restoration passed inside a rolled-back runtime transaction, with fixture absence verified afterward and no personal records changed. Other environments must migrate and grant the new function before deploying. Actual iPhone Safari/Home Screen and hosted production remain unverified.
+
 ## Combobox typing follow-up (2026-10-14)
 
 - All shared combobox inputs select their displayed text on focus/click, allowing the first typed character to replace All/All markets or a selected label. A before-input handler covers WebKit tap behaviour that resets caret selection after focus; existing selection/search separation and Escape restoration remain intact.
@@ -239,7 +263,7 @@ Last updated: 2026-10-14.
 
 ## Next steps
 
-The backend, dark mode and structured entry are now on `main`. Complete/review the form and filter improvements on `feature/searchable-controls`. The optional metadata migration is already applied to development Neon and must precede the updated app in other environments.
+The backend, dark mode, structured entry and searchable controls are on `main`. Review the settled-editing/Trash implementation on `feature/bet-edit-delete`. Metadata and edit/delete migrations are applied to development Neon; other environments must apply pending migrations and runtime grants before the updated app.
 
 Then implement private R2 attachments and persistent screenshot import/extraction/retry/confirmation. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate hosted Next.js/production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 
