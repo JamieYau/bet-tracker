@@ -120,7 +120,7 @@ describe("modular PostgreSQL schema foundation", () => {
           "select * from drizzle.__drizzle_migrations",
         )
       ).rowCount,
-    ).toBe(6);
+    ).toBe(7);
     expect(
       (await connection.db.select().from(bookmakers))
         .map((row) => row.name)
@@ -155,7 +155,13 @@ describe("modular PostgreSQL schema foundation", () => {
       connection.db.insert(bets).values(bet({ ownerId: other })),
     ).rejects.toThrow();
     expect(await connection.db.select().from(appAccounts)).toEqual([
-      { singleton: true, ownerId: owner },
+      {
+        singleton: true,
+        ownerId: owner,
+        unitSizePence: null,
+        displayMode: "gbp",
+        preferencesVersion: 0,
+      },
     ]);
   });
   it("round-trips exact decimal odds, integer pence and UTC instants through Drizzle", async () => {

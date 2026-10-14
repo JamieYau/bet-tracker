@@ -12,7 +12,9 @@ import { exportCsv } from "../../src/features/bets/export";
 import {
   readLedger,
   savePostgresBet,
+  savePostgresDisplayMode,
   savePostgresOption,
+  savePostgresPreferences,
   setPostgresBetDeleted,
   settlePostgresBet,
 } from "../../src/features/bets/postgres";
@@ -111,6 +113,161 @@ function settlement(betId: string, changes = {}) {
 }
 
 describe("real Better Auth and restricted PostgreSQL repository", () => {
+  it("retains unit snapshots through settings changes, delayed settlement, edits, corrections and Trash", async () => {
+    let ledger = await readLedger(runtime.db, owner);
+    const legacyId = randomUUID();
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      legacyId,
+      0,
+      bet(ledger),
+      true,
+      false,
+    );
+    await savePostgresPreferences(runtime.db, owner, 5000, "units", 0);
+    const id = randomUUID();
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      id,
+      0,
+      bet(ledger, { cashStakePence: 5000 }),
+      true,
+      false,
+    );
+    await savePostgresPreferences(runtime.db, owner, 10000, "units", 1);
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      id,
+      1,
+      bet(ledger, { cashStakePence: 2500, unitSizePence: 10000 }),
+      true,
+      false,
+    );
+    await settlePostgresBet(
+      runtime.db,
+      owner,
+      settlement(id, { version: 2, returnPence: 7500 }),
+    );
+    ledger = await readLedger(runtime.db, owner);
+    expect(ledger.bets.find((item) => item.id === id)?.unitSizePence).toBe(
+      5000,
+    );
+    expect(metrics(ledger.bets).units.profit).toBe(1);
+    expect(
+      ledger.bets.find((item) => item.id === legacyId)?.unitSizePence,
+    ).toBeNull();
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      legacyId,
+      1,
+      bet(ledger, { unitSizePence: 2500 }),
+      true,
+      false,
+    );
+    expect(
+      (await readLedger(runtime.db, owner)).bets.find(
+        (item) => item.id === legacyId,
+      )?.unitSizePence,
+    ).toBe(2500);
+    await settlePostgresBet(
+      runtime.db,
+      owner,
+      settlement(id, { version: 3, returnPence: 5000, reason: "Correction" }),
+    );
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      id,
+      4,
+      bet(ledger, { cashStakePence: 1000, unitSizePence: null }),
+      true,
+      false,
+    );
+    let saved = (await readLedger(runtime.db, owner)).bets.find(
+      (item) => item.id === id,
+    );
+    expect(saved?.unitSizePence).toBe(5000);
+    expect(saved?.settlements).toHaveLength(2);
+    expect(metrics(saved ? [saved] : []).units.profit).toBe(0.8);
+    await setPostgresBetDeleted(runtime.db, owner, id, 5, true);
+    expect(
+      (await readLedger(runtime.db, owner)).bets.find((item) => item.id === id),
+    ).toBeUndefined();
+    await setPostgresBetDeleted(runtime.db, owner, id, 6, false);
+    saved = (await readLedger(runtime.db, owner)).bets.find(
+      (item) => item.id === id,
+    );
+    expect(saved?.unitSizePence).toBe(5000);
+    const nextId = randomUUID();
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      nextId,
+      0,
+      bet(ledger),
+      false,
+      false,
+    );
+    expect(
+      (await readLedger(runtime.db, owner)).bets.find(
+        (item) => item.id === nextId,
+      )?.unitSizePence,
+    ).toBe(10000);
+  });
+  it("preserves a saved draft's unit size when confirmed under a new setting", async () => {
+    const ledger = await readLedger(runtime.db, owner);
+    const id = randomUUID();
+    await savePostgresPreferences(runtime.db, owner, 5000, "gbp", 0);
+    await savePostgresBet(runtime.db, owner, id, 0, bet(ledger), false, false);
+    await savePostgresPreferences(runtime.db, owner, 10000, "units", 1);
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      id,
+      1,
+      bet(ledger, { unitSizePence: 10000 }),
+      true,
+      false,
+    );
+    const saved = (await readLedger(runtime.db, owner)).bets.find(
+      (item) => item.id === id,
+    );
+    expect(saved).toMatchObject({
+      status: "open",
+      unitSizePence: 5000,
+      version: 2,
+    });
+  });
+  it("protects unit settings and rejects stale or invalid settings without rewriting bets", async () => {
+    await expect(
+      savePostgresPreferences(runtime.db, "unprovisioned", 5000, "units", 0),
+    ).rejects.toThrow("Unauthorized");
+    await expect(
+      savePostgresPreferences(runtime.db, owner, 0, "gbp", 0),
+    ).rejects.toThrow();
+    await expect(
+      savePostgresPreferences(runtime.db, owner, null, "units", 0),
+    ).rejects.toThrow();
+    await savePostgresPreferences(runtime.db, owner, 5000, "units", 0);
+    await expect(
+      savePostgresPreferences(runtime.db, owner, 10000, "gbp", 0),
+    ).rejects.toThrow("Settings changed");
+    await savePostgresDisplayMode(runtime.db, owner, "gbp");
+    expect((await readLedger(runtime.db, owner)).preferences).toMatchObject({
+      unitSizePence: 5000,
+      displayMode: "gbp",
+      version: 2,
+    });
+    await expect(
+      runtime.pool.query(
+        "update public.app_accounts set unit_size_pence=10000",
+      ),
+    ).rejects.toThrow();
+  });
   it("persists pick metadata atomically and retains confirmation/version guarantees", async () => {
     const ledger = await readLedger(runtime.db, owner);
     const id = randomUUID();

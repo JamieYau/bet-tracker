@@ -12,6 +12,8 @@ import {
 import { signOut } from "@/features/auth/actions";
 import { getLedger } from "@/features/bets/repository";
 import { OptionForm } from "@/features/settings/option-form";
+import { UnitSettings } from "@/features/units/controls";
+import { defaultPreferences } from "@/features/units/units";
 import { isDemo } from "@/lib/config";
 export default async function SettingsPage() {
   const ledger = await getLedger();
@@ -21,6 +23,16 @@ export default async function SettingsPage() {
         title="Settings"
         description="Keep your bookmakers and sources organised."
       />
+      <Card className="mb-5">
+        <CardHeader>
+          <CardTitle>Units & stakes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UnitSettings
+            preferences={ledger.preferences ?? defaultPreferences}
+          />
+        </CardContent>
+      </Card>
       <div className="grid items-start gap-5 md:grid-cols-2">
         {(
           [

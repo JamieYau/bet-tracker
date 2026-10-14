@@ -14,6 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { units } from "@/features/units/units";
 import { money } from "@/lib/format";
 
 export type ProfitChartPoint = {
@@ -21,6 +22,7 @@ export type ProfitChartPoint = {
   dateLabel: string;
   axisLabel: string;
   value: number;
+  cashValue?: number;
 };
 const config = {
   value: { label: "Cash P/L", color: "var(--chart-1)" },
@@ -35,9 +37,11 @@ const axisMoney = new Intl.NumberFormat("en-GB", {
 export function ProfitChart({
   points,
   summary,
+  mode = "gbp",
 }: {
   points: ProfitChartPoint[];
   summary: string;
+  mode?: "gbp" | "units";
 }) {
   const summaryId = useId();
   return (
@@ -70,9 +74,18 @@ export function ProfitChart({
             width={64}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => axisMoney.format(Number(value) / 100)}
+            tickFormatter={(value) =>
+              mode === "units"
+                ? units(Number(value))
+                : axisMoney.format(Number(value) / 100)
+            }
             domain={([min, max]) =>
-              min === max ? [min - 100, max + 100] : [min, max]
+              min === max
+                ? [
+                    min - (mode === "units" ? 1 : 100),
+                    max + (mode === "units" ? 1 : 100),
+                  ]
+                : [min, max]
             }
           />
           <ReferenceLine
@@ -86,11 +99,21 @@ export function ProfitChart({
                 labelFormatter={(_label, payload) =>
                   payload?.[0]?.payload?.dateLabel ?? ""
                 }
-                formatter={(value) => (
+                formatter={(value, _name, item) => (
                   <div className="flex w-full items-center justify-between gap-4">
                     <span className="text-muted-foreground">Cash P/L</span>
                     <span className="font-medium tabular-nums">
-                      {money(Number(value))}
+                      {mode === "units" ? (
+                        <>
+                          {units(Number(value))}
+                          <span className="block text-xs text-muted-foreground">
+                            {money(item.payload.cashValue ?? 0)} for included
+                            bets
+                          </span>
+                        </>
+                      ) : (
+                        money(Number(value))
+                      )}
                     </span>
                   </div>
                 )}

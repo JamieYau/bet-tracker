@@ -9,7 +9,9 @@ import { normalizeLedger } from "./normalize-ledger";
 import {
   readLedger,
   savePostgresBet,
+  savePostgresDisplayMode,
   savePostgresOption,
+  savePostgresPreferences,
   setPostgresBetDeleted,
   settlePostgresBet,
 } from "./postgres";
@@ -93,6 +95,11 @@ export async function saveBet(
       const bet = {
         ...existing,
         ...input,
+        unitSizePence: existing
+          ? (existing.unitSizePence ?? input.unitSizePence ?? null)
+          : input.unitSizePence === undefined
+            ? (ledger.preferences?.unitSizePence ?? null)
+            : input.unitSizePence,
         id,
         ownerId: owner,
         status,
@@ -200,4 +207,44 @@ export async function setBetDeleted(
       return id;
     });
   return setPostgresBetDeleted(database(), owner, id, version, deleted);
+}
+
+export async function savePreferences(
+  unitSizePence: number | null,
+  displayMode: "gbp" | "units",
+  version: number,
+) {
+  const owner = await requireOwner();
+  if (isDemo())
+    return demoMutate((ledger) => {
+      if ((ledger.preferences?.version ?? 0) !== version)
+        throw new Error("Settings changed. Refresh before saving.");
+      ledger.preferences = { unitSizePence, displayMode, version: version + 1 };
+    });
+  return savePostgresPreferences(
+    database(),
+    owner,
+    unitSizePence,
+    displayMode,
+    version,
+  );
+}
+export async function saveDisplayMode(displayMode: "gbp" | "units") {
+  const owner = await requireOwner();
+  if (isDemo())
+    return demoMutate((ledger) => {
+      const current = ledger.preferences ?? {
+        unitSizePence: null,
+        displayMode: "gbp",
+        version: 0,
+      };
+      if (displayMode === "units" && !current.unitSizePence)
+        throw new Error("Set your unit size in Settings first.");
+      ledger.preferences = {
+        ...current,
+        displayMode,
+        version: current.version + 1,
+      };
+    });
+  return savePostgresDisplayMode(database(), owner, displayMode);
 }

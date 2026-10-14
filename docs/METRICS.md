@@ -39,3 +39,12 @@ Individual stakes/returns are capped at £10 million; accepted odds at 1,000,000
 Drafts, open bets and settled bets can be edited. Settled edits retain the latest actual credited return and settlement history. P/L, stakes, ROI and cash-only/promotional categories use the current bet terms; odds changes do not automatically change an already credited return. Correct outcome, return or settlement time with a documented settlement revision.
 
 Deleted bets are excluded from history, all metrics/charts/group totals, filter choices and bets/legs CSV. Trash retains their details, legs and settlement history. Restoring returns the bet to its original status and includes it in totals again. Partial cash-outs, exchange lays and each-way prefills are outside v1.
+
+
+## Units
+
+Account unit size is a default for newly opened manual forms, not a global conversion rate for history. Each bet stores its positive £/unit size as integer pence on first save, including drafts. Edits and settlement/corrections retain that size; a missing historical size can be explicitly assigned once. Existing/imported cash amounts are never replaced by a 1u prefill.
+
+Cash P/L units = (latest credited cash return − current cash stake) / saved unit size. Stakes and exposure use the same per-bet denominator. Cumulative/monthly/grouped unit results sum these per-bet amounts without display rounding; format to at most two decimal places. A free-only loss remains 0u cash P/L. Cash-only ROI still uses actual cash, so changing display does not change it.
+
+Bets with missing unit sizes are excluded from unit aggregates/charts, with coverage disclosed; their cash stays included in GBP reporting/history. Unit-chart cash tooltips report actual cumulative cash for the same covered bets. Since sizes can differ, never multiply cumulative units by the current size to obtain cash profit. Bets CSV appends saved unit size in pence, cash/free stake units and cash P/L units; legs retain their existing nonfinancial export.

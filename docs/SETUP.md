@@ -95,3 +95,8 @@ Before declaring the app ready for personal use, verify live authentication/data
 - [shadcn/ui](https://ui.shadcn.com/docs/installation/next), [Vitest](https://vitest.dev/guide/), [Playwright](https://playwright.dev/docs/intro)
 
 Installed Next.js guides in `node_modules/next/dist/docs` govern version-specific APIs.
+
+
+## Units migration
+
+`0006_betting_units` adds nullable per-bet unit snapshots and account unit/display preferences, preserves existing snapshots on edits, and introduces restricted settings/display functions. Apply it with `pnpm db:migrate`, rerun `pnpm db:grant-runtime`, then `pnpm db:verify` before using this branch against an existing environment. Existing bets remain GBP only; no automatic unit backfill or cash rewrite occurs. The account starts with no unit size and GBP display.

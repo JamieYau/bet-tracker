@@ -15,6 +15,7 @@ export default async function AddPage() {
         id={randomUUID()}
         bookmakers={ledger.bookmakers}
         sources={ledger.sources}
+        preferences={ledger.preferences}
         now={new Date().toISOString()}
       />
     </>

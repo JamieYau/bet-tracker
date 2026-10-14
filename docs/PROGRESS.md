@@ -263,7 +263,7 @@ Last updated: 2026-10-14.
 
 ## Next steps
 
-The backend, dark mode, structured entry and searchable controls are on `main`. Review the settled-editing/Trash implementation on `feature/bet-edit-delete`. Metadata and edit/delete migrations are applied to development Neon; other environments must apply pending migrations and runtime grants before the updated app.
+The backend, dark mode, structured entry, searchable controls and settled-editing/Trash are present in the `main` baseline used for this milestone. Review the unit tracking implementation on `feature/betting-units`. Metadata, edit/delete and unit migrations are applied to development Neon; other environments must apply pending migrations and runtime grants before the updated app.
 
 Then implement private R2 attachments and persistent screenshot import/extraction/retry/confirmation. CI, sample-slip extraction checks, actual iPhone/Home Screen and separate hosted Next.js/production deployment remain later work. The [future analytics ideas](DECISIONS.md#future-analytics-ui-reference-2026-10-12) remain deferred until real usage.
 
@@ -307,3 +307,14 @@ Checked backend items below are historical completion for the existing implement
 ## Handoff discipline
 
 Update this file at milestones with verified results and the next step. Record decisions in `DECISIONS.md`, scope changes in `BUILD_BRIEF.md`. Never store credentials or personal screenshots in these documents. This is a completed manual development milestone, not a deployment-ready first release.
+
+
+## Unit tracking implemented (2026-10-14)
+
+- Created `feature/betting-units` from clean `main` and recorded the approved settings/display/stake-entry/history rules in BUILD_BRIEF, DECISIONS and METRICS.
+- Implemented additive account preferences and per-bet snapshots, owner-protected/versioned settings writes, £ stake prefills/helpers, remembered £/Units display, dual-value details/CSV and per-bet cumulative/monthly/grouped unit analytics. Existing bets are not automatically backfilled; missing coverage is labelled, and an optional collapsed field explicitly assigns a historical size once.
+- Biome/TypeScript, 29 unit checks, 28 real disposable PostgreSQL checks, peer compatibility, migration metadata/no-change generation and production build passed. PostgreSQL covers saved snapshots across settings changes, drafts/confirmation, delayed settlement, editing/corrections, Trash, invalid/stale settings and owner/direct-write rejection.
+- Applied migration 0006 to development Neon, reran runtime grants and read-only db:verify; all passed. A live runtime transaction verified settings/snapshot/edit/delayed-settlement behaviour, then rolled back and verified original preferences and fixture absence. No personal bet amounts or unit settings were retained from the live test.
+- Both focused demo Chromium/WebKit unit flows passed initially. Full regression identified a pre-hydration keyboard-filter test and an equal-settlement-time ordering assumption in the new tooltip test; synchronisation and final-total assertion were corrected, with settings cleanup added to prevent failed tests contaminating later browser projects. The full demo rerun passed 37 of 38 Chromium/WebKit scenarios, including both unit workflows and responsive checks. The remaining WebKit theme error-list assertion reported React/Next development `Type error`/`Load failed` and a devtools `__nextjs_original-stack-frames` access-control error; theme behaviour assertions passed. A focused rerun reproduced this development-only check failure. Both authenticated production Chromium/WebKit workflows passed with real Better Auth and disposable PostgreSQL, including unit settings, stake prefills/helpers, original-size delayed settlement/editing/corrections, historical assignment, graph tooltips, CSV and £/Units persistence. Initial production assertions matched cached hidden routes; the shared helper now scopes form/text checks to visible main content while retaining portal option locators.
+- T3 native preview confirmed 1u £50 autofill, a live 0.5u helper for £25, £150/2u totals from £50/£100 snapshots, working display toggle and no 320/390px overflow. Toggle targets are at least 44px. These are local fixture checks, not actual iPhone/Home Screen or hosted production verification. The shared preview is back on the actual local app Settings page; its preferences were not changed.
+- Implementation and review are complete on `feature/betting-units`. No new dependencies or lockfile changes. Other environments need migration 0006 and runtime grants before deployment. The existing WebKit development theme/devtools error remains outstanding; private R2 attachments/import and release verification remain the next product work.

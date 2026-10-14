@@ -38,7 +38,11 @@ Revisit a focused analytics UI milestone after live backend verification, screen
 
 - Quick time filters and clearer performance summaries around the P/L graph.
 - Clickable source/tipster summaries leading to individual performance views.
-- Consider win/loss records and profit in units only after agreeing their definitions.
+- Consider win/loss records after agreeing their definitions. Units are approved as a separate milestone below.
+
+## Units and stake entry
+
+Approved follow-up: configure the £ value of 1u and preferred £/Units display in Settings; provide a remembered toggle on Dashboard/Bets. Keep stake inputs in pounds, prefill new manual cash stakes with 1u and show live unit equivalents. Each bet retains its own saved unit size through edits, confirmation and delayed settlement; changes in Settings affect new forms only. Existing bets stay £ only until their historical size is explicitly assigned. Cash remains the underlying record and ROI remains cash-based. See [DECISIONS.md](DECISIONS.md#unit-tracking-and-stake-entry-2026-10-14).
 
 ## Financial rules
 

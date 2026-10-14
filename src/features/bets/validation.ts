@@ -39,6 +39,7 @@ const pickMetadata = {
 };
 const pence = z.number().int().min(0).max(MAX_PENCE);
 export const betSchema = z.object({
+  unitSizePence: z.number().int().min(1).max(MAX_PENCE).nullable().optional(),
   bookmakerId: z.uuid(),
   sourceId: z.uuid(),
   placedAt: z.iso.datetime({ offset: true }),

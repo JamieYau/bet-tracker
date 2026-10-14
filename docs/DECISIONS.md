@@ -30,7 +30,7 @@ These were suggested during discussion, but were not separately confirmed. Resol
 
 ## Delivery sequence
 
-Current order: the Better Auth/Neon/Drizzle backend is merged and verified against development Neon; dark mode and structured entry are now on main; review the settled-editing/Trash branch; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
+Current order: the backend, dark mode, structured entry, searchable controls and settled-editing/Trash are in the main baseline; implement/review the approved unit tracking branch; implement private R2 attachments and screenshot import; finish personal-use release verification. Revisit analytics improvements after real usage. This preserves the first-release functionality; no productisation or pricing work is planned.
 
 ## Modular backend pivot (2026-10-12)
 
@@ -105,7 +105,7 @@ Candidate priorities for that later milestone:
 2. Clickable “By source” summaries opening an individual source/tipster view with P/L, cash-only ROI, settled count, a cumulative graph and associated bets. Reuse the existing metrics and sport/date filters; preserve whole-bet counting and latest-correction semantics.
 3. Clearer dashboard hierarchy: filters above a compact performance summary, then the graph and deeper breakdowns. Bring cash-only ROI and settled count closer to P/L; retain open exposure and the cash-only/promotional distinction.
 4. Win/loss record, subject to agreed treatment of voids, full cash-outs and early payouts. Do not assume a W–L record equals the settled count: current settled counts include voids and each acca counts once. Prefer the app’s existing “Settled bets” label to “Graded”.
-5. Optional profit-in-units display, deferred until a unit definition is agreed for varying cash stakes, free bets and mixed funding. Retain GBP as the primary measure; do not assume a fixed unit value or retroactively change financial reporting.
+5. Profit-in-units display is now approved as a separate milestone; see the unit tracking decision below. Other analytics candidates remain deferred.
 
 Source views describe the user’s recorded bets attributed to that tipster, not the tipster’s complete published track record. There is no proposed public expert directory or external pick feed. Market breakdowns and other reference-site features remain inspiration only; no requirement to implement them has been agreed.
 
@@ -172,3 +172,17 @@ Use a separately created restricted SQL login role, not a provider dashboard rol
 
 - The user requested a separate positive P/L variable so profit remains green when the primary theme colour changes. Define --profit-positive in light/dark palettes and map it to Tailwind text-profit-positive through @theme inline.
 - Use a readable green in light mode and a brighter green in dark mode for the existing non-negative cash P/L text in shared bet lists and bet details. Negative amounts retain destructive red; the current zero/non-negative rule is retained. Dashboard recent bets and Trash inherit the shared list styling. No financial or data changes.
+
+
+## Unit tracking and stake entry (2026-10-14)
+
+The user approved implementing units on a new branch, including settings, 1u cash-stake defaults and a remembered £/Units performance/history display. This supersedes the previous units deferral; no wider PropBomb analytics redesign is included.
+
+- Cash stakes, free stakes and actual credited returns remain GBP integer pence. Each bet saves a positive nullable `unit_size_pence`; cash P/L units equal cash P/L divided by that bet’s saved size. Sum per-bet unit results, never divide total historical cash P/L by today’s setting. Cash-only ROI continues to use actual cash amounts.
+- Account settings store the current size and preferred display across devices. Default to GBP until configured; allow choosing Units once a size is set. A £/Units control on Dashboard and Bets updates the same preference. Settings changes apply to new entry forms, not previously saved bets or already-open forms.
+- Keep stake entry in pounds, prefill a new manual cash stake with 1u, and show live unit equivalents and the unit’s £ value. Free stakes stay separate and blank initially. Existing/draft/imported stakes are retained rather than replaced by a default. No unit-input toggle or stake shortcut buttons in this milestone.
+- Capture the size at the first save (including a draft), preserve it through later confirmation/editing/deletion/restoration, and use it when settlement occurs—even after the current setting changes. Changing stakes or correcting credited returns recalculates P/L with the original denominator. A saved assigned denominator cannot be overwritten by an ordinary edit, even through a modified request.
+- Existing bets migrate with no unit size; never guess their historical size from today’s setting or the stake. An optional collapsed funding field can explicitly assign a historical size to a bet lacking one, or set the appropriate size for a newly entered backdated bet. Once assigned/saved, preserve it. Bets without sizes remain £ only in history/details; unit totals/charts exclude them and disclose missing coverage. GBP totals still include all bets.
+- Free-only losses produce 0u cash P/L, not -1u. Cash-only and free/mixed P/L remain separate and reconcile within the covered unit subset. Accas count once with one unit denominator; no leg profit allocation.
+- Details show both cash and unit stakes/P/L plus saved unit size. Unit chart tooltips show cumulative units and actual GBP for the same covered bets; never multiply units by the current unit size. CSV retains cash columns and appends the saved size/derived unit columns for whole bets.
+- Implementation uses existing Server Actions/Drizzle/decimal.js, with no new dependencies. Reviewed additive migration plus restricted settings functions preserve owner/version/idempotency protections. Compatibility references: [Next.js mutations](https://nextjs.org/docs/app/getting-started/mutating-data), [Drizzle generation](https://orm.drizzle.team/docs/drizzle-kit-generate).

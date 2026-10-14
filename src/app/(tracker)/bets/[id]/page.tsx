@@ -25,6 +25,7 @@ import { StatusBadge } from "@/features/bets/status-badge";
 import { TrashForm } from "@/features/bets/trash-form";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
 import { SettlementForm } from "@/features/settlement/settlement-form";
+import { inUnits, unitProfit, units } from "@/features/units/units";
 import { dateTime, formatOdds, money, outcomeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 export default async function BetPage({
@@ -52,8 +53,20 @@ export default async function BetPage({
     ["Event / fixture", bet.event || "—"],
     ["Market type", bet.market || "—"],
     ["Accepted odds", formatOdds(bet.acceptedOdds)],
-    ["Cash stake", money(bet.cashStakePence)],
-    ["Free-bet stake", `${money(bet.freeStakePence)}`],
+    [
+      "Cash stake",
+      `${money(bet.cashStakePence)}${bet.unitSizePence ? ` · ${units(inUnits(bet.cashStakePence, bet.unitSizePence))}` : ""}`,
+    ],
+    [
+      "Free-bet stake",
+      `${money(bet.freeStakePence)}${bet.unitSizePence ? ` · ${units(inUnits(bet.freeStakePence, bet.unitSizePence))}` : ""}`,
+    ],
+    [
+      "Unit size",
+      bet.unitSizePence
+        ? `${money(bet.unitSizePence)} per unit`
+        : "Not assigned · £ only",
+    ],
     ["Reference", bet.reference || "—"],
   ];
   return (
@@ -173,6 +186,11 @@ export default async function BetPage({
               >
                 {money(profit ?? 0)}
               </p>
+              {bet.unitSizePence && (
+                <p className="text-sm text-muted-foreground">
+                  {units(unitProfit(bet))}
+                </p>
+              )}
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Settled</p>

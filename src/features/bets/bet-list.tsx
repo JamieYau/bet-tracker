@@ -17,12 +17,14 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
-import { dateTime, money } from "@/lib/format";
+import { betAmount, defaultPreferences } from "@/features/units/units";
+import { dateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { selectionLabel } from "./catalog";
 import { StatusBadge } from "./status-badge";
 import type { Bet, Ledger } from "./types";
 export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
+  const mode = (ledger.preferences ?? defaultPreferences).displayMode;
   if (!bets.length)
     return (
       <Empty className="border bg-card py-10">
@@ -103,11 +105,12 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                     )}
                   >
                     {profit === null
-                      ? money(bet.cashStakePence)
-                      : money(profit)}
+                      ? betAmount(bet.cashStakePence, bet, mode)
+                      : betAmount(profit, bet, mode)}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
                     {profit === null ? "cash stake" : "cash P/L"}
+                    {mode === "units" && !bet.unitSizePence ? " · £ only" : ""}
                   </p>
                 </div>
                 <ArrowUpRight

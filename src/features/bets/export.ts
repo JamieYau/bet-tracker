@@ -1,4 +1,5 @@
 import { cashProfit, currentSettlement } from "@/features/settlement/finance";
+import { inUnits, unitProfit } from "@/features/units/units";
 import type { Bet, Ledger } from "./types";
 
 function cell(value: unknown) {
@@ -49,6 +50,10 @@ export function exportCsv(bets: Bet[], ledger: Ledger, kind: "bets" | "legs") {
             "event",
             "direction",
             "line",
+            "unit_size_pence",
+            "cash_stake_units",
+            "free_stake_units",
+            "cash_pl_units",
           ],
         ];
   for (const bet of bets) {
@@ -95,6 +100,10 @@ export function exportCsv(bets: Bet[], ledger: Ledger, kind: "bets" | "legs") {
       bet.event ?? "",
       bet.direction ?? "",
       bet.line != null ? Number(bet.line) : "",
+      bet.unitSizePence,
+      inUnits(bet.cashStakePence, bet.unitSizePence),
+      inUnits(bet.freeStakePence, bet.unitSizePence),
+      unitProfit(bet),
     ]);
   }
   return `\uFEFF${rows.map((row) => row.map(cell).join(",")).join("\r\n")}\r\n`;

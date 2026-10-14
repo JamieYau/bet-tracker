@@ -4,6 +4,7 @@ test("filter disclosure supports the keyboard, preserves values and exports the 
   page,
 }) => {
   await page.goto("/bets");
+  await expect(page.getByLabel("Bookmaker", { exact: true })).toBeEnabled();
   const trigger = page.getByRole("button", { name: /Filter your ledger/ });
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await trigger.focus();

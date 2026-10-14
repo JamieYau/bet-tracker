@@ -56,6 +56,7 @@ export async function recordAction(
       allowDuplicate: form.get("allowDuplicate") === "on",
       bet: {
         ...raw,
+        unitSizePence: raw.unitSize ? moneyToPence(raw.unitSize) : null,
         line: raw.line?.trim() || null,
         placedAt: londonToUtc(raw.placedAt),
         acceptedOdds: raw.acceptedOdds.trim()

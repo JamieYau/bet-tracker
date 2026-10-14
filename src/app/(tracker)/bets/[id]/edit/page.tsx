@@ -22,6 +22,7 @@ export default async function EditPage({
         bet={bet}
         bookmakers={ledger.bookmakers}
         sources={ledger.sources}
+        preferences={ledger.preferences}
         now={new Date().toISOString()}
       />
     </>

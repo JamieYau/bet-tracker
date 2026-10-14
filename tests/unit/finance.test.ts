@@ -17,6 +17,7 @@ import {
   ordinaryReturn,
   parseOdds,
 } from "@/features/settlement/finance";
+import { inUnits, stakeHint, unitProfit } from "@/features/units/units";
 import { londonToUtc } from "@/lib/format";
 
 const settlement = (changes: Partial<Settlement> = {}): Settlement => ({
@@ -372,5 +373,112 @@ describe("sport-dependent filter markets", () => {
     expect(filterMarketOptions(bets, "")).toContain("Custom basketball");
     expect(filterMarketOptions(bets, "Mixed")).toContain("Custom NBA leg");
     expect(filterMarketOptions(bets, "Mixed")).not.toContain("Custom NFL");
+  });
+});
+
+describe("historical unit reporting", () => {
+  it("accumulates fractional units before display rounding", () => {
+    const list = ["a", "b", "c"].map((id) =>
+      bet({
+        id,
+        unitSizePence: 3,
+        cashStakePence: 1,
+        settlements: [settlement({ returnPence: 2 })],
+      }),
+    );
+    expect(metrics(list).units.profit).toBe(1);
+    expect(metrics(list).units.series.at(-1)?.value).toBe(1);
+  });
+  it("sums each bet using its own saved unit size and reconciles cash separately", () => {
+    const earlier = bet({
+      unitSizePence: 5000,
+      cashStakePence: 5000,
+      settlements: [settlement({ returnPence: 10000 })],
+    });
+    const later = bet({
+      id: "b2",
+      unitSizePence: 10000,
+      cashStakePence: 10000,
+      settlements: [
+        settlement({ returnPence: 20000, settledAt: "2026-11-01T12:00:00Z" }),
+      ],
+    });
+    const totals = metrics([earlier, later]);
+    expect(totals.profit).toBe(15000);
+    expect(totals.units.profit).toBe(2);
+    expect(totals.units.series.map((point) => point.value)).toEqual([1, 2]);
+    expect(totals.units.series[1].cashValue).toBe(15000);
+    expect(totals.units.monthly).toEqual([
+      ["2026-10", 1],
+      ["2026-11", 1],
+    ]);
+    expect(metrics([earlier, later], { from: "2026-11-01" }).units.profit).toBe(
+      1,
+    );
+  });
+  it("recalculates edits and latest settlement corrections using the saved unit size", () => {
+    const recorded = bet({
+      unitSizePence: 5000,
+      cashStakePence: 5000,
+      settlements: [
+        settlement({ returnPence: 10000 }),
+        settlement({ revision: 2, returnPence: 7500 }),
+      ],
+    });
+    expect(unitProfit(recorded)).toBe(0.5);
+    expect(unitProfit({ ...recorded, cashStakePence: 2500 })).toBe(1);
+    expect(
+      unitProfit({ ...recorded, status: "open", settlements: [] }),
+    ).toBeNull();
+  });
+  it("excludes unknown unit sizes with explicit coverage, never guessing from cash stakes", () => {
+    const unknown = bet();
+    const totals = metrics([
+      unknown,
+      bet({ id: "known", unitSizePence: 1000 }),
+      bet({ id: "open", status: "open", settlements: [] }),
+    ]);
+    expect(totals.profit).toBe(3000);
+    expect(totals.units.profit).toBe(1.5);
+    expect(totals.units.missingSettledCount).toBe(1);
+    expect(totals.units.missingOpenCount).toBe(1);
+    expect(totals.units.series).toHaveLength(1);
+    expect(inUnits(1000, null)).toBeNull();
+    expect(unitProfit(unknown)).toBeNull();
+  });
+  it("preserves free/mixed cash P/L and cash-based ROI", () => {
+    const freeLoss = bet({
+      cashStakePence: 0,
+      freeStakePence: 5000,
+      unitSizePence: 5000,
+      settlements: [settlement({ outcome: "lost", returnPence: 0 })],
+    });
+    const mixed = bet({
+      id: "mixed",
+      cashStakePence: 2500,
+      freeStakePence: 2500,
+      unitSizePence: 5000,
+      settlements: [settlement({ returnPence: 7500 })],
+    });
+    expect(unitProfit(freeLoss)).toBe(0);
+    const totals = metrics([freeLoss, mixed]);
+    expect(totals.units.promotionalProfit).toBe(1);
+    expect(totals.cashOnlyRoi).toBeNull();
+    expect(totals.units.cashStakes).toBe(0.5);
+    expect(stakeHint("25", 5000)).toBe("0.5u · £50.00 per unit");
+    expect(stakeHint("bad", 5000)).toBe("— · £50.00 per unit");
+  });
+  it("exports saved unit definitions and unrounded derived values alongside original cash", () => {
+    const recorded = bet({ unitSizePence: 1000 });
+    const csv = exportCsv(
+      [recorded],
+      { bets: [recorded], bookmakers: [], sources: [] },
+      "bets",
+    );
+    expect(csv).toContain(
+      '"unit_size_pence","cash_stake_units","free_stake_units","cash_pl_units"',
+    );
+    expect(csv).toContain('"1000","1","0","1.5"');
+    expect(() => betSchema.parse({ ...recorded, unitSizePence: 0 })).toThrow();
   });
 });
