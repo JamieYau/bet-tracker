@@ -18,6 +18,7 @@ export default async function EditPage({
         description="Update the recorded details, stakes, odds and legs."
       />
       <BetForm
+        key={`${bet.id}:${bet.version}`}
         id={bet.id}
         bet={bet}
         bookmakers={ledger.bookmakers}

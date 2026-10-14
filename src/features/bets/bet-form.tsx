@@ -74,7 +74,7 @@ export function BetForm({
       : initialUnitSize
         ? String(initialUnitSize / 100)
         : "",
-    freeStake: bet?.freeStakePence ? String(bet.freeStakePence / 100) : "",
+    freeStake: bet ? String(bet.freeStakePence / 100) : "",
     freeStakeReturned: bet?.freeStakeReturned ?? false,
     betType: bet?.betType ?? "single",
     reference: bet?.reference ?? "",
@@ -464,7 +464,10 @@ export function BetForm({
                   aria-invalid={Boolean(state.errors?.[`${key}Pence`]?.length)}
                   aria-describedby={
                     [
-                      unitSizePence ? `${key}-hint` : undefined,
+                      unitSizePence &&
+                      (key === "cashStake" || Number(values[key]) > 0)
+                        ? `${key}-hint`
+                        : undefined,
                       state.errors?.[`${key}Pence`]?.length
                         ? `${key}-error`
                         : undefined,
@@ -479,11 +482,12 @@ export function BetForm({
                   value={values[key]}
                   onChange={(event) => text(key, event.target.value)}
                 />
-                {unitSizePence && (
-                  <FieldDescription id={`${key}-hint`}>
-                    {stakeHint(values[key], unitSizePence)}
-                  </FieldDescription>
-                )}
+                {unitSizePence &&
+                  (key === "cashStake" || Number(values[key]) > 0) && (
+                    <FieldDescription id={`${key}-hint`}>
+                      {stakeHint(values[key], unitSizePence)}
+                    </FieldDescription>
+                  )}
                 <FieldError id={`${key}-error`}>
                   {state.errors?.[`${key}Pence`]?.join(" ")}
                 </FieldError>

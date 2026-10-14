@@ -186,3 +186,11 @@ The user approved implementing units on a new branch, including settings, 1u cas
 - Free-only losses produce 0u cash P/L, not -1u. Cash-only and free/mixed P/L remain separate and reconcile within the covered unit subset. Accas count once with one unit denominator; no leg profit allocation.
 - Details show both cash and unit stakes/P/L plus saved unit size. Unit chart tooltips show cumulative units and actual GBP for the same covered bets; never multiply units by the current unit size. CSV retains cash columns and appends the saved size/derived unit columns for whole bets.
 - Implementation uses existing Server Actions/Drizzle/decimal.js, with no new dependencies. Reviewed additive migration plus restricted settings functions preserve owner/version/idempotency protections. Compatibility references: [Next.js mutations](https://nextjs.org/docs/app/getting-started/mutating-data), [Drizzle generation](https://orm.drizzle.team/docs/drizzle-kit-generate).
+
+
+## Saved stake editing clarification (2026-10-14)
+
+- Opening Edit uses the bet's recorded cash and free-bet stakes, including an explicit 0 for a saved zero free stake. The 1u cash default and blank free stake apply only to a new manual bet.
+- Bind the editor's React key to bet ID/version so a different bet or updated saved version initializes its own form state. Preserve the existing saved unit denominator.
+- Hide the free-stake unit helper when there is no free funding; its unit-size amount must not suggest a free stake. Cash stake retains its live units helper.
+- History rows show cash P/L after settlement and cash stake while open/draft; a settled row's amount is not necessarily its stake. Inspect saved funding on the detail page. No saved stakes are rewritten for this clarification.
