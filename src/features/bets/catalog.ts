@@ -131,5 +131,5 @@ export function selectionLabel(pick: {
     line = `+${line}`;
   return [pick.selection, [direction, line].filter(Boolean).join(" ")]
     .filter(Boolean)
-    .join(" · ");
+    .join(" ");
 }
