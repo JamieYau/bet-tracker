@@ -98,10 +98,8 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                   <p
                     className={cn(
                       "text-sm font-semibold tabular-nums",
-                      profit !== null &&
-                        (profit >= 0
-                          ? "text-profit-positive"
-                          : "text-destructive"),
+                      profit !== null && profit > 0 && "text-profit-positive",
+                      profit !== null && profit < 0 && "text-destructive",
                     )}
                   >
                     {profit === null

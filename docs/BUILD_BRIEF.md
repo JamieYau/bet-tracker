@@ -30,7 +30,7 @@ A private, iPhone-first web app for the owner’s personal use that records bets
 
 Dark mode is implemented as a separate UI milestone on `feature/dark-mode`. Follow the device appearance by default; provide a direct Light/Dark toggle in the app header and login page, plus System/Light/Dark controls in Settings. Persist the choice in the browser and use a complementary green dark palette. Implementation decisions and verification are recorded in [DECISIONS.md](DECISIONS.md#dark-mode-plan-2026-10-13) and [PROGRESS.md](PROGRESS.md).
 
-Outcome badges use green for Won, destructive red for Lost, and neutral colours for Draft, Open, Void and Full Cash-out. Keep labels visible alongside colour. Positive cash P/L uses its own green colour token, independent of the primary theme colour, with separate light/dark values.
+Outcome badges use green for Won, destructive red for Lost, and neutral colours for Draft, Open, Void and Full Cash-out. Keep labels visible alongside colour. Positive cash P/L uses its own green colour token, independent of the primary theme colour, with separate light/dark values. Negative P/L is red; zero P/L is neutral, using the same foreground as an open bet's stake in both pounds and units.
 
 ## Future analytics ideas
 

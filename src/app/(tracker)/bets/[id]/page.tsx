@@ -176,9 +176,8 @@ export default async function BetPage({
               <p
                 className={cn(
                   "mt-1 text-2xl font-semibold",
-                  (profit ?? 0) >= 0
-                    ? "text-profit-positive"
-                    : "text-destructive",
+                  profit !== null && profit > 0 && "text-profit-positive",
+                  profit !== null && profit < 0 && "text-destructive",
                 )}
               >
                 {money(profit ?? 0)}

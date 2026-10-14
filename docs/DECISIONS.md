@@ -171,7 +171,7 @@ Use a separately created restricted SQL login role, not a provider dashboard rol
 ## Positive cash P/L colour (2026-10-14)
 
 - The user requested a separate positive P/L variable so profit remains green when the primary theme colour changes. Define --profit-positive in light/dark palettes and map it to Tailwind text-profit-positive through @theme inline.
-- Use a readable green in light mode and a brighter green in dark mode for the existing non-negative cash P/L text in shared bet lists and bet details. Negative amounts retain destructive red; the current zero/non-negative rule is retained. Dashboard recent bets and Trash inherit the shared list styling. No financial or data changes.
+- Use a readable green in light mode and a brighter green in dark mode for strictly positive cash P/L text in shared bet lists and bet details. Negative amounts retain destructive red. Zero P/L uses the normal foreground, matching an open bet's stake, in pounds and units. This also covers voids, break-even cash-outs and free-bet losses with no cash loss; outcome badges still identify the result. Dashboard recent bets and Trash inherit the shared list styling. No financial or data changes.
 
 
 ## Unit tracking and stake entry (2026-10-14)
