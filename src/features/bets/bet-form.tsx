@@ -146,22 +146,7 @@ export function BetForm({
           ? legSports[0]
           : "Mixed"
         : values.sport,
-    legs:
-      values.betType === "single"
-        ? [
-            {
-              id: bet?.legs[0]?.id ?? id,
-              selection: values.selection,
-              market: values.market,
-              sport: values.sport,
-              event: values.event,
-              direction: values.direction,
-              line: values.line,
-              odds: null,
-              status: bet?.legs[0]?.status ?? "open",
-            },
-          ]
-        : legs,
+    legs: values.betType === "single" ? [] : legs,
   };
   return (
     <form action={action} className="mx-auto max-w-3xl space-y-5">

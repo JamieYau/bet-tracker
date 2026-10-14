@@ -47,6 +47,11 @@ test("player props retain structured fields through recording, edits, filters an
     page.getByRole("link", { name: "Edit bet", exact: true }),
   ).toBeVisible();
   const url = page.url();
+  const singleId = new URL(url).pathname.split("/").at(-1);
+  expect(singleId).toBeTruthy();
+  expect(
+    await (await page.request.get("/api/export?kind=legs")).text(),
+  ).not.toContain(singleId);
   const csv = await (await page.request.get("/api/export")).text();
   expect(csv.split("\n").find((row) => row.includes(event))).toContain(
     `"${event}","over","9.5"`,

@@ -121,7 +121,7 @@ describe("modular PostgreSQL schema foundation", () => {
           "select * from drizzle.__drizzle_migrations",
         )
       ).rowCount,
-    ).toBe(8);
+    ).toBe(9);
     expect(
       (await connection.db.select().from(bookmakers))
         .map((row) => row.name)
@@ -188,6 +188,90 @@ describe("modular PostgreSQL schema foundation", () => {
           )
         ).rows[0].count,
       ).toBe(0);
+    },
+  );
+  it.each([false, true])(
+    "cleans redundant single legs while preserving accas, or rolls back differing terms (mismatch=%s)",
+    async (mismatch) => {
+      const [single] = await connection.db
+        .insert(bets)
+        .values(
+          bet({
+            status: "settled",
+            unitSizePence: 5000,
+            deletedAt: new Date(),
+          }),
+        )
+        .returning();
+      const [acca] = await connection.db
+        .insert(bets)
+        .values(bet({ betType: "acca" }))
+        .returning();
+      const [history] = await connection.db
+        .insert(settlements)
+        .values(settlement(single.id))
+        .returning();
+      const [singleLeg, accaLeg] = await connection.db
+        .insert(legs)
+        .values([
+          {
+            id: randomUUID(),
+            ownerId: owner,
+            betId: single.id,
+            position: 0,
+            selection: mismatch ? "Different selection" : single.selection,
+            sport: single.sport,
+            market: single.market,
+            status: "open",
+          },
+          {
+            id: randomUUID(),
+            ownerId: owner,
+            betId: acca.id,
+            position: 0,
+            selection: "Acca selection",
+            sport: "Football",
+            status: "void",
+          },
+        ])
+        .returning();
+      const client = await connection.pool.connect();
+      try {
+        await client.query("begin");
+        const migration = await readFile(
+          "drizzle/0008_acca_only_legs.sql",
+          "utf8",
+        );
+        if (mismatch) {
+          await expect(client.query(migration)).rejects.toThrow(
+            "Reconcile differing single-leg terms",
+          );
+          await client.query("rollback");
+        } else {
+          await client.query(migration);
+          await client.query("commit");
+        }
+      } finally {
+        await client.query("rollback");
+        client.release();
+      }
+      const saved = (
+        await connection.db.select().from(bets).where(eq(bets.id, single.id))
+      )[0];
+      expect(saved).toEqual({
+        ...single,
+        version: mismatch ? single.version : single.version + 1,
+      });
+      expect(await connection.db.select().from(settlements)).toEqual([history]);
+      expect(
+        await connection.db
+          .select()
+          .from(legs)
+          .where(eq(legs.betId, single.id)),
+      ).toEqual(mismatch ? [singleLeg] : []);
+      expect(
+        await connection.db.select().from(legs).where(eq(legs.betId, acca.id)),
+      ).toEqual([accaLeg]);
     },
   );
   it("permits one provisioned account and rejects unprovisioned ledger owners", async () => {

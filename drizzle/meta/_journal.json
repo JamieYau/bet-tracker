@@ -57,6 +57,13 @@
       "when": 1791947852070,
       "tag": "0007_remove_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791949716495,
+      "tag": "0008_acca_only_legs",
+      "breakpoints": true
     }
   ]
 }

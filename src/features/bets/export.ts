@@ -58,6 +58,7 @@ export function exportCsv(bets: Bet[], ledger: Ledger, kind: "bets" | "legs") {
         ];
   for (const bet of bets) {
     if (kind === "legs") {
+      if (bet.betType !== "acca") continue;
       bet.legs.forEach((leg, index) => {
         rows.push([
           bet.id,

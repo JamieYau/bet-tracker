@@ -218,3 +218,11 @@ The user approved implementing units on a new branch, including settings, 1u cas
 - Required financial/selection fields and acca legs are validated for every save. The database only allows Open/Settled and applies required-field constraints to every bet. Keep initial-recording idempotency, duplicate-reference warnings, optimistic versions and reversible Trash.
 - Migration 0007 converts complete historical drafts (including Trash) to Open and increments their versions without changing stakes, returns, snapshots or deletion state. It rolls back with an explicit error if incomplete drafts exist; it does not fabricate terms or delete records. Read-only development inspection found no drafts.
 - Screenshot import remains future work: extracted fields are reviewed in an unsaved form before saving an open bet. Persistent incomplete bet drafts are no longer a requirement; attachment staging/retry details remain to be designed.
+
+
+## Acca-only leg storage (2026-10-14)
+
+- The user approved removing redundant single selection rows from `legs`. Singles store selection/market/sport/event/direction/line and accepted odds on `bets`; accas retain their individual selections in `legs`. New and edited singles submit no legs, and both application validation and the restricted database save function reject non-empty single legs. Type changes to Single remove former acca legs through the existing atomic replacement save.
+- Legs CSV exports only acca selections; bets CSV continues to include singles and accas. Filtering and financial/unit logic already use parent fields for singles and are unchanged.
+- Migration 0008 checks single-leg selection terms against their parent, aborts if they differ, deletes matching redundant rows including Trash and increments only affected parent versions to invalidate stale forms. Bet terms, settlement history, account preferences and acca legs are retained. Development inspection found five redundant rows with no differing terms.
+- The user confirmed retaining independent Open/Won/Lost/Void acca leg statuses, even when the parent is settled. Do not infer/update leg outcomes from whole-bet settlement: a winning acca may include void legs, and a lost/cashed-out bet does not identify each selection's result.

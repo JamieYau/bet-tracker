@@ -100,11 +100,11 @@ export const confirmedBetSchema = betSchema.superRefine((bet, context) => {
       path: ["legs"],
       message: "An acca needs at least two legs.",
     });
-  if (bet.betType === "single" && bet.legs.length > 1)
+  if (bet.betType === "single" && bet.legs.length > 0)
     context.addIssue({
       code: "custom",
       path: ["legs"],
-      message: "A single can have only one leg.",
+      message: "Single selections are stored on the bet; remove any legs.",
     });
   if (
     bet.betType === "acca" &&

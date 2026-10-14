@@ -20,7 +20,7 @@ A private, iPhone-first web app for the owner’s personal use that records bets
 - Manual entry plus one or more screenshots for a single bet. AI fills an editable form; confirmation saves an open bet. There is no saved Draft status.
 - Fields: bookmaker, placement time, sport, selection/market, accepted odds, separate cash/free-bet stakes, bet type and source. Optional event/fixture, Over/Under, numeric line/handicap, reference, notes and tags, plus an In-play checkbox.
 - Agreed entry follow-up: one Sport dropdown with NFL, Football, NCAAF, WNBA, Tennis and NBA. No separate league field; tennis tournaments can go in Event/fixture. Sport-specific market choices include a custom fallback; singles and each acca leg carry their own event, direction and line. These entry refinements are implemented.
-- Singles and accas: separate legs, one financial bet. One source per bet; use “Me” for mixed-source accas. Never allocate profit between legs.
+- Single selections live on the bet; only accas have separate leg rows. Both use one financial bet. One source per bet; use “Me” for mixed-source accas. Never allocate profit between legs.
 - Editable bookmakers and tipsters. Seed Unibet, Coral, Betfred, Paddy Power, Virgin Bet, Betway, Sky Bet, SBK, 888sport, BetMGM, BoyleSports, Ladbrokes and bet365.
 - History and analytics filters: date, bookmaker, source, sport, market, event, direction, line, in-play, bet type and status. Clearly label date semantics.
 - Metrics: settled cash P/L, cumulative/monthly P/L, settled bet count, settled cash stakes and open cash exposure. P/L charts use settlement date.
@@ -56,7 +56,7 @@ Approved follow-up: configure the £ value of 1u and preferred £/Units display 
 - Early payouts close the bet using credited return and an “Early payout” tag. Sporting results do not automatically reverse them.
 - Open bets stay outside settled P/L. Corrections must not double-count returns.
 - Editing settled terms preserves the actual credited return and settlement history; metrics use the current stakes/funding. Deleted bets are excluded from history, metrics and CSV until restored.
-- Whole void bets count as settled. Voiding one acca leg leaves the acca open while remaining legs are active.
+- Whole void bets count as settled. Voiding one acca leg leaves the acca open while remaining legs are active. Acca leg outcomes are recorded independently and are not automatically changed when the whole bet settles.
 - Mixed cash/free-bet stakes share accepted odds. Different terms can be entered as two separate bets.
 - Partial cash-outs, exchange lay tracking and dedicated each-way calculations are outside v1. Unusual settlements may use manual actual returns.
 

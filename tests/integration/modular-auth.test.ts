@@ -848,6 +848,78 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
     expect(stored).toHaveLength(1);
     expect(stored[0]).toMatchObject({ id, status: "open", version: 1 });
   });
+  it("keeps singles leg-free through saving, editing and bet-type changes, rejecting injected legs", async () => {
+    const ledger = await readLedger(runtime.db, owner);
+    const id = randomUUID();
+    const single = bet(ledger);
+    const readSaved = async () => {
+      const saved = (await readLedger(runtime.db, owner)).bets.find(
+        (b) => b.id === id,
+      );
+      if (!saved) throw new Error("Missing saved bet");
+      return saved;
+    };
+    const pick = {
+      id: randomUUID(),
+      selection: "Home win",
+      market: "Match result",
+      sport: "Football",
+      odds: null,
+      status: "open" as const,
+    };
+    await expect(
+      savePostgresBet(
+        runtime.db,
+        owner,
+        id,
+        0,
+        { ...single, legs: [pick] },
+        true,
+        false,
+      ),
+    ).rejects.toThrow("Invalid leg count");
+    await savePostgresBet(runtime.db, owner, id, 0, single, true, false);
+    await savePostgresBet(
+      runtime.db,
+      owner,
+      id,
+      1,
+      { ...single, selection: "Away win" },
+      false,
+      false,
+    );
+    let saved = await readSaved();
+    expect(saved.legs).toEqual([]);
+    expect(saved.version).toBe(2);
+    const acca = {
+      ...single,
+      betType: "acca" as const,
+      legs: [
+        pick,
+        {
+          ...pick,
+          id: randomUUID(),
+          selection: "Second selection",
+          status: "void" as const,
+        },
+      ],
+    };
+    await savePostgresBet(runtime.db, owner, id, 2, acca, false, false);
+    saved = await readSaved();
+    expect(saved.legs.map((l) => l.status)).toEqual(["open", "void"]);
+    await settlePostgresBet(runtime.db, owner, settlement(id, { version: 3 }));
+    saved = await readSaved();
+    expect(saved.legs.map((l) => l.status)).toEqual(["open", "void"]);
+    const originalSettlements = saved.settlements;
+    await savePostgresBet(runtime.db, owner, id, 4, single, false, false);
+    saved = await readSaved();
+    expect(saved.status).toBe("settled");
+    expect(saved.legs).toEqual([]);
+    expect(saved.settlements).toEqual(originalSettlements);
+    expect(exportCsv([saved], ledger, "legs").trim().split("\n")).toHaveLength(
+      1,
+    );
+  });
   it("saves accas atomically and keeps the bet open when one leg is void", async () => {
     const ledger = await readLedger(runtime.db, owner);
     const input = bet(ledger, {

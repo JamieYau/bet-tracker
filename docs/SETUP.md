@@ -108,3 +108,6 @@ Default `pnpm dev` and `pnpm dev:demo` output is isolated in ignored `.next-dev`
 
 
 Migration 0007 removes saved Draft status. It converts complete old drafts to Open, preserving saved terms and Trash state; incomplete drafts cause the migration to roll back and must be completed or deliberately removed first. New saves require complete bet terms, and existing settled bets keep their settlement history on edit.
+
+
+Migration 0008 removes redundant single leg rows after checking their selection terms match their parent bets. Differing terms abort the migration for reconciliation. Affected bet versions increment to invalidate stale editors; acca legs and settlement history are preserved. New and edited singles must submit an empty legs array, and legs CSV exports only acca selections.

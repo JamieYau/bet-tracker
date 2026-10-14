@@ -217,6 +217,31 @@ describe("metrics and inputs", () => {
     });
     expect(confirmedBetSchema.safeParse(value).success).toBe(false);
   });
+  it("rejects leg rows on singles and omits them from leg exports", () => {
+    const single = bet();
+    const redundant = {
+      id: "10000000-0000-4000-8000-000000000001",
+      selection: single.selection,
+      market: single.market,
+      sport: single.sport,
+      odds: null,
+      status: "open" as const,
+    };
+    expect(confirmedBetSchema.safeParse(single).success).toBe(true);
+    expect(
+      confirmedBetSchema.safeParse({ ...single, legs: [redundant] }).success,
+    ).toBe(false);
+    const legacy = { ...single, legs: [redundant] };
+    expect(
+      exportCsv(
+        [legacy],
+        { bets: [legacy], bookmakers: [], sources: [] },
+        "legs",
+      )
+        .trim()
+        .split("\n"),
+    ).toHaveLength(1);
+  });
   it("rejects missing acca legs", () =>
     expect(confirmedBetSchema.safeParse(bet({ betType: "acca" })).success).toBe(
       false,
