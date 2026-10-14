@@ -218,7 +218,7 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
       )?.unitSizePence,
     ).toBe(10000);
   });
-  it("preserves a saved draft's unit size when confirmed under a new setting", async () => {
+  it("preserves an open bet's unit size when edited under a new setting", async () => {
     const ledger = await readLedger(runtime.db, owner);
     const id = randomUUID();
     await savePostgresPreferences(runtime.db, owner, 5000, "gbp", 0);
@@ -672,9 +672,9 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
       1,
     );
   });
-  it("deletes and restores drafts, open bets and settled accas with history intact", async () => {
+  it("deletes and restores open bets and settled accas with history intact", async () => {
     const initial = await readLedger(runtime.db, owner);
-    for (const status of ["draft", "open", "settled"] as const) {
+    for (const status of ["open", "settled"] as const) {
       const id = randomUUID();
       const input = bet(initial, {
         betType: "acca",
@@ -698,15 +698,7 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
           },
         ],
       });
-      await savePostgresBet(
-        runtime.db,
-        owner,
-        id,
-        0,
-        input,
-        status !== "draft",
-        false,
-      );
+      await savePostgresBet(runtime.db, owner, id, 0, input, true, false);
       if (status === "settled")
         await settlePostgresBet(runtime.db, owner, settlement(id));
       const original = (await readLedger(runtime.db, owner)).bets.find(
@@ -828,28 +820,33 @@ describe("real Better Auth and restricted PostgreSQL repository", () => {
       ]),
     ).rejects.toThrow("Unauthorized");
   });
-  it("retries draft confirmation without double recording", async () => {
+  it("rejects incomplete saves and retries initial recording without double recording", async () => {
     const ledger = await readLedger(runtime.db, owner);
     const id = randomUUID();
-    await savePostgresBet(
-      runtime.db,
-      owner,
-      id,
-      0,
-      bet(ledger, {
-        selection: "",
-        sport: "",
-        acceptedOdds: null,
-        cashStakePence: 0,
-      }),
-      false,
-      false,
-    );
-    await savePostgresBet(runtime.db, owner, id, 1, bet(ledger), true, false);
-    await savePostgresBet(runtime.db, owner, id, 1, bet(ledger), true, false);
+    for (const confirm of [false, true]) {
+      await expect(
+        savePostgresBet(
+          runtime.db,
+          owner,
+          id,
+          0,
+          bet(ledger, {
+            selection: "",
+            sport: "",
+            acceptedOdds: null,
+            cashStakePence: 0,
+          }),
+          confirm,
+          false,
+        ),
+      ).rejects.toThrow();
+    }
+    expect((await readLedger(runtime.db, owner)).bets).toHaveLength(0);
+    await savePostgresBet(runtime.db, owner, id, 0, bet(ledger), true, false);
+    await savePostgresBet(runtime.db, owner, id, 0, bet(ledger), true, false);
     const stored = (await readLedger(runtime.db, owner)).bets;
     expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({ id, status: "open", version: 2 });
+    expect(stored[0]).toMatchObject({ id, status: "open", version: 1 });
   });
   it("saves accas atomically and keeps the bet open when one leg is void", async () => {
     const ledger = await readLedger(runtime.db, owner);

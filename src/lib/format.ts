@@ -34,7 +34,6 @@ export function outcomeLabel(value: string) {
         lost: "Lost",
         void: "Void",
         cash_out: "Full cash-out",
-        draft: "Draft",
         open: "Open",
         settled: "Settled",
       } as Record<string, string>

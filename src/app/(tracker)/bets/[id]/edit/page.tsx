@@ -14,7 +14,7 @@ export default async function EditPage({
   return (
     <>
       <PageHeading
-        title={bet.status === "draft" ? "Complete your draft" : "Edit bet"}
+        title="Edit bet"
         description="Update the recorded details, stakes, odds and legs."
       />
       <BetForm

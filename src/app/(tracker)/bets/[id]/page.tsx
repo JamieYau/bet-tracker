@@ -77,7 +77,7 @@ export default async function BetPage({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeading
           eyebrow={bet.betType}
-          title={selectionLabel(bet) || "Untitled draft"}
+          title={selectionLabel(bet) || "Untitled bet"}
           description={bet.market || "Recorded terms and financial settlement."}
         />
         <StatusBadge status={current?.outcome ?? bet.status} />
@@ -123,7 +123,7 @@ export default async function BetPage({
                 "mt-5 h-11",
               )}
             >
-              {bet.status === "draft" ? "Complete draft" : "Edit bet"}
+              Edit bet
             </Link>
           )}
         </CardContent>
@@ -195,7 +195,7 @@ export default async function BetPage({
           </CardContent>
         </Card>
       )}
-      {!bet.deletedAt && bet.status !== "draft" && (
+      {!bet.deletedAt && (
         <Card>
           <CardHeader>
             <CardTitle>

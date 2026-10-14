@@ -17,20 +17,20 @@ A private, iPhone-first web app for the owner’s personal use that records bets
 
 - Dashboard, Bets, Add Bet and Settings; mobile bottom navigation and prominent Add Bet action.
 - Accessible shadcn/ui controls with loading, empty, validation and error states. Searchable comboboxes for bookmaker, source and market in entry and filters; filter market choices follow the selected sport immediately, with results refreshed by Apply filters.
-- Manual entry plus one or more screenshots for a single bet. AI creates an editable draft; recording requires confirmation.
+- Manual entry plus one or more screenshots for a single bet. AI fills an editable form; confirmation saves an open bet. There is no saved Draft status.
 - Fields: bookmaker, placement time, sport, selection/market, accepted odds, separate cash/free-bet stakes, bet type and source. Optional event/fixture, Over/Under, numeric line/handicap, reference, notes and tags, plus an In-play checkbox.
 - Agreed entry follow-up: one Sport dropdown with NFL, Football, NCAAF, WNBA, Tennis and NBA. No separate league field; tennis tournaments can go in Event/fixture. Sport-specific market choices include a custom fallback; singles and each acca leg carry their own event, direction and line. These entry refinements are implemented.
 - Singles and accas: separate legs, one financial bet. One source per bet; use “Me” for mixed-source accas. Never allocate profit between legs.
 - Editable bookmakers and tipsters. Seed Unibet, Coral, Betfred, Paddy Power, Virgin Bet, Betway, Sky Bet, SBK, 888sport, BetMGM, BoyleSports, Ladbrokes and bet365.
 - History and analytics filters: date, bookmaker, source, sport, market, event, direction, line, in-play, bet type and status. Clearly label date semantics.
 - Metrics: settled cash P/L, cumulative/monthly P/L, settled bet count, settled cash stakes and open cash exposure. P/L charts use settlement date.
-- Bet details, private attachments, editing for drafts/open/settled bets, reversible deletion through Trash, settlement correction history and CSV export of bets and legs.
+- Bet details, private attachments, editing for open/settled bets, reversible deletion through Trash, settlement correction history and CSV export of bets and legs.
 
 ## Appearance
 
 Dark mode is implemented as a separate UI milestone on `feature/dark-mode`. Follow the device appearance by default; provide a direct Light/Dark toggle in the app header and login page, plus System/Light/Dark controls in Settings. Persist the choice in the browser and use a complementary green dark palette. Implementation decisions and verification are recorded in [DECISIONS.md](DECISIONS.md#dark-mode-plan-2026-10-13) and [PROGRESS.md](PROGRESS.md).
 
-Outcome badges use green for Won, destructive red for Lost, and neutral colours for Draft, Open, Void and Full Cash-out. Keep labels visible alongside colour. Positive cash P/L uses its own green colour token, independent of the primary theme colour, with separate light/dark values. Negative P/L is red; zero P/L is neutral, using the same foreground as an open bet's stake in both pounds and units.
+Outcome badges use green for Won, destructive red for Lost, and neutral colours for Open, Void and Full Cash-out. Keep labels visible alongside colour. Positive cash P/L uses its own green colour token, independent of the primary theme colour, with separate light/dark values. Negative P/L is red; zero P/L is neutral, using the same foreground as an open bet's stake in both pounds and units.
 
 ## Future analytics ideas
 
@@ -54,7 +54,7 @@ Approved follow-up: configure the £ value of 1u and preferred £/Units display 
 - Use accepted total odds for accas and boosts; do not derive financial odds from legs.
 - Won, Lost, Void and Full Cash-out. Prefill ordinary returns; allow actual credited returns to override calculations.
 - Early payouts close the bet using credited return and an “Early payout” tag. Sporting results do not automatically reverse them.
-- Drafts/open bets stay outside settled P/L. Corrections must not double-count returns.
+- Open bets stay outside settled P/L. Corrections must not double-count returns.
 - Editing settled terms preserves the actual credited return and settlement history; metrics use the current stakes/funding. Deleted bets are excluded from history, metrics and CSV until restored.
 - Whole void bets count as settled. Voiding one acca leg leaves the acca open while remaining legs are active.
 - Mixed cash/free-bet stakes share accepted odds. Different terms can be entered as two separate bets.
@@ -69,7 +69,7 @@ Approved follow-up: configure the £ value of 1u and preferred £/Units display 
 - Server-only OpenAI adapter with configurable model. Compare sample slips for accuracy and speed before selecting the initial image-capable model.
 - Extract structured fields, leave absent fields blank, flag ambiguity and visibly disclose placement time defaulting to now.
 - Warn about apparent return discrepancies, duplicate references and image hashes. Never silently merge. Confirmation must be idempotent.
-- Preserve drafts through processing failures; offer retry/manual completion. Manual entry works without AI credentials.
+- Keep the current form entries through processing failures; offer retry/manual completion. Manual entry works without AI credentials.
 - Keep secrets server-side; do not log screenshots or extracted personal details.
 
 ## Verification and delivery

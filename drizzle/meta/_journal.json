@@ -50,6 +50,13 @@
       "when": 1791941896104,
       "tag": "0006_betting_units",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791947852070,
+      "tag": "0007_remove_drafts",
+      "breakpoints": true
     }
   ]
 }

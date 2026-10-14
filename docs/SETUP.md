@@ -56,7 +56,7 @@ The repository uses a consistent read transaction and transactional SQL function
 
 ## Later attachments and release work
 
-Implement private R2 uploads/downloads/deletion, metadata validation and persistent import drafts/extraction/retry/confirmation on later branches. Keep development/preview and production buckets/data separate. Actual R2 access, production Neon, actual iPhone Safari/Home Screen and hosted Next.js deployment remain separate live checks.
+Implement private R2 uploads/downloads/deletion, metadata validation and import form review/extraction/retry/recording on later branches. Keep development/preview and production buckets/data separate. Actual R2 access, production Neon, actual iPhone Safari/Home Screen and hosted Next.js deployment remain separate live checks.
 
 ## Verification — current scripts
 
@@ -105,3 +105,6 @@ Installed Next.js guides in `node_modules/next/dist/docs` govern version-specifi
 ## Development output
 
 Default `pnpm dev` and `pnpm dev:demo` output is isolated in ignored `.next-dev` so the live development stylesheet/cache is separate from production build checks in `.next`. Production `pnpm build`/`pnpm start` retain their normal output. `NEXT_DIST_DIR` continues to override either default; demo browser tests retain their separate `.next-e2e` directory. TypeScript includes generated route types from both default directories.
+
+
+Migration 0007 removes saved Draft status. It converts complete old drafts to Open, preserving saved terms and Trash state; incomplete drafts cause the migration to roll back and must be completed or deliberately removed first. New saves require complete bet terms, and existing settled bets keep their settlement history on edit.

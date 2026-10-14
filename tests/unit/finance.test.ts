@@ -162,8 +162,7 @@ describe("exact financial calculations", () => {
     expect(currentSettlement(value)?.revision).toBe(2);
     expect(cashProfit(value)).toBe(1000);
   });
-  it("excludes drafts and open bets from P/L", () => {
-    expect(cashProfit(bet({ status: "draft" }))).toBeNull();
+  it("excludes open bets from P/L", () => {
     expect(cashProfit(bet({ status: "open" }))).toBeNull();
   });
 });
@@ -209,14 +208,13 @@ describe("metrics and inputs", () => {
       }).openExposure,
     ).toBe(1000);
   });
-  it("retains valid incomplete drafts but rejects confirmation", () => {
+  it("rejects incomplete bets when saving", () => {
     const value = bet({
       selection: "",
       sport: "",
       acceptedOdds: null,
       cashStakePence: 0,
     });
-    expect(betSchema.safeParse(value).success).toBe(true);
     expect(confirmedBetSchema.safeParse(value).success).toBe(false);
   });
   it("rejects missing acca legs", () =>
@@ -268,7 +266,7 @@ describe("structured pick classification", () => {
       assertSports(bet({ sport: "Basketball" }), bet({ sport: "Basketball" })),
     ).not.toThrow();
   });
-  it("rejects invalid metadata and supports incomplete drafts with absent metadata", () => {
+  it("rejects invalid metadata and supports absent optional metadata", () => {
     for (const changes of [
       { line: "9.1234567" },
       { line: "NaN" },

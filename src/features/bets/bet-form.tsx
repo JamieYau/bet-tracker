@@ -581,31 +581,18 @@ export function BetForm({
             type="submit"
             className="h-12 flex-1 sm:flex-none sm:px-8"
             name="intent"
-            value={bet && bet.status !== "draft" ? "save" : "confirm"}
+            value={bet ? "save" : "confirm"}
             disabled={pending}
             aria-busy={pending}
           >
             <PendingLabel pending={pending}>
-              {bet && bet.status !== "draft" ? "Save changes" : "Confirm bet"}
+              {bet ? "Save changes" : "Confirm bet"}
             </PendingLabel>
           </Button>
-          {(!bet || bet.status === "draft") && (
-            <Button
-              type="submit"
-              className="h-12"
-              variant="outline"
-              name="intent"
-              value="draft"
-              disabled={pending}
-              aria-busy={pending}
-            >
-              <PendingLabel pending={pending}>Save draft</PendingLabel>
-            </Button>
-          )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Drafts are excluded from profit and open exposure. Screenshot import
-          will be added in the next stage.
+          Open bets count towards cash exposure. Profit is recorded when they
+          settle.
         </p>
       </fieldset>
     </form>

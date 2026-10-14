@@ -121,7 +121,7 @@ export const saveSchema = z.object({
   version: z.number().int().min(0),
   confirm: z.boolean(),
   allowDuplicate: z.boolean(),
-  bet: betSchema,
+  bet: confirmedBetSchema,
 });
 export const settlementSchema = z
   .object({

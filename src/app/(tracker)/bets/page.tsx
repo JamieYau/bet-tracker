@@ -26,7 +26,7 @@ export default async function BetsPage({
       <PageHeading
         eyebrow="History"
         title="Your bets"
-        description="A record of every bet, from draft to credited return."
+        description="A record of every bet, from placement to credited return."
       />
       <DisplayToggle preferences={ledger.preferences ?? defaultPreferences} />
       <FilterForm

@@ -63,7 +63,7 @@ export function BetList({ bets, ledger }: { bets: Bet[]; ledger: Ledger }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <ItemTitle className="min-w-0 font-semibold sm:text-base">
                     <span className="truncate">
-                      {selectionLabel(bet) || "Untitled draft"}
+                      {selectionLabel(bet) || "Untitled bet"}
                     </span>
                   </ItemTitle>
                   <StatusBadge status={settlement?.outcome ?? bet.status} />

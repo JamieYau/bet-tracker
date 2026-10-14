@@ -14,7 +14,7 @@ import {
   settleBet,
 } from "./repository";
 import type { ActionState } from "./types";
-import { confirmedBetSchema, saveSchema, settlementSchema } from "./validation";
+import { saveSchema, settlementSchema } from "./validation";
 
 function failure(error: unknown): ActionState {
   if (error instanceof z.ZodError) {
@@ -52,7 +52,8 @@ export async function recordAction(
     const input = saveSchema.parse({
       id: field(form, "id"),
       version: Number(field(form, "version")),
-      confirm: field(form, "intent") === "confirm",
+      confirm:
+        z.enum(["confirm", "save"]).parse(field(form, "intent")) === "confirm",
       allowDuplicate: form.get("allowDuplicate") === "on",
       bet: {
         ...raw,
@@ -80,8 +81,6 @@ export async function recordAction(
     const ledger = await getLedger();
     const existing = ledger.bets.find((bet) => bet.id === input.id);
     assertSports(input.bet, existing);
-    if (input.confirm || (existing && existing.status !== "draft"))
-      confirmedBetSchema.parse(input.bet);
     id = await saveBet(
       input.id,
       input.version,

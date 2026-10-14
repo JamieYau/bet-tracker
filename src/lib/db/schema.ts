@@ -103,7 +103,7 @@ export const bets = pgTable(
     freeStakePence: money("free_stake_pence"),
     freeStakeReturned: boolean("free_stake_returned").notNull().default(false),
     betType: text("bet_type", { enum: ["single", "acca"] }).notNull(),
-    status: text("status", { enum: ["draft", "open", "settled"] }).notNull(),
+    status: text("status", { enum: ["open", "settled"] }).notNull(),
     reference: text("reference").notNull().default(""),
     notes: text("notes").notNull().default(""),
     tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
@@ -142,10 +142,7 @@ export const bets = pgTable(
       sql`${table.freeStakePence} between 0 and 1000000000`,
     ),
     check("bets_type_check", sql`${table.betType} in ('single', 'acca')`),
-    check(
-      "bets_status_check",
-      sql`${table.status} in ('draft', 'open', 'settled')`,
-    ),
+    check("bets_status_check", sql`${table.status} in ('open', 'settled')`),
     check(
       "bets_version_check",
       sql`${table.version} > 0 and (${table.confirmedFromVersion} is null or ${table.confirmedFromVersion} >= 0)`,
@@ -156,7 +153,7 @@ export const bets = pgTable(
     ),
     check(
       "bets_confirmed_fields_check",
-      sql`${table.status} = 'draft' or (${table.acceptedOdds} is not null and length(trim(${table.selection})) > 0 and length(trim(${table.sport})) > 0 and ${table.cashStakePence} + ${table.freeStakePence} > 0)`,
+      sql`(${table.acceptedOdds} is not null and length(trim(${table.selection})) > 0 and length(trim(${table.sport})) > 0 and ${table.cashStakePence} + ${table.freeStakePence} > 0)`,
     ),
   ],
 );

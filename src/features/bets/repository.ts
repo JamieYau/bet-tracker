@@ -16,7 +16,7 @@ import {
   settlePostgresBet,
 } from "./postgres";
 import type { Bet, BetInput, Ledger } from "./types";
-import type { settlementSchema } from "./validation";
+import { confirmedBetSchema, type settlementSchema } from "./validation";
 
 export async function getLedger(includeDeleted = false): Promise<Ledger> {
   const owner = await requireOwner();
@@ -40,6 +40,7 @@ export async function saveBet(
   allowDuplicate: boolean,
 ) {
   const owner = await requireOwner();
+  confirmedBetSchema.parse(input);
   if (isDemo())
     return demoMutate((ledger) => {
       const existing = ledger.bets.find((bet) => bet.id === id);
@@ -50,29 +51,18 @@ export async function saveBet(
       const stored = existing as
         | (Bet & { confirmedFromVersion?: number })
         | undefined;
-      if (
-        confirm &&
-        stored?.status !== "draft" &&
-        stored?.confirmedFromVersion === version
-      )
-        return id;
+      if (confirm && stored?.confirmedFromVersion === version) return id;
       if ((existing?.version ?? 0) !== version)
         throw new Error("This bet changed. Refresh before editing.");
       const status: Bet["status"] =
-        existing?.status === "settled"
-          ? "settled"
-          : confirm || existing?.status === "open"
-            ? "open"
-            : "draft";
+        existing?.status === "settled" ? "settled" : "open";
       if (
-        status !== "draft" &&
         !allowDuplicate &&
         input.reference &&
         ledger.bets.some(
           (bet) =>
             bet.ownerId === owner &&
             bet.id !== id &&
-            bet.status !== "draft" &&
             !bet.deletedAt &&
             bet.bookmakerId === input.bookmakerId &&
             bet.reference === input.reference,
@@ -106,10 +96,9 @@ export async function saveBet(
         version: version + 1,
         createdAt: existing?.createdAt ?? new Date().toISOString(),
         settlements: existing?.settlements ?? [],
-        confirmedFromVersion:
-          confirm && (!existing || existing.status === "draft")
-            ? version
-            : stored?.confirmedFromVersion,
+        confirmedFromVersion: !existing
+          ? version
+          : stored?.confirmedFromVersion,
       };
       ledger.bets = ledger.bets.filter((bet) => bet.id !== id);
       ledger.bets.push(bet);
@@ -138,8 +127,6 @@ export async function settleBet(input: z.infer<typeof settlementSchema>) {
         throw new Error("Restore this bet from Trash before settling.");
       if (bet.settlements.some((item) => item.requestKey === input.requestKey))
         return bet.id;
-      if (bet.status === "draft")
-        throw new Error("Confirm the draft before settling.");
       if (bet.version !== input.version)
         throw new Error("This bet changed. Refresh before settling.");
       if (bet.settlements.length && !input.reason.trim())

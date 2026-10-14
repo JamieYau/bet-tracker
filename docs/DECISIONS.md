@@ -10,23 +10,23 @@
 - A voided acca leg does not settle the whole bet while remaining legs are active. “Lay” in the discussion meant remaining acca, not an exchange lay bet.
 - Acca calculations use accepted total odds or the actual credited return. Do not recalculate from leg odds.
 - Bet detail odds display strips insignificant trailing decimal zeros while preserving every significant digit. Database precision and financial calculations are unchanged.
-- Placed in-play records whether the event had started at placement, for singles or the whole acca. Use the existing `In-play` tag as persistence: the checkbox and Tags input stay synchronised, drafts/editing retain the choice, and detail badges/CSV show it. This is recorded context, not a change to settlement rules.
+- Placed in-play records whether the event had started at placement, for singles or the whole acca. Use the existing `In-play` tag as persistence: the checkbox and Tags input stay synchronised, recording/editing retain the choice, and detail badges/CSV show it. This is recorded context, not a change to settlement rules.
 - Player-prop entry now separates the player/team in Selection, the market type, Event/fixture, optional Over/Under and optional numeric Line/handicap. Existing free-text selections remain readable and are not parsed or rewritten.
 - Agreed follow-up classification: use one fixed Sport dropdown with NFL, Football, NCAAF, WNBA, Tennis and NBA. These are the user's practical betting categories, including competitions; do not add a separate parent-sport/league hierarchy. Store canonical values for consistent filtering. Football does not need a league field; tennis tournaments can be included in Event/fixture. The fixed dropdown and separate event field are implemented.
 - Confirmed entry refinement: Over/Under and numeric line are separate optional fields for filtering/trends. Lines accept a signed number with at most six decimal places, bounded to ±1,000,000. The same structured metadata is stored for singles and acca legs and appended to CSV exports. Market choices depend on Sport, with Other/custom preserving unusual/legacy descriptions.
 - Existing sport/market case variants are normalised when reading and on new app writes. Ambiguous Basketball/American football categories are retained for old bets; new entry uses the six fixed categories. No existing selection, sport or market data is destructively rewritten. Acca summary sport follows its legs (Mixed for different categories), and combined pick filters match the same leg while counting whole-bet P/L once.
+- Save every recorded bet as Open; no Draft status or incomplete persistent saves. Imported fields are reviewed in the form before recording.
 - The build brief is the agreed product scope. The manual workflow, modular backend, dark mode and structured entry are implemented; private R2 attachments/screenshot import remain the next milestone.
 
 ## Proposed implementation defaults
 
 These were suggested during discussion, but were not separately confirmed. Resolve them during implementation using the brief and record the final choice here.
 
-- Persist manual and imported drafts; only confirmed bets enter history/open exposure.
 - Append-only settlement correction history with one effective settlement used for metrics.
 - History date filters default to placement date; settled performance uses settlement date. Clearly state how filters affect open exposure.
 - Report overall settled cash P/L, cash-only P/L/ROI and cash P/L from free/mixed-funded bets as reconciling categories. Final labels and metric definitions still need to be written.
 - For a void, prefill cash stake as cash credited return. Reinstated free-bet credit is not cash return; permit actual cash return override.
-- Upload attachments against a saved draft, extract into it and use an idempotency key for confirmation. Permit recording despite a duplicate warning after explicit confirmation.
+- Use an upload/import workflow with editable form review before saving an open bet; the exact attachment staging lifecycle remains to be decided in the import milestone. Keep recording idempotent. Permit recording despite a duplicate warning after explicit confirmation.
 
 ## Delivery sequence
 
@@ -44,7 +44,7 @@ The user approved updating the approach to Neon PostgreSQL, Better Auth, Drizzle
 - Every private read, mutation, export and attachment request must check the authenticated, provisioned owner. Browser clients never access PostgreSQL directly. Preserve owner IDs/scoping despite having one legitimate user; test unauthenticated and unprovisioned identities.
 - Replace Supabase JWT/`auth.uid()` assumptions deliberately. Use a restricted runtime database role separate from migration credentials. Additional RLS may be retained with transaction-local identity if justified, but must not be claimed to work automatically with Better Auth. R2 authorization belongs to the application, not PostgreSQL policies.
 - Preserve atomic bet/leg saves, idempotent confirmation, optimistic versions, serialized settlement revisions, duplicate warnings and settlement history (the settled-term lock is superseded by the editing decision below). Decide whether to adapt existing SQL functions or use Drizzle transactions after reviewing the migration; an ORM must not weaken these guarantees.
-- R2 buckets remain private. The server assigns object keys and checks draft/bet ownership before issuing short-lived upload/download URLs. Validate size/type and uploaded metadata; provide deletion independent of bets. Keep R2 credentials server-side and configure narrow browser-upload CORS.
+- R2 buckets remain private. The server assigns object keys and checks attachment/bet ownership before issuing short-lived upload/download URLs. Validate size/type and uploaded metadata; provide deletion independent of bets. Keep R2 credentials server-side and configure narrow browser-upload CORS.
 - Separate development/preview and production databases, buckets and auth secrets. No live Supabase data migration is currently required; preserve local demo data and avoid destructive commands against any configured database.
 
 Status: Better Auth password login, owner provisioning/recovery, restricted-role grants and the PostgreSQL repository cutover are implemented and verified locally. Application routes no longer use Supabase. Legacy Supabase packages, clients, generated types, configuration, callback, migrations, tests and setup guide have been removed. Git history retains the earlier implementation. Development Neon connectivity, permissions and authenticated workflows are now verified with the local Next.js app; R2, hosted Next.js deployment, production data and real iPhone checks remain outstanding. See [SETUP.md](SETUP.md) for the current executable setup.
@@ -116,7 +116,7 @@ Existing sport/source/date filters, cumulative/monthly cash P/L, cash-only ROI, 
 These record the original implementation before the cutover. Supabase integration is superseded by the choices above; financial and concurrency guarantees are retained.
 
 - Private pages render per request. Removed the scaffold's Cache Components/partial-prefetch flags to keep authenticated reads straightforward; no shared user-data caching.
-- Manual incomplete drafts are explicitly saved through Save draft. Automatic draft saving is not implemented; imported draft persistence belongs to the import stage.
+- Superseded by the no-drafts decision below: manual entry now has one recording action that saves Open; incomplete inputs remain in the form until completed.
 - Settlement history is append-only and latest revision determines all metrics. The original settled-term lock is superseded by the editing decision below; credited-return corrections still require an explanation.
 - Bet IDs and confirmation-from-version identify repeated confirmation. RPCs serialize owner saves and check optimistic versions; settlement retries use request keys.
 - Date-filter and cash-only/promotional reporting semantics are defined in `METRICS.md`. Open exposure ignores the date range; other filters apply.
@@ -151,7 +151,7 @@ Use a separately created restricted SQL login role, not a provider dashboard rol
 
 ## Bet editing and reversible deletion (2026-10-14)
 
-- The user approved full bet editing and deletion on a new branch for this personal tracker. Drafts, open bets and settled bets may have their recorded details, placement time, bookmaker/source, stakes/funding, accepted odds, bet type and legs edited. Ordinary edits do not require a reason.
+- The user approved full bet editing and deletion on a new branch for this personal tracker. Open bets and settled bets may have their recorded details, placement time, bookmaker/source, stakes/funding, accepted odds, bet type and legs edited. Ordinary edits do not require a reason.
 - Settled edits retain settled status and every settlement revision. The actual credited return is preserved; changing odds does not recalculate money already received. Changing cash stake/funding immediately changes P/L, ROI and promotional categories. Outcome/return/time changes continue through settlement corrections with a required reason.
 - Delete means move to Trash after an inline confirmation, for any bet status. Store deleted_at and increment the optimistic version without removing legs, settlement history or attachment references. No permanent deletion or automatic expiry is introduced. Restore retains original status/details/history and makes the bet count again.
 - Default owner-scoped ledger reads exclude deleted bets so history, dashboard/chart/group totals, filter choices and bets/legs CSV exclude them consistently. Trash and bet detail deliberately include deleted records. Deleted records cannot be edited, confirmed or settled until restored; database functions enforce this before retry handling.
@@ -165,7 +165,7 @@ Use a separately created restricted SQL login role, not a provider dashboard rol
 
 ## Outcome badge colours (2026-10-14)
 
-- The user requested green Won badges, destructive red Lost badges and neutral Open/Void badges. Full Cash-out remains neutral because it may produce either profit or loss; Draft/Settled fallback badges are also neutral. The P/L amount continues to show the actual profit/loss colour independently.
+- The user requested green Won badges, destructive red Lost badges and neutral Open/Void badges. Full Cash-out remains neutral because it may produce either profit or loss; Settled fallback badges are also neutral. The P/L amount continues to show the actual profit/loss colour independently.
 - Share StatusBadge across all BetList uses (history, dashboard and Trash), the bet detail header and acca legs. Add a soft emerald success variant to the existing Badge; use its existing destructive/secondary variants for loss/neutral. Light/dark palettes retain explicit outcome labels so colour is supplementary. No financial, settlement, data or dependency changes.
 
 ## Positive cash P/L colour (2026-10-14)
@@ -180,8 +180,8 @@ The user approved implementing units on a new branch, including settings, 1u cas
 
 - Cash stakes, free stakes and actual credited returns remain GBP integer pence. Each bet saves a positive nullable `unit_size_pence`; cash P/L units equal cash P/L divided by that bet’s saved size. Sum per-bet unit results, never divide total historical cash P/L by today’s setting. Cash-only ROI continues to use actual cash amounts.
 - Account settings store the current size and preferred display across devices. Default to GBP until configured; allow choosing Units once a size is set. A £/Units control on Dashboard and Bets updates the same preference. Settings changes apply to new entry forms, not previously saved bets or already-open forms.
-- Keep stake entry in pounds, prefill a new manual cash stake with 1u, and show live unit equivalents and the unit’s £ value. Free stakes stay separate and blank initially. Existing/draft/imported stakes are retained rather than replaced by a default. No unit-input toggle or stake shortcut buttons in this milestone.
-- Capture the size at the first save (including a draft), preserve it through later confirmation/editing/deletion/restoration, and use it when settlement occurs—even after the current setting changes. Changing stakes or correcting credited returns recalculates P/L with the original denominator. A saved assigned denominator cannot be overwritten by an ordinary edit, even through a modified request.
+- Keep stake entry in pounds, prefill a new manual cash stake with 1u, and show live unit equivalents and the unit’s £ value. Free stakes stay separate and blank initially. Existing/imported stakes are retained rather than replaced by a default. No unit-input toggle or stake shortcut buttons in this milestone.
+- Capture the size when recording an open bet, preserve it through later editing/deletion/restoration, and use it when settlement occurs—even after the current setting changes. Changing stakes or correcting credited returns recalculates P/L with the original denominator. A saved assigned denominator cannot be overwritten by an ordinary edit, even through a modified request.
 - Simplified at the user’s request: Add Bet uses the configured Settings size and has no per-bet historical-size field. Remove £-only annotations from history/details. Keep a collapsed unit-size assignment in Edit for a bet lacking a saved size. Unit aggregates still require a known denominator; if needed, show one compact coverage count instead of a legacy-data explanation. The user confirmed existing development bets are fake: assigning their current configured unit and adding fresh unit-aware fixtures is authorised for these test records. Do not apply that development-only assumption to future real financial history.
 - Free-only losses produce 0u cash P/L, not -1u. Cash-only and free/mixed P/L remain separate and reconcile within the covered unit subset. Accas count once with one unit denominator; no leg profit allocation.
 - Details show both cash and unit stakes/P/L plus saved unit size. Unit chart tooltips show cumulative units and actual GBP for the same covered bets; never multiply units by the current unit size. CSV retains cash columns and appends the saved size/derived unit columns for whole bets.
@@ -193,7 +193,7 @@ The user approved implementing units on a new branch, including settings, 1u cas
 - Opening Edit uses the bet's recorded cash and free-bet stakes, including an explicit 0 for a saved zero free stake. The 1u cash default and blank free stake apply only to a new manual bet.
 - Bind the editor's React key to bet ID/version so a different bet or updated saved version initializes its own form state. Preserve the existing saved unit denominator.
 - Hide the free-stake unit helper when there is no free funding; its unit-size amount must not suggest a free stake. Cash stake retains its live units helper.
-- History rows show cash P/L after settlement and cash stake while open/draft; a settled row's amount is not necessarily its stake. Inspect saved funding on the detail page. No saved stakes are rewritten for this clarification.
+- History rows show cash P/L after settlement and cash stake while open; a settled row's amount is not necessarily its stake. Inspect saved funding on the detail page. No saved stakes are rewritten for this clarification.
 
 
 ## Development stylesheet cache isolation (2026-10-14)
@@ -210,3 +210,11 @@ The user approved implementing units on a new branch, including settings, 1u cas
 - Remove £-only badges/text and the missing-unit-size detail row. Keep internal nullable handling for unconfigured pound entry, with compact coverage only where a unit total would otherwise be incomplete. Existing per-bet snapshots still protect history from changes in Settings.
 - Development fixture data is explicitly fake. Assign missing snapshot sizes using the current configured £50 unit without changing cash/returns, and create six fictional unit-aware examples for cash win/loss, free win, mixed funding, open stake and void. Preserve assigned snapshots and existing records.
 - Bet version is the ledger's existing optimistic save counter, not a new unit feature or user setting. Writes increment it and reject outdated submissions so one tab/device cannot overwrite a newer save. The editor uses bet ID/version as its React key to load updated recorded terms. No extra version-management UI is added.
+
+
+## Remove saved drafts (2026-10-14)
+
+- The user wants Open bets to cover provisional tracking: they can edit or delete a bet later. Remove Save draft, Draft filters/badges and draft-specific routes/actions. New records save as Open; settled edits preserve status, settlement history and saved unit sizes.
+- Required financial/selection fields and acca legs are validated for every save. The database only allows Open/Settled and applies required-field constraints to every bet. Keep initial-recording idempotency, duplicate-reference warnings, optimistic versions and reversible Trash.
+- Migration 0007 converts complete historical drafts (including Trash) to Open and increments their versions without changing stakes, returns, snapshots or deletion state. It rolls back with an explicit error if incomplete drafts exist; it does not fabricate terms or delete records. Read-only development inspection found no drafts.
+- Screenshot import remains future work: extracted fields are reviewed in an unsaved form before saving an open bet. Persistent incomplete bet drafts are no longer a requirement; attachment staging/retry details remain to be designed.

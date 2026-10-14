@@ -67,7 +67,7 @@ export type Settlement = {
 export type Bet = BetInput & {
   id: string;
   ownerId: string;
-  status: "draft" | "open" | "settled";
+  status: "open" | "settled";
   version: number;
   createdAt: string;
   settlements: Settlement[];
