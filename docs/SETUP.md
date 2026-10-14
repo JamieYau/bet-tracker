@@ -100,3 +100,8 @@ Installed Next.js guides in `node_modules/next/dist/docs` govern version-specifi
 ## Units migration
 
 `0006_betting_units` adds nullable per-bet unit snapshots and account unit/display preferences, preserves existing snapshots on edits, and introduces restricted settings/display functions. Apply it with `pnpm db:migrate`, rerun `pnpm db:grant-runtime`, then `pnpm db:verify` before using this branch against an existing environment. Existing bets remain GBP only; no automatic unit backfill or cash rewrite occurs. The account starts with no unit size and GBP display.
+
+
+## Development output
+
+Default `pnpm dev` and `pnpm dev:demo` output is isolated in ignored `.next-dev` so the live development stylesheet/cache is separate from production build checks in `.next`. Production `pnpm build`/`pnpm start` retain their normal output. `NEXT_DIST_DIR` continues to override either default; demo browser tests retain their separate `.next-e2e` directory. TypeScript includes generated route types from both default directories.

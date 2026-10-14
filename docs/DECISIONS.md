@@ -194,3 +194,11 @@ The user approved implementing units on a new branch, including settings, 1u cas
 - Bind the editor's React key to bet ID/version so a different bet or updated saved version initializes its own form state. Preserve the existing saved unit denominator.
 - Hide the free-stake unit helper when there is no free funding; its unit-size amount must not suggest a free stake. Cash stake retains its live units helper.
 - History rows show cash P/L after settlement and cash stake while open/draft; a settled row's amount is not necessarily its stake. Inspect saved funding on the detail page. No saved stakes are rewritten for this clarification.
+
+
+## Development stylesheet cache isolation (2026-10-14)
+
+- Positive P/L still used `text-profit-positive` in source and rendered DOM, but the running development stylesheet lacked both the semantic variable and utility. Computed profit text inherited the normal foreground. Source colour values/classes had not reverted.
+- Use a phase-based Next.js config: default development output is `.next-dev`, while production build/start/type generation stays `.next`. Preserve explicit `NEXT_DIST_DIR` overrides for existing test/preview servers. Ignore generated development files and include their route types in TypeScript.
+- Isolating the development cache refreshed the compiled stylesheet without changing colour tokens or financial records. Verify live CSS after production builds; do not treat a source-only class search as proof of the displayed colour.
+- Compatibility checked against installed Next.js distDir/configuration guides and [official distDir documentation](https://nextjs.org/docs/app/api-reference/config/next-config-js/distDir).
